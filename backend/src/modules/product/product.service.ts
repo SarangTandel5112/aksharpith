@@ -1,13 +1,19 @@
 import {
   ProductRepository,
   ProductQueryOptions,
-  PaginatedResult,
 } from './product.repository';
 import { CreateProductDto, UpdateProductDto, QueryProductDto } from './dtos';
 import { Product } from '@entities';
 import { CategoryRepository } from '@modules/category/category.repository';
+import { PaginatedResult } from '@common/types';
+import { validateEntityExists, validateUniqueness, validateDeletion } from '@helpers/entity.helper';
 import logger from '@setup/logger';
 
+/**
+ * Product Service
+ * Uses entity helpers to reduce code duplication
+ * Implements business logic for product management
+ */
 export class ProductService {
   constructor(
     private productRepository: ProductRepository,
@@ -32,40 +38,29 @@ export class ProductService {
     return this.productRepository.findAll(options);
   }
 
-  async getProductById(id: number): Promise<Product | null> {
+  async getProductById(id: number): Promise<Product> {
     const product = await this.productRepository.findById(id);
-    if (!product) {
-      throw new Error('Product not found');
-    }
+    validateEntityExists(product, 'Product');
     return product;
   }
 
   async getProductsByCategory(categoryId: number): Promise<Product[]> {
-    // Verify category exists
     const category = await this.categoryRepository.findById(categoryId);
-    if (!category) {
-      throw new Error('Category not found');
-    }
+    validateEntityExists(category, 'Category');
 
     return this.productRepository.findByCategoryId(categoryId);
   }
 
   async createProduct(createProductDto: CreateProductDto): Promise<Product> {
-    // Verify category exists
     const category = await this.categoryRepository.findById(
       createProductDto.categoryId
     );
-    if (!category) {
-      throw new Error('Category not found');
-    }
+    validateEntityExists(category, 'Category');
 
-    // Check if product with same name already exists
     const existingProduct = await this.productRepository.findByName(
       createProductDto.productName
     );
-    if (existingProduct) {
-      throw new Error('Product with this name already exists');
-    }
+    validateUniqueness(existingProduct, undefined, 'product', createProductDto.productName);
 
     const product = await this.productRepository.create(createProductDto);
     logger.info(`Product created: ${product.productName}`);
@@ -76,30 +71,21 @@ export class ProductService {
     id: number,
     updateProductDto: UpdateProductDto
   ): Promise<Product> {
-    // Check if product exists
     const existingProduct = await this.productRepository.findById(id);
-    if (!existingProduct) {
-      throw new Error('Product not found');
-    }
+    validateEntityExists(existingProduct, 'Product');
 
-    // If updating category, verify it exists
     if (updateProductDto.categoryId) {
       const category = await this.categoryRepository.findById(
         updateProductDto.categoryId
       );
-      if (!category) {
-        throw new Error('Category not found');
-      }
+      validateEntityExists(category, 'Category');
     }
 
-    // If updating name, check if new name is already taken
     if (updateProductDto.productName) {
       const productWithSameName = await this.productRepository.findByName(
         updateProductDto.productName
       );
-      if (productWithSameName && productWithSameName.id !== id) {
-        throw new Error('Product with this name already exists');
-      }
+      validateUniqueness(productWithSameName, id, 'product', updateProductDto.productName);
     }
 
     const updatedProduct = await this.productRepository.update(
@@ -112,14 +98,10 @@ export class ProductService {
 
   async deleteProduct(id: number): Promise<void> {
     const product = await this.productRepository.findById(id);
-    if (!product) {
-      throw new Error('Product not found');
-    }
+    validateEntityExists(product, 'Product');
 
     const deleted = await this.productRepository.delete(id);
-    if (!deleted) {
-      throw new Error('Failed to delete product');
-    }
+    validateDeletion(deleted, 'product');
     logger.info(`Product deleted: ${id}`);
   }
 
@@ -128,11 +110,8 @@ export class ProductService {
   }
 
   async getProductCountByCategory(categoryId: number): Promise<number> {
-    // Verify category exists
     const category = await this.categoryRepository.findById(categoryId);
-    if (!category) {
-      throw new Error('Category not found');
-    }
+    validateEntityExists(category, 'Category');
 
     return this.productRepository.countByCategory(categoryId);
   }

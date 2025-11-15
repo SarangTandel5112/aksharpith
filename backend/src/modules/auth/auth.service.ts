@@ -3,6 +3,7 @@ import { LoginDto, RegisterDto, RefreshTokenDto } from './dtos';
 import { User } from '@entities';
 import { BcryptHelper } from '@helpers/bcrypt.helper';
 import { TokenHelper } from '@helpers/token.helper';
+import { removePasswordHash, validateEntityExists } from '@helpers/entity.helper';
 import logger from '@setup/logger';
 
 interface AuthResponse {
@@ -11,22 +12,22 @@ interface AuthResponse {
   refreshToken: string;
 }
 
+/**
+ * Auth Service
+ * Uses entity helpers to reduce code duplication
+ * Implements authentication and authorization logic
+ */
 export class AuthService {
   constructor(private userRepository: UserRepository) {}
 
   async register(registerDto: RegisterDto): Promise<AuthResponse> {
-    // Check if user already exists
-    const existingUser = await this.userRepository.findByEmail(
-      registerDto.email
-    );
+    const existingUser = await this.userRepository.findByEmail(registerDto.email);
     if (existingUser) {
       throw new Error('User with this email already exists');
     }
 
-    // Hash password
     const hashedPassword = await BcryptHelper.hash(registerDto.password);
 
-    // Create user
     const user = await this.userRepository.create({
       username: registerDto.username,
       Firstname: registerDto.Firstname,
@@ -37,7 +38,6 @@ export class AuthService {
       isTempPassword: false,
     });
 
-    // Generate JWT tokens
     const token = TokenHelper.generateToken({
       userId: user.id,
       email: user.email,
@@ -51,23 +51,19 @@ export class AuthService {
 
     logger.info(`User registered successfully: ${user.email}`);
 
-    // Return user without passwordHash
-    const { passwordHash, ...userWithoutPassword } = user;
     return {
-      user: userWithoutPassword,
+      user: removePasswordHash(user),
       token,
       refreshToken,
     };
   }
 
   async login(loginDto: LoginDto): Promise<AuthResponse> {
-    // Find user by email with role relation
     const user = await this.userRepository.findByEmail(loginDto.email);
     if (!user) {
       throw new Error('Invalid email or password');
     }
 
-    // Verify password
     const isPasswordValid = await BcryptHelper.compare(
       loginDto.password,
       user.passwordHash
@@ -76,7 +72,6 @@ export class AuthService {
       throw new Error('Invalid email or password');
     }
 
-    // Generate JWT tokens
     const token = TokenHelper.generateToken({
       userId: user.id,
       email: user.email,
@@ -91,10 +86,8 @@ export class AuthService {
 
     logger.info(`User logged in successfully: ${user.email}`);
 
-    // Return user without passwordHash
-    const { passwordHash, ...userWithoutPassword } = user;
     return {
-      user: userWithoutPassword,
+      user: removePasswordHash(user),
       token,
       refreshToken,
     };
@@ -104,18 +97,11 @@ export class AuthService {
     refreshTokenDto: RefreshTokenDto
   ): Promise<{ token: string; refreshToken: string }> {
     try {
-      // Verify refresh token
-      const payload = TokenHelper.verifyRefreshToken(
-        refreshTokenDto.refreshToken
-      );
+      const payload = TokenHelper.verifyRefreshToken(refreshTokenDto.refreshToken);
 
-      // Find user to ensure they still exist
       const user = await this.userRepository.findById(payload.userId);
-      if (!user) {
-        throw new Error('User not found');
-      }
+      validateEntityExists(user, 'User');
 
-      // Generate new tokens
       const token = TokenHelper.generateToken({
         userId: user.id,
         email: user.email,

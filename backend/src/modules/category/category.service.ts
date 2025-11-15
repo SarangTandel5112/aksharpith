@@ -1,12 +1,18 @@
 import {
   CategoryRepository,
   CategoryQueryOptions,
-  PaginatedResult,
 } from './category.repository';
 import { CreateCategoryDto, UpdateCategoryDto, QueryCategoryDto } from './dtos';
 import { ProductCategory } from '@entities';
+import { PaginatedResult } from '@common/types';
+import { validateEntityExists, validateUniqueness, validateDeletion } from '@helpers/entity.helper';
 import logger from '@setup/logger';
 
+/**
+ * Category Service
+ * Uses entity helpers to reduce code duplication
+ * Implements business logic for category management
+ */
 export class CategoryService {
   constructor(private categoryRepository: CategoryRepository) {}
 
@@ -24,24 +30,19 @@ export class CategoryService {
     return this.categoryRepository.findAll(options);
   }
 
-  async getCategoryById(id: number): Promise<ProductCategory | null> {
+  async getCategoryById(id: number): Promise<ProductCategory> {
     const category = await this.categoryRepository.findById(id);
-    if (!category) {
-      throw new Error('Category not found');
-    }
+    validateEntityExists(category, 'Category');
     return category;
   }
 
   async createCategory(
     createCategoryDto: CreateCategoryDto
   ): Promise<ProductCategory> {
-    // Check if category with same name already exists
     const existingCategory = await this.categoryRepository.findByName(
       createCategoryDto.categoryName
     );
-    if (existingCategory) {
-      throw new Error('Category with this name already exists');
-    }
+    validateUniqueness(existingCategory, undefined, 'category', createCategoryDto.categoryName);
 
     const category = await this.categoryRepository.create(createCategoryDto);
     logger.info(`Category created: ${category.categoryName}`);
@@ -52,20 +53,14 @@ export class CategoryService {
     id: number,
     updateCategoryDto: UpdateCategoryDto
   ): Promise<ProductCategory> {
-    // Check if category exists
     const existingCategory = await this.categoryRepository.findById(id);
-    if (!existingCategory) {
-      throw new Error('Category not found');
-    }
+    validateEntityExists(existingCategory, 'Category');
 
-    // If updating name, check if new name is already taken
     if (updateCategoryDto.categoryName) {
       const categoryWithSameName = await this.categoryRepository.findByName(
         updateCategoryDto.categoryName
       );
-      if (categoryWithSameName && categoryWithSameName.id !== id) {
-        throw new Error('Category with this name already exists');
-      }
+      validateUniqueness(categoryWithSameName, id, 'category', updateCategoryDto.categoryName);
     }
 
     const updatedCategory = await this.categoryRepository.update(
@@ -78,14 +73,10 @@ export class CategoryService {
 
   async deleteCategory(id: number): Promise<void> {
     const category = await this.categoryRepository.findById(id);
-    if (!category) {
-      throw new Error('Category not found');
-    }
+    validateEntityExists(category, 'Category');
 
     const deleted = await this.categoryRepository.delete(id);
-    if (!deleted) {
-      throw new Error('Failed to delete category');
-    }
+    validateDeletion(deleted, 'category');
     logger.info(`Category deleted: ${id}`);
   }
 
