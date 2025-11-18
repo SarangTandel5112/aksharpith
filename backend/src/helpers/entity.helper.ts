@@ -80,9 +80,11 @@ export function validateUniqueness<T extends { id?: number }>(
  */
 export function validateDeletion(
   deleted: boolean,
-  entityName: string
+  entityName: string,
+  customMessage?: string
 ): void {
   if (!deleted) {
-    throw new Error(`Failed to delete ${entityName}`);
+    const errorMessage = customMessage || `Failed to delete ${entityName}`;
+    throw new Error(errorMessage);
   }
 }

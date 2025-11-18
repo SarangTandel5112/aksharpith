@@ -5,11 +5,8 @@ import { BaseRepository } from '@common/base.repository';
 import { QuerySubCategoryDto } from './dtos';
 
 export class SubCategoryRepository extends BaseRepository<SubCategory> {
-  protected repository: Repository<SubCategory>;
-
   constructor() {
-    super();
-    this.repository = AppDataSource.getRepository(SubCategory);
+    super(AppDataSource.getRepository(SubCategory));
   }
 
   protected getEntityName(): string {

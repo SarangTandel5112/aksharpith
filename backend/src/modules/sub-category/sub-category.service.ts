@@ -53,7 +53,9 @@ export class SubCategoryService {
 
     // Note: Cannot delete sub-category if products exist (enforced by database RESTRICT constraint)
     const deleted = await this.subCategoryRepository.delete(id);
-    validateDeletion(deleted, 'SubCategory', 'Products may be associated with this sub-category');
+    if (!deleted) {
+      throw new Error('Failed to delete SubCategory. Products may be associated with this sub-category');
+    }
   }
 
   async getSubCategoryCount(categoryId?: number): Promise<number> {

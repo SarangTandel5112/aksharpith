@@ -5,11 +5,8 @@ import { BaseRepository } from '@common/base.repository';
 import { QueryDepartmentDto } from './dtos';
 
 export class DepartmentRepository extends BaseRepository<Department> {
-  protected repository: Repository<Department>;
-
   constructor() {
-    super();
-    this.repository = AppDataSource.getRepository(Department);
+    super(AppDataSource.getRepository(Department));
   }
 
   protected getEntityName(): string {

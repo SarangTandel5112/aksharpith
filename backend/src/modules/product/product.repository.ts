@@ -5,7 +5,9 @@ import { BaseRepository } from '@common/base.repository';
 import { BaseQueryOptions, PaginatedResult } from '@common/types';
 
 export interface ProductQueryOptions extends BaseQueryOptions {
-  categoryId?: number;
+  departmentId?: number;
+  subCategoryId?: number;
+  categoryId?: number; // For backward compatibility
   minPrice?: number;
   maxPrice?: number;
   minStock?: number;
@@ -28,8 +30,9 @@ export class ProductRepository extends BaseRepository<Product> {
   protected getAllowedSortFields(): string[] {
     return [
       'id',
+      'productCode',
       'productName',
-      'price',
+      'unitPrice',
       'stockQuantity',
       'description',
       'createdAt',
@@ -50,27 +53,39 @@ export class ProductRepository extends BaseRepository<Product> {
   async findAll(
     options: ProductQueryOptions
   ): Promise<PaginatedResult<Product>> {
-    const { categoryId, minPrice, maxPrice, minStock, sortBy, order } = options;
+    const { departmentId, subCategoryId, categoryId, minPrice, maxPrice, minStock, sortBy, order } = options;
 
     return this.findAllWithPagination(options, (qb) => {
-      // Add category relation
-      qb.leftJoinAndSelect('product.category', 'category');
+      // Add relations
+      qb.leftJoinAndSelect('product.department', 'department');
+      qb.leftJoinAndSelect('product.subCategory', 'subCategory');
+      qb.leftJoinAndSelect('subCategory.category', 'category');
 
-      // Apply category filter
+      // Apply department filter
+      if (departmentId) {
+        qb.andWhere('product.departmentId = :departmentId', { departmentId });
+      }
+
+      // Apply sub-category filter
+      if (subCategoryId) {
+        qb.andWhere('product.subCategoryId = :subCategoryId', { subCategoryId });
+      }
+
+      // Apply category filter (via subCategory)
       if (categoryId) {
-        qb.andWhere('product.categoryId = :categoryId', { categoryId });
+        qb.andWhere('subCategory.categoryId = :categoryId', { categoryId });
       }
 
       // Apply price range filter
       if (minPrice !== undefined && maxPrice !== undefined) {
-        qb.andWhere('product.price BETWEEN :minPrice AND :maxPrice', {
+        qb.andWhere('product.unitPrice BETWEEN :minPrice AND :maxPrice', {
           minPrice,
           maxPrice,
         });
       } else if (minPrice !== undefined) {
-        qb.andWhere('product.price >= :minPrice', { minPrice });
+        qb.andWhere('product.unitPrice >= :minPrice', { minPrice });
       } else if (maxPrice !== undefined) {
-        qb.andWhere('product.price <= :maxPrice', { maxPrice });
+        qb.andWhere('product.unitPrice <= :maxPrice', { maxPrice });
       }
 
       // Apply stock filter
@@ -78,15 +93,20 @@ export class ProductRepository extends BaseRepository<Product> {
         qb.andWhere('product.stockQuantity >= :minStock', { minStock });
       }
 
-      // Handle special case for category sorting
-      if (sortBy === 'categoryId' || sortBy === 'category') {
-        qb.orderBy('category.categoryName', order || 'DESC');
+      // Handle special case for sorting
+      if (sortBy === 'department') {
+        qb.orderBy('department.departmentName', order || 'DESC');
+      } else if (sortBy === 'subCategory' || sortBy === 'categoryId') {
+        qb.orderBy('subCategory.subCategoryName', order || 'DESC');
       }
     });
   }
 
   async findById(id: number): Promise<Product | null> {
-    return super.findById(id, ['category']);
+    return this.repository.findOne({
+      where: { id },
+      relations: ['department', 'subCategory', 'subCategory.category'],
+    });
   }
 
   async findByName(productName: string): Promise<Product | null> {
@@ -94,10 +114,14 @@ export class ProductRepository extends BaseRepository<Product> {
   }
 
   async findByCategoryId(categoryId: number): Promise<Product[]> {
-    return this.repository.find({
-      where: { categoryId, isActive: true },
-      relations: ['category'],
-    });
+    return this.repository
+      .createQueryBuilder('product')
+      .leftJoinAndSelect('product.department', 'department')
+      .leftJoinAndSelect('product.subCategory', 'subCategory')
+      .leftJoinAndSelect('subCategory.category', 'category')
+      .where('subCategory.categoryId = :categoryId', { categoryId })
+      .andWhere('product.isActive = :isActive', { isActive: true })
+      .getMany();
   }
 
   async countByCategory(categoryId: number): Promise<number> {

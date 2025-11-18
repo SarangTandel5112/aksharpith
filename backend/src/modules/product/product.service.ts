@@ -5,8 +5,11 @@ import {
 import { CreateProductDto, UpdateProductDto, QueryProductDto } from './dtos';
 import { Product } from '@entities';
 import { CategoryRepository } from '@modules/category/category.repository';
+import { DepartmentRepository } from '@modules/department/department.repository';
+import { SubCategoryRepository } from '@modules/sub-category/sub-category.repository';
 import { PaginatedResult } from '@common/types';
 import { validateEntityExists, validateUniqueness, validateDeletion } from '@helpers/entity.helper';
+import { GSTHelper } from '@helpers/gst.helper';
 import logger from '@setup/logger';
 
 /**
@@ -17,7 +20,9 @@ import logger from '@setup/logger';
 export class ProductService {
   constructor(
     private productRepository: ProductRepository,
-    private categoryRepository: CategoryRepository
+    private categoryRepository: CategoryRepository,
+    private departmentRepository: DepartmentRepository,
+    private subCategoryRepository: SubCategoryRepository
   ) {}
 
   async getAllProducts(
@@ -52,11 +57,34 @@ export class ProductService {
   }
 
   async createProduct(createProductDto: CreateProductDto): Promise<Product> {
-    const category = await this.categoryRepository.findById(
-      createProductDto.categoryId
+    // Validate department exists
+    const department = await this.departmentRepository.findById(
+      createProductDto.departmentId
     );
-    validateEntityExists(category, 'Category');
+    validateEntityExists(department, 'Department');
 
+    // Validate sub-category exists
+    const subCategory = await this.subCategoryRepository.findById(
+      createProductDto.subCategoryId
+    );
+    validateEntityExists(subCategory, 'SubCategory');
+
+    // Validate GST configuration
+    const gstErrors = GSTHelper.validateGSTConfiguration({
+      nonTaxable: createProductDto.nonTaxable,
+      gst1Sgst: createProductDto.gst1Sgst,
+      gst2Cgst: createProductDto.gst2Cgst,
+      gst3Igst: createProductDto.gst3Igst,
+      gst1Slab: createProductDto.gst1Slab,
+      gst2Slab: createProductDto.gst2Slab,
+      gst3Slab: createProductDto.gst3Slab,
+    });
+
+    if (gstErrors.length > 0) {
+      throw new Error(`GST validation errors: ${gstErrors.join(', ')}`);
+    }
+
+    // Check for unique product name
     const existingProduct = await this.productRepository.findByName(
       createProductDto.productName
     );
@@ -74,13 +102,45 @@ export class ProductService {
     const existingProduct = await this.productRepository.findById(id);
     validateEntityExists(existingProduct, 'Product');
 
-    if (updateProductDto.categoryId) {
-      const category = await this.categoryRepository.findById(
-        updateProductDto.categoryId
+    // Validate department if provided
+    if (updateProductDto.departmentId) {
+      const department = await this.departmentRepository.findById(
+        updateProductDto.departmentId
       );
-      validateEntityExists(category, 'Category');
+      validateEntityExists(department, 'Department');
     }
 
+    // Validate sub-category if provided
+    if (updateProductDto.subCategoryId) {
+      const subCategory = await this.subCategoryRepository.findById(
+        updateProductDto.subCategoryId
+      );
+      validateEntityExists(subCategory, 'SubCategory');
+    }
+
+    // Validate GST configuration if any GST fields are being updated
+    if (
+      updateProductDto.nonTaxable !== undefined ||
+      updateProductDto.gst1Sgst !== undefined ||
+      updateProductDto.gst2Cgst !== undefined ||
+      updateProductDto.gst3Igst !== undefined
+    ) {
+      const gstErrors = GSTHelper.validateGSTConfiguration({
+        nonTaxable: updateProductDto.nonTaxable ?? existingProduct.nonTaxable,
+        gst1Sgst: updateProductDto.gst1Sgst ?? existingProduct.gst1Sgst,
+        gst2Cgst: updateProductDto.gst2Cgst ?? existingProduct.gst2Cgst,
+        gst3Igst: updateProductDto.gst3Igst ?? existingProduct.gst3Igst,
+        gst1Slab: updateProductDto.gst1Slab ?? existingProduct.gst1Slab,
+        gst2Slab: updateProductDto.gst2Slab ?? existingProduct.gst2Slab,
+        gst3Slab: updateProductDto.gst3Slab ?? existingProduct.gst3Slab,
+      });
+
+      if (gstErrors.length > 0) {
+        throw new Error(`GST validation errors: ${gstErrors.join(', ')}`);
+      }
+    }
+
+    // Check for unique product name if changing
     if (updateProductDto.productName) {
       const productWithSameName = await this.productRepository.findByName(
         updateProductDto.productName

@@ -22,14 +22,13 @@ export class DepartmentService {
       departmentName: data.departmentName,
       limit: 1,
     });
-    validateUniqueness(existingByName.data, 'Department name');
+    const existing = existingByName.data.length > 0 ? existingByName.data[0] : null;
+    validateUniqueness(existing, undefined, 'department name', data.departmentName);
 
     // Check for unique department code if provided
     if (data.departmentCode) {
       const existingByCode = await this.departmentRepository.findByCode(data.departmentCode);
-      if (existingByCode) {
-        throw new Error('Department code already exists');
-      }
+      validateUniqueness(existingByCode, undefined, 'department code', data.departmentCode);
     }
 
     return this.departmentRepository.create(data);
@@ -45,15 +44,14 @@ export class DepartmentService {
         departmentName: data.departmentName,
         limit: 1,
       });
-      validateUniqueness(existingByName.data, 'Department name');
+      const existing = existingByName.data.length > 0 ? existingByName.data[0] : null;
+      validateUniqueness(existing, id, 'department name', data.departmentName);
     }
 
     // Check for unique department code if changing
     if (data.departmentCode && data.departmentCode !== department.departmentCode) {
       const existingByCode = await this.departmentRepository.findByCode(data.departmentCode);
-      if (existingByCode && existingByCode.id !== id) {
-        throw new Error('Department code already exists');
-      }
+      validateUniqueness(existingByCode, id, 'department code', data.departmentCode);
     }
 
     const updated = await this.departmentRepository.update(id, data);

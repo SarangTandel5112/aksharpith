@@ -1,17 +1,17 @@
 import { Router } from 'express';
 import { SubCategoryController } from './sub-category.controller';
-import { authenticate } from '@middlewares/auth.middleware';
+import { authMiddleware } from '@middlewares/auth.middleware';
 
 export function createSubCategoryRoutes(controller: SubCategoryController): Router {
   const router = Router();
 
   // Protected routes (require authentication)
-  router.get('/', authenticate, controller.getAllSubCategories);
-  router.get('/stats/count', authenticate, controller.getSubCategoryCount);
-  router.get('/:id', authenticate, controller.getSubCategoryById);
-  router.post('/', authenticate, controller.createSubCategory);
-  router.put('/:id', authenticate, controller.updateSubCategory);
-  router.delete('/:id', authenticate, controller.deleteSubCategory);
+  router.get('/', authMiddleware, controller.getAllSubCategories);
+  router.get('/stats/count', authMiddleware, controller.getSubCategoryCount);
+  router.get('/:id', authMiddleware, controller.getSubCategoryById);
+  router.post('/', authMiddleware, controller.createSubCategory);
+  router.put('/:id', authMiddleware, controller.updateSubCategory);
+  router.delete('/:id', authMiddleware, controller.deleteSubCategory);
 
   return router;
 }
