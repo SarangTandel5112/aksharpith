@@ -7,7 +7,7 @@ import { InputNumber, InputNumberValueChangeEvent } from 'primereact/inputnumber
 import { Dropdown } from 'primereact/dropdown';
 import { FileUpload, FileUploadHandlerEvent } from 'primereact/fileupload';
 import { classNames } from 'primereact/utils';
-import { CreateProductDto } from '@/lib/api/products.api';
+import { CreateProductDto, Department, SubCategory } from '@/lib/api/products.api';
 import { Category } from '@/lib/api/categories.api';
 
 export interface ProductFormDialogProps {
@@ -18,11 +18,15 @@ export interface ProductFormDialogProps {
     onInputChange: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, name: string) => void;
     onInputNumberChange: (e: InputNumberValueChangeEvent, name: string) => void;
     onImageUpload: (event: FileUploadHandlerEvent) => void;
+    onDepartmentChange: (departmentId: number) => void;
     onCategoryChange: (categoryId: number) => void;
+    onSubCategoryChange: (subCategoryId: number) => void;
     onImageUrlChange: (url: string) => void;
     submitted: boolean;
     isEditing: boolean;
+    departments: Department[];
     categories: Category[];
+    subCategories: SubCategory[];
     uploading: boolean;
     imageUrl: string;
     fileUploadRef: React.RefObject<FileUpload>;
@@ -38,11 +42,15 @@ export const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
     onInputChange,
     onInputNumberChange,
     onImageUpload,
+    onDepartmentChange,
     onCategoryChange,
+    onSubCategoryChange,
     onImageUrlChange,
     submitted,
     isEditing,
+    departments,
     categories,
+    subCategories,
     uploading,
     imageUrl,
     fileUploadRef,
@@ -82,14 +90,36 @@ export const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
                 <label htmlFor="image">Or Upload Image to S3</label>
                 {imageUrl && (
                     <div className="mb-3">
-                        <img src={imageUrl} alt="Product" width="200" className="block shadow-2" style={{ borderRadius: '8px', margin: '0 auto' }} />
+                        <img
+                            src={imageUrl}
+                            alt="Product"
+                            width="200"
+                            className="block shadow-2"
+                            style={{ borderRadius: '8px', margin: '0 auto' }}
+                        />
                     </div>
                 )}
-                <FileUpload ref={fileUploadRef} mode="basic" accept="image/*" maxFileSize={5000000} chooseLabel="Upload Image to S3" className="w-full" customUpload uploadHandler={onImageUpload} disabled={uploading} />
+                <FileUpload
+                    ref={fileUploadRef}
+                    mode="basic"
+                    accept="image/*"
+                    maxFileSize={5000000}
+                    chooseLabel="Upload Image to S3"
+                    className="w-full"
+                    customUpload
+                    uploadHandler={onImageUpload}
+                    disabled={uploading}
+                />
                 {uploading && <small className="text-600">Uploading to S3...</small>}
                 {imageUrl && (
                     <div className="mt-2">
-                        <InputText id="imageUrl" value={imageUrl} onChange={(e) => onImageUrlChange(e.target.value)} placeholder="Or enter S3 image URL" className="w-full" />
+                        <InputText
+                            id="imageUrl"
+                            value={imageUrl}
+                            onChange={(e) => onImageUrlChange(e.target.value)}
+                            placeholder="Or enter S3 image URL"
+                            className="w-full"
+                        />
                     </div>
                 )}
             </div>
@@ -105,7 +135,8 @@ export const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
                         'p-invalid': (submitted && !product.productName) || getFieldError?.('productName')
                     })}
                 />
-                {(submitted && !product.productName && <small className="p-invalid">Product name is required.</small>) || (getFieldError?.('productName') && <small className="p-invalid">{getFieldError('productName')}</small>)}
+                {(submitted && !product.productName && <small className="p-invalid">Product name is required.</small>) ||
+                    (getFieldError?.('productName') && <small className="p-invalid">{getFieldError('productName')}</small>)}
             </div>
             <div className="field">
                 <label htmlFor="description">Description</label>
@@ -122,20 +153,57 @@ export const ProductFormDialog: React.FC<ProductFormDialogProps> = ({
                 {getFieldError?.('description') && <small className="p-invalid">{getFieldError('description')}</small>}
             </div>
             <div className="field">
+                <label htmlFor="department">Department</label>
+                <Dropdown
+                    id="department"
+                    value={product.departmentId}
+                    options={departments}
+                    onChange={(e) => onDepartmentChange(e.value)}
+                    optionLabel="departmentName"
+                    optionValue="id"
+                    placeholder="Select a department"
+                    className={classNames({
+                        'p-invalid': (submitted && !product.departmentId) || getFieldError?.('departmentId')
+                    })}
+                />
+                {(submitted && !product.departmentId && <small className="p-invalid">Department is required.</small>) ||
+                    (getFieldError?.('departmentId') && <small className="p-invalid">{getFieldError('departmentId')}</small>)}
+            </div>
+            <div className="field">
                 <label htmlFor="category">Category</label>
                 <Dropdown
                     id="category"
-                    value={product.categoryId}
+                    value={subCategories.find((sc) => sc.id === product.subCategoryId)?.categoryId || null}
                     options={categories}
                     onChange={(e) => onCategoryChange(e.value)}
                     optionLabel="categoryName"
                     optionValue="id"
-                    placeholder="Select a category"
+                    placeholder="Select a category first"
                     className={classNames({
-                        'p-invalid': (submitted && !product.categoryId) || getFieldError?.('categoryId')
+                        'p-invalid': getFieldError?.('categoryId')
                     })}
                 />
-                {(submitted && !product.categoryId && <small className="p-invalid">Category is required.</small>) || (getFieldError?.('categoryId') && <small className="p-invalid">{getFieldError('categoryId')}</small>)}
+                {getFieldError?.('categoryId') && <small className="p-invalid">{getFieldError('categoryId')}</small>}
+                <small className="text-500">Select a category to filter sub-categories</small>
+            </div>
+            <div className="field">
+                <label htmlFor="subCategory">Sub-Category</label>
+                <Dropdown
+                    id="subCategory"
+                    value={product.subCategoryId}
+                    options={subCategories}
+                    onChange={(e) => onSubCategoryChange(e.value)}
+                    optionLabel="subCategoryName"
+                    optionValue="id"
+                    placeholder="Select a sub-category"
+                    className={classNames({
+                        'p-invalid': (submitted && !product.subCategoryId) || getFieldError?.('subCategoryId')
+                    })}
+                    disabled={subCategories.length === 0}
+                />
+                {(submitted && !product.subCategoryId && <small className="p-invalid">Sub-category is required.</small>) ||
+                    (getFieldError?.('subCategoryId') && <small className="p-invalid">{getFieldError('subCategoryId')}</small>)}
+                {subCategories.length === 0 && <small className="text-500">Select a category first to see sub-categories</small>}
             </div>
             <div className="formgrid grid">
                 <div className="field col">

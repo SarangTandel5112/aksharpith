@@ -1,6 +1,17 @@
 import { httpService } from './http';
 import { Category } from './categories.api';
 
+export interface Department {
+    id: number;
+    departmentName: string;
+}
+
+export interface SubCategory {
+    id: number;
+    subCategoryName: string;
+    categoryId: number;
+}
+
 export interface Product {
     id: number;
     productName: string;
@@ -8,7 +19,11 @@ export interface Product {
     price: number | null;
     stockQuantity: number | null;
     photo: string | null;
-    categoryId: number;
+    departmentId: number;
+    subCategoryId: number;
+    categoryId?: number;
+    department?: Department;
+    subCategory?: SubCategory;
     category?: Category;
     createdAt: string;
     updatedAt: string | null;
@@ -20,7 +35,8 @@ export interface CreateProductDto {
     price?: number;
     stockQuantity?: number;
     photo?: string;
-    categoryId: number;
+    departmentId: number;
+    subCategoryId: number;
 }
 
 export interface UpdateProductDto {
@@ -29,7 +45,8 @@ export interface UpdateProductDto {
     price?: number;
     stockQuantity?: number;
     photo?: string;
-    categoryId?: number;
+    departmentId?: number;
+    subCategoryId?: number;
 }
 
 export interface ProductQueryParams {
