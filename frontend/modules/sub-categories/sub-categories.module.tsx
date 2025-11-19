@@ -97,10 +97,7 @@ const SubCategoriesModule: React.FC = () => {
         fetchCategories();
     }, []);
 
-    // Refetch when category filter changes
-    useEffect(() => {
-        fetchData();
-    }, [selectedCategoryFilter]);
+    // Note: useCrudData hook automatically resets to first page when additionalParams change
 
     const onPage = (event: any) => {
         if (event.first !== undefined && event.first !== first) {
