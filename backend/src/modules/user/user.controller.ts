@@ -1,118 +1,58 @@
 import { Request, Response } from 'express';
 import { UserService } from './user.service';
+import { BaseController } from '@common/base.controller';
 import { ResponseHelper } from '@common/response.helper';
 import { AuthenticatedRequest } from '@types';
 
-export class UserController {
-  constructor(private userService: UserService) {}
+/**
+ * User Controller
+ * Extends BaseController to inherit common controller patterns
+ * Contains both CRUD operations and auth-related methods
+ */
+export class UserController extends BaseController {
+  constructor(private userService: UserService) {
+    super();
+  }
 
-  getAllUsers = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const result = await this.userService.getAllUsers(req.query);
-      ResponseHelper.success(res, result, 'Users retrieved successfully');
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Failed to get users';
-      ResponseHelper.error(res, message, 500);
-    }
-  };
+  getAllUsers = this.handleGetAll(
+    (query) => this.userService.getAllUsers(query),
+    'Users retrieved successfully'
+  );
 
-  getUserById = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const id = parseInt(req.params.id, 10);
-      if (isNaN(id)) {
-        ResponseHelper.error(res, 'Invalid user ID', 400);
-        return;
-      }
+  getUserById = this.handleGetById(
+    (id) => this.userService.getUserById(id),
+    'User retrieved successfully'
+  );
 
-      const user = await this.userService.getUserById(id);
-      ResponseHelper.success(res, user, 'User retrieved successfully');
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Failed to get user';
-      const statusCode = message === 'User not found' ? 404 : 500;
-      ResponseHelper.error(res, message, statusCode);
-    }
-  };
+  createUser = this.handleCreate(
+    (data) => this.userService.createUser(data),
+    'User created successfully'
+  );
 
-  updateUser = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const id = parseInt(req.params.id, 10);
-      if (isNaN(id)) {
-        ResponseHelper.error(res, 'Invalid user ID', 400);
-        return;
-      }
+  updateUser = this.handleUpdate(
+    (id, data) => this.userService.updateUser(id, data),
+    'User updated successfully'
+  );
 
-      const user = await this.userService.updateUser(id, req.body);
-      ResponseHelper.success(res, user, 'User updated successfully');
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Failed to update user';
-      const statusCode = message === 'User not found' ? 404 : 400;
-      ResponseHelper.error(res, message, statusCode);
-    }
-  };
+  deleteUser = this.handleDelete(
+    (id) => this.userService.deleteUser(id),
+    'User deleted successfully'
+  );
 
-  deleteUser = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const id = parseInt(req.params.id, 10);
-      if (isNaN(id)) {
-        ResponseHelper.error(res, 'Invalid user ID', 400);
-        return;
-      }
+  getUserCount = this.handleGetCount(
+    () => this.userService.getUserCount(),
+    'User count retrieved successfully'
+  );
 
-      await this.userService.deleteUser(id);
-      ResponseHelper.success(res, null, 'User deleted successfully');
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Failed to delete user';
-      const statusCode = message === 'User not found' ? 404 : 500;
-      ResponseHelper.error(res, message, statusCode);
-    }
-  };
+  register = this.handleCreate(
+    (data) => this.userService.register(data),
+    'User registered successfully'
+  );
 
-  getUserCount = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const count = await this.userService.getUserCount();
-      ResponseHelper.success(res, { count }, 'User count retrieved successfully');
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Failed to get user count';
-      ResponseHelper.error(res, message, 500);
-    }
-  };
-
-  createUser = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const user = await this.userService.createUser(req.body);
-      ResponseHelper.success(res, user, 'User created successfully', 201);
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Failed to create user';
-      ResponseHelper.error(res, message, 400);
-    }
-  };
-
-  register = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const result = await this.userService.register(req.body);
-      ResponseHelper.success(res, result, 'User registered successfully', 201);
-    } catch (error) {
-      const message =
-        error instanceof Error ? error.message : 'Registration failed';
-      ResponseHelper.error(res, message, 400);
-    }
-  };
-
-  login = async (req: Request, res: Response): Promise<void> => {
-    try {
-      const result = await this.userService.login(req.body);
-      ResponseHelper.success(res, result, 'Login successful');
-    } catch (error) {
-      const message = error instanceof Error ? error.message : 'Login failed';
-      ResponseHelper.error(res, message, 401);
-    }
-  };
+  login = this.asyncHandler(
+    async (req) => await this.userService.login(req.body),
+    { successMessage: 'Login successful' }
+  );
 
   getProfile = async (req: Request, res: Response): Promise<void> => {
     try {

@@ -15,6 +15,7 @@ export interface UseCrudDataOptions<T> {
     initialRows?: number;
     sortBy?: string;
     order?: 'ASC' | 'DESC';
+    additionalParams?: Record<string, any>;
 }
 
 export interface UseCrudDataReturn<T> {
@@ -39,7 +40,7 @@ export interface UseCrudDataReturn<T> {
 }
 
 export function useCrudData<T>(options: UseCrudDataOptions<T>): UseCrudDataReturn<T> {
-    const { api, toast, initialPage = 0, initialRows = 10, sortBy: initialSortBy, order: initialOrder } = options;
+    const { api, toast, initialPage = 0, initialRows = 10, sortBy: initialSortBy, order: initialOrder, additionalParams } = options;
 
     const [data, setData] = useState<T[]>([]);
     const [loading, setLoading] = useState(false);
@@ -50,6 +51,8 @@ export function useCrudData<T>(options: UseCrudDataOptions<T>): UseCrudDataRetur
     const [sortBy, setSortBy] = useState<string | undefined>(initialSortBy);
     const [order, setOrder] = useState<'ASC' | 'DESC'>(initialOrder || 'DESC');
     const prevSortRef = useRef<{ sortBy?: string; order?: string }>({ sortBy: initialSortBy, order: initialOrder || 'DESC' });
+    const prevGlobalFilterRef = useRef<string>('');
+    const prevAdditionalParamsRef = useRef<Record<string, any> | undefined>(additionalParams);
 
     // Reset to first page when sort changes (but not on initial load)
     useEffect(() => {
@@ -58,6 +61,23 @@ export function useCrudData<T>(options: UseCrudDataOptions<T>): UseCrudDataRetur
             prevSortRef.current = { sortBy, order };
         }
     }, [sortBy, order]);
+
+    // Reset to first page when global filter changes (but not on initial load)
+    useEffect(() => {
+        if (globalFilter !== prevGlobalFilterRef.current && prevGlobalFilterRef.current !== '') {
+            setFirst(0);
+        }
+        prevGlobalFilterRef.current = globalFilter;
+    }, [globalFilter]);
+
+    // Reset to first page when additional params change (but not on initial load)
+    useEffect(() => {
+        const hasChanged = JSON.stringify(additionalParams) !== JSON.stringify(prevAdditionalParamsRef.current);
+        if (hasChanged && prevAdditionalParamsRef.current !== undefined) {
+            setFirst(0);
+        }
+        prevAdditionalParamsRef.current = additionalParams;
+    }, [additionalParams]);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -73,6 +93,10 @@ export function useCrudData<T>(options: UseCrudDataOptions<T>): UseCrudDataRetur
             if (sortBy) {
                 params.sortBy = sortBy;
                 params.order = order || 'DESC';
+            }
+            // Merge additional params if provided
+            if (additionalParams) {
+                Object.assign(params, additionalParams);
             }
 
             const response = await api.getAll(params);
@@ -98,7 +122,7 @@ export function useCrudData<T>(options: UseCrudDataOptions<T>): UseCrudDataRetur
         } finally {
             setLoading(false);
         }
-    }, [api, first, rows, globalFilter, sortBy, order, toast]);
+    }, [api, first, rows, globalFilter, sortBy, order, additionalParams, toast]);
 
     useEffect(() => {
         fetchData();

@@ -6,8 +6,10 @@ import { FileUploadHandlerEvent } from 'primereact/fileupload';
 import { Toast } from 'primereact/toast';
 import { Button } from 'primereact/button';
 import { Column } from 'primereact/column';
-import { productsApi, Product, CreateProductDto, UpdateProductDto } from '@/lib/api/products.api';
+import { productsApi, Product, CreateProductDto, UpdateProductDto, Department, SubCategory } from '@/lib/api/products.api';
 import { categoriesApi, Category } from '@/lib/api/categories.api';
+import { departmentsApi } from '@/lib/api/departments.api';
+import { subCategoriesApi } from '@/lib/api/sub-categories.api';
 import { useCrudData, useDialog, useForm, useImageUpload } from '@/hooks';
 import { DeleteDialog, DataTableHeader, CrudToolbar } from '@/components/crud';
 import { ProductFormDialog, ProductTableColumns, ProductGridView } from './components';
@@ -19,7 +21,8 @@ const ProductsModule: React.FC = () => {
         description: '',
         price: 0,
         stockQuantity: 0,
-        categoryId: 0,
+        departmentId: 0,
+        subCategoryId: 0,
         photo: ''
     };
 
@@ -58,30 +61,66 @@ const ProductsModule: React.FC = () => {
     const deleteProductsDialog = useDialog(false);
 
     // Form Management (Single Responsibility)
-    const { formData: product, setFormData, updateField, reset: resetForm, submitted, setSubmitted, setValidationErrors, getFieldError } = useForm<CreateProductDto & { imageUrl?: string }>({ ...emptyProduct, imageUrl: '' });
+    const {
+        formData: product,
+        setFormData,
+        updateField,
+        reset: resetForm,
+        submitted,
+        setSubmitted,
+        setValidationErrors,
+        getFieldError
+    } = useForm<CreateProductDto & { imageUrl?: string }>({ ...emptyProduct, imageUrl: '' });
     const [editingProductId, setEditingProductId] = useState<number | null>(null);
     const [productToDelete, setProductToDelete] = useState<Product | null>(null);
     const [selectedProducts, setSelectedProducts] = useState<Product[] | null>(null);
+    const [departments, setDepartments] = useState<Department[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
+    const [allSubCategories, setAllSubCategories] = useState<SubCategory[]>([]);
+    const [filteredSubCategories, setFilteredSubCategories] = useState<SubCategory[]>([]);
+    const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
     const [viewMode, setViewMode] = useState<'list' | 'grid'>('list');
 
     // Image Upload Management (Single Responsibility)
     const { uploading, imageUrl, fileUploadRef, uploadImage, setImageUrl, clearImage } = useImageUpload(toast);
 
-    // Fetch categories on mount (Single Responsibility)
+    // Fetch departments, categories, and subcategories on mount
     useEffect(() => {
-        const fetchCategories = async () => {
+        const fetchData = async () => {
             try {
-                const response = await categoriesApi.getAll({ limit: 100 });
-                if (response.success && response.data) {
-                    setCategories(response.data.data);
+                // Fetch departments
+                const deptResponse = await departmentsApi.getAll({ page: 1, limit: 1000 });
+                if (deptResponse.success && deptResponse.data) {
+                    setDepartments(deptResponse.data.data);
+                }
+
+                // Fetch categories
+                const catResponse = await categoriesApi.getAll({ limit: 1000 });
+                if (catResponse.success && catResponse.data) {
+                    setCategories(catResponse.data.data);
+                }
+
+                // Fetch all subcategories
+                const subCatResponse = await subCategoriesApi.getAll({ page: 1, limit: 1000 });
+                if (subCatResponse.success && subCatResponse.data) {
+                    setAllSubCategories(subCatResponse.data.data);
                 }
             } catch (error) {
-                console.error('Failed to fetch categories:', error);
+                console.error('Failed to fetch data:', error);
             }
         };
-        fetchCategories();
+        fetchData();
     }, []);
+
+    // Filter subcategories when category changes
+    useEffect(() => {
+        if (selectedCategoryId) {
+            const filtered = allSubCategories.filter((sc) => sc.categoryId === selectedCategoryId);
+            setFilteredSubCategories(filtered);
+        } else {
+            setFilteredSubCategories([]);
+        }
+    }, [selectedCategoryId, allSubCategories]);
 
     const onPage = (event: any) => {
         if (event.first !== undefined && event.first !== first) {
@@ -100,13 +139,23 @@ const ProductsModule: React.FC = () => {
             stockQuantity: 'stockQuantity',
             description: 'description',
             createdAt: 'createdAt',
-            category: 'categoryId' // Map category to categoryId for sorting
+            department: 'departmentId',
+            subCategory: 'subCategoryId'
         };
 
         const backendField = fieldMapping[event.sortField] || event.sortField;
 
         // Only set sort if field is sortable on backend
-        const sortableFields = ['productName', 'price', 'stockQuantity', 'description', 'categoryId', 'category', 'createdAt', 'updatedAt'];
+        const sortableFields = [
+            'productName',
+            'price',
+            'stockQuantity',
+            'description',
+            'departmentId',
+            'subCategoryId',
+            'createdAt',
+            'updatedAt'
+        ];
         if (sortableFields.includes(backendField)) {
             setSortBy(backendField);
             setOrder(event.sortOrder === 1 ? 'ASC' : 'DESC');
@@ -123,17 +172,25 @@ const ProductsModule: React.FC = () => {
     const openNew = () => {
         resetForm();
         setEditingProductId(null);
+        setSelectedCategoryId(null);
         clearImage();
         productDialog.open();
     };
 
     const editProduct = (productData: Product) => {
+        // Find the subcategory to get its categoryId
+        const subCategory = allSubCategories.find((sc) => sc.id === productData.subCategoryId);
+        if (subCategory) {
+            setSelectedCategoryId(subCategory.categoryId);
+        }
+
         setFormData({
             productName: productData.productName,
             description: productData.description || '',
             price: productData.price || 0,
             stockQuantity: productData.stockQuantity || 0,
-            categoryId: productData.categoryId,
+            departmentId: productData.departmentId,
+            subCategoryId: productData.subCategoryId,
             photo: productData.photo || '',
             imageUrl: productData.photo || ''
         });
@@ -171,7 +228,7 @@ const ProductsModule: React.FC = () => {
     const saveProduct = async () => {
         setSubmitted(true);
 
-        if (product.productName && product.productName.trim() && product.categoryId) {
+        if (product.productName && product.productName.trim() && product.departmentId && product.subCategoryId) {
             try {
                 const updateData: UpdateProductDto = {
                     productName: product.productName,
@@ -179,16 +236,20 @@ const ProductsModule: React.FC = () => {
                     price: product.price || undefined,
                     stockQuantity: product.stockQuantity || undefined,
                     photo: product.photo || imageUrl || undefined,
-                    categoryId: product.categoryId
+                    departmentId: product.departmentId,
+                    subCategoryId: product.subCategoryId
                 };
 
-                const success = editingProductId ? await updateItem(editingProductId, updateData) : await createItem(updateData as CreateProductDto);
+                const success = editingProductId
+                    ? await updateItem(editingProductId, updateData)
+                    : await createItem(updateData as CreateProductDto);
 
                 if (success) {
                     productDialog.close();
                     resetForm();
                     clearImage();
                     setEditingProductId(null);
+                    setSelectedCategoryId(null);
                 }
             } catch (error: any) {
                 if (error instanceof ValidationError) {
@@ -258,10 +319,36 @@ const ProductsModule: React.FC = () => {
         updateField(name as keyof CreateProductDto, val);
     };
 
+    const handleDepartmentChange = (departmentId: number) => {
+        updateField('departmentId', departmentId);
+    };
+
+    const handleCategoryChange = (categoryId: number) => {
+        setSelectedCategoryId(categoryId);
+        // Clear subcategory selection when category changes
+        updateField('subCategoryId', 0);
+    };
+
+    const handleSubCategoryChange = (subCategoryId: number) => {
+        updateField('subCategoryId', subCategoryId);
+    };
+
     const rightToolbarContent = (
         <div className="flex gap-2">
-            <Button icon="pi pi-th-large" severity={viewMode === 'grid' ? undefined : 'secondary'} onClick={() => setViewMode('grid')} tooltip="Grid View" tooltipOptions={{ position: 'bottom' }} />
-            <Button icon="pi pi-list" severity={viewMode === 'list' ? undefined : 'secondary'} onClick={() => setViewMode('list')} tooltip="List View" tooltipOptions={{ position: 'bottom' }} />
+            <Button
+                icon="pi pi-th-large"
+                severity={viewMode === 'grid' ? undefined : 'secondary'}
+                onClick={() => setViewMode('grid')}
+                tooltip="Grid View"
+                tooltipOptions={{ position: 'bottom' }}
+            />
+            <Button
+                icon="pi pi-list"
+                severity={viewMode === 'list' ? undefined : 'secondary'}
+                onClick={() => setViewMode('list')}
+                tooltip="List View"
+                tooltipOptions={{ position: 'bottom' }}
+            />
             <Button label="Export" icon="pi pi-upload" severity="help" onClick={exportCSV} />
         </div>
     );
@@ -271,7 +358,13 @@ const ProductsModule: React.FC = () => {
             <div className="col-12">
                 <div className="card">
                     <Toast ref={toast} />
-                    <CrudToolbar onNew={openNew} onDelete={confirmDeleteSelected} onExport={exportCSV} canDelete={!!selectedProducts && selectedProducts.length > 0} rightContent={rightToolbarContent} />
+                    <CrudToolbar
+                        onNew={openNew}
+                        onDelete={confirmDeleteSelected}
+                        onExport={exportCSV}
+                        canDelete={!!selectedProducts && selectedProducts.length > 0}
+                        rightContent={rightToolbarContent}
+                    />
 
                     {viewMode === 'list' ? (
                         <div style={{ position: 'relative' }}>
@@ -315,7 +408,13 @@ const ProductsModule: React.FC = () => {
                                 currentPageReportTemplate="Showing {first} to {last} of {totalRecords} products"
                                 globalFilter={globalFilter}
                                 emptyMessage="No products found."
-                                header={<DataTableHeader title="Manage Products" globalFilter={globalFilter} onGlobalFilterChange={setGlobalFilter} />}
+                                header={
+                                    <DataTableHeader
+                                        title="Manage Products"
+                                        globalFilter={globalFilter}
+                                        onGlobalFilterChange={setGlobalFilter}
+                                    />
+                                }
                                 responsiveLayout="scroll"
                             >
                                 <Column selectionMode="multiple" headerStyle={{ width: '4rem' }}></Column>
@@ -341,16 +440,58 @@ const ProductsModule: React.FC = () => {
                                     }}
                                     style={{ width: '120px' }}
                                 ></Column>
-                                <Column field="productName" header="Name" sortable body={(rowData: Product) => rowData.productName} headerStyle={{ minWidth: '15rem' }}></Column>
-                                <Column field="category" header="Category" sortable body={(rowData: Product) => rowData.category?.categoryName || 'N/A'} headerStyle={{ minWidth: '10rem' }}></Column>
-                                <Column field="price" header="Price" sortable body={(rowData: Product) => (rowData.price ? formatCurrency(rowData.price) : 'N/A')}></Column>
+                                <Column
+                                    field="productName"
+                                    header="Name"
+                                    sortable
+                                    body={(rowData: Product) => rowData.productName}
+                                    headerStyle={{ minWidth: '15rem' }}
+                                ></Column>
+                                <Column
+                                    field="department"
+                                    header="Department"
+                                    sortable
+                                    body={(rowData: Product) => rowData.department?.departmentName || 'N/A'}
+                                    headerStyle={{ minWidth: '10rem' }}
+                                ></Column>
+                                <Column
+                                    field="subCategory"
+                                    header="Sub-Category"
+                                    sortable
+                                    body={(rowData: Product) => rowData.subCategory?.subCategoryName || 'N/A'}
+                                    headerStyle={{ minWidth: '12rem' }}
+                                ></Column>
+                                <Column
+                                    field="price"
+                                    header="Price"
+                                    sortable
+                                    body={(rowData: Product) => (rowData.price ? formatCurrency(rowData.price) : 'N/A')}
+                                ></Column>
                                 <Column field="stockQuantity" header="Stock" sortable body={(rowData: Product) => rowData.stockQuantity ?? 'N/A'}></Column>
-                                <Column field="description" header="Description" sortable body={(rowData: Product) => rowData.description || '-'} headerStyle={{ minWidth: '20rem' }}></Column>
-                                <Column field="createdAt" header="Created Date" sortable body={(rowData: Product) => new Date(rowData.createdAt).toLocaleDateString()} headerStyle={{ minWidth: '12rem' }}></Column>
+                                <Column
+                                    field="description"
+                                    header="Description"
+                                    sortable
+                                    body={(rowData: Product) => rowData.description || '-'}
+                                    headerStyle={{ minWidth: '20rem' }}
+                                ></Column>
+                                <Column
+                                    field="createdAt"
+                                    header="Created Date"
+                                    sortable
+                                    body={(rowData: Product) => new Date(rowData.createdAt).toLocaleDateString()}
+                                    headerStyle={{ minWidth: '12rem' }}
+                                ></Column>
                                 <Column
                                     body={(rowData: Product) => (
                                         <>
-                                            <Button icon="pi pi-pencil" rounded severity="success" className="mr-2" onClick={() => editProduct(rowData)} />
+                                            <Button
+                                                icon="pi pi-pencil"
+                                                rounded
+                                                severity="success"
+                                                className="mr-2"
+                                                onClick={() => editProduct(rowData)}
+                                            />
                                             <Button icon="pi pi-trash" rounded severity="warning" onClick={() => confirmDeleteProduct(rowData)} />
                                         </>
                                     )}
@@ -361,7 +502,17 @@ const ProductsModule: React.FC = () => {
                     ) : (
                         <>
                             <DataTableHeader title="Manage Products" globalFilter={globalFilter} onGlobalFilterChange={setGlobalFilter} />
-                            <ProductGridView products={products} loading={loading} first={first} rows={rows} totalRecords={totalRecords} onPage={setFirst} onEdit={editProduct} onDelete={confirmDeleteProduct} formatCurrency={formatCurrency} />
+                            <ProductGridView
+                                products={products}
+                                loading={loading}
+                                first={first}
+                                rows={rows}
+                                totalRecords={totalRecords}
+                                onPage={setFirst}
+                                onEdit={editProduct}
+                                onDelete={confirmDeleteProduct}
+                                formatCurrency={formatCurrency}
+                            />
                         </>
                     )}
 
@@ -373,14 +524,18 @@ const ProductsModule: React.FC = () => {
                         onInputChange={onInputChange}
                         onInputNumberChange={onInputNumberChange}
                         onImageUpload={handleImageUpload}
-                        onCategoryChange={(categoryId) => updateField('categoryId', categoryId)}
+                        onDepartmentChange={handleDepartmentChange}
+                        onCategoryChange={handleCategoryChange}
+                        onSubCategoryChange={handleSubCategoryChange}
                         onImageUrlChange={(url) => {
                             setImageUrl(url);
                             updateField('photo', url);
                         }}
                         submitted={submitted}
                         isEditing={!!editingProductId}
+                        departments={departments}
                         categories={categories}
+                        subCategories={filteredSubCategories}
                         uploading={uploading}
                         imageUrl={imageUrl}
                         fileUploadRef={fileUploadRef}
@@ -397,9 +552,14 @@ const ProductsModule: React.FC = () => {
                                     <p className="m-0 mb-2">
                                         <strong>Product Name:</strong> {productToDelete.productName}
                                     </p>
-                                    {productToDelete.category && (
+                                    {productToDelete.department && (
                                         <p className="m-0 mb-2">
-                                            <strong>Category:</strong> {productToDelete.category.categoryName}
+                                            <strong>Department:</strong> {productToDelete.department.departmentName}
+                                        </p>
+                                    )}
+                                    {productToDelete.subCategory && (
+                                        <p className="m-0 mb-2">
+                                            <strong>Sub-Category:</strong> {productToDelete.subCategory.subCategoryName}
                                         </p>
                                     )}
                                     {productToDelete.price && (

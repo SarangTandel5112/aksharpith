@@ -1,17 +1,28 @@
 import {
   ProductRepository,
   ProductQueryOptions,
-  PaginatedResult,
 } from './product.repository';
 import { CreateProductDto, UpdateProductDto, QueryProductDto } from './dtos';
 import { Product } from '@entities';
 import { CategoryRepository } from '@modules/category/category.repository';
+import { DepartmentRepository } from '@modules/department/department.repository';
+import { SubCategoryRepository } from '@modules/sub-category/sub-category.repository';
+import { PaginatedResult } from '@common/types';
+import { validateEntityExists, validateUniqueness, validateDeletion } from '@helpers/entity.helper';
+import { GSTHelper } from '@helpers/gst.helper';
 import logger from '@setup/logger';
 
+/**
+ * Product Service
+ * Uses entity helpers to reduce code duplication
+ * Implements business logic for product management
+ */
 export class ProductService {
   constructor(
     private productRepository: ProductRepository,
-    private categoryRepository: CategoryRepository
+    private categoryRepository: CategoryRepository,
+    private departmentRepository: DepartmentRepository,
+    private subCategoryRepository: SubCategoryRepository
   ) {}
 
   async getAllProducts(
@@ -32,40 +43,52 @@ export class ProductService {
     return this.productRepository.findAll(options);
   }
 
-  async getProductById(id: number): Promise<Product | null> {
+  async getProductById(id: number): Promise<Product> {
     const product = await this.productRepository.findById(id);
-    if (!product) {
-      throw new Error('Product not found');
-    }
+    validateEntityExists(product, 'Product');
     return product;
   }
 
   async getProductsByCategory(categoryId: number): Promise<Product[]> {
-    // Verify category exists
     const category = await this.categoryRepository.findById(categoryId);
-    if (!category) {
-      throw new Error('Category not found');
-    }
+    validateEntityExists(category, 'Category');
 
     return this.productRepository.findByCategoryId(categoryId);
   }
 
   async createProduct(createProductDto: CreateProductDto): Promise<Product> {
-    // Verify category exists
-    const category = await this.categoryRepository.findById(
-      createProductDto.categoryId
+    // Validate department exists
+    const department = await this.departmentRepository.findById(
+      createProductDto.departmentId
     );
-    if (!category) {
-      throw new Error('Category not found');
+    validateEntityExists(department, 'Department');
+
+    // Validate sub-category exists
+    const subCategory = await this.subCategoryRepository.findById(
+      createProductDto.subCategoryId
+    );
+    validateEntityExists(subCategory, 'SubCategory');
+
+    // Validate GST configuration
+    const gstErrors = GSTHelper.validateGSTConfiguration({
+      nonTaxable: createProductDto.nonTaxable,
+      gst1Sgst: createProductDto.gst1Sgst,
+      gst2Cgst: createProductDto.gst2Cgst,
+      gst3Igst: createProductDto.gst3Igst,
+      gst1Slab: createProductDto.gst1Slab,
+      gst2Slab: createProductDto.gst2Slab,
+      gst3Slab: createProductDto.gst3Slab,
+    });
+
+    if (gstErrors.length > 0) {
+      throw new Error(`GST validation errors: ${gstErrors.join(', ')}`);
     }
 
-    // Check if product with same name already exists
+    // Check for unique product name
     const existingProduct = await this.productRepository.findByName(
       createProductDto.productName
     );
-    if (existingProduct) {
-      throw new Error('Product with this name already exists');
-    }
+    validateUniqueness(existingProduct, undefined, 'product', createProductDto.productName);
 
     const product = await this.productRepository.create(createProductDto);
     logger.info(`Product created: ${product.productName}`);
@@ -76,30 +99,53 @@ export class ProductService {
     id: number,
     updateProductDto: UpdateProductDto
   ): Promise<Product> {
-    // Check if product exists
     const existingProduct = await this.productRepository.findById(id);
-    if (!existingProduct) {
-      throw new Error('Product not found');
+    validateEntityExists(existingProduct, 'Product');
+
+    // Validate department if provided
+    if (updateProductDto.departmentId) {
+      const department = await this.departmentRepository.findById(
+        updateProductDto.departmentId
+      );
+      validateEntityExists(department, 'Department');
     }
 
-    // If updating category, verify it exists
-    if (updateProductDto.categoryId) {
-      const category = await this.categoryRepository.findById(
-        updateProductDto.categoryId
+    // Validate sub-category if provided
+    if (updateProductDto.subCategoryId) {
+      const subCategory = await this.subCategoryRepository.findById(
+        updateProductDto.subCategoryId
       );
-      if (!category) {
-        throw new Error('Category not found');
+      validateEntityExists(subCategory, 'SubCategory');
+    }
+
+    // Validate GST configuration if any GST fields are being updated
+    if (
+      updateProductDto.nonTaxable !== undefined ||
+      updateProductDto.gst1Sgst !== undefined ||
+      updateProductDto.gst2Cgst !== undefined ||
+      updateProductDto.gst3Igst !== undefined
+    ) {
+      const gstErrors = GSTHelper.validateGSTConfiguration({
+        nonTaxable: updateProductDto.nonTaxable ?? existingProduct.nonTaxable,
+        gst1Sgst: updateProductDto.gst1Sgst ?? existingProduct.gst1Sgst,
+        gst2Cgst: updateProductDto.gst2Cgst ?? existingProduct.gst2Cgst,
+        gst3Igst: updateProductDto.gst3Igst ?? existingProduct.gst3Igst,
+        gst1Slab: updateProductDto.gst1Slab ?? existingProduct.gst1Slab,
+        gst2Slab: updateProductDto.gst2Slab ?? existingProduct.gst2Slab,
+        gst3Slab: updateProductDto.gst3Slab ?? existingProduct.gst3Slab,
+      });
+
+      if (gstErrors.length > 0) {
+        throw new Error(`GST validation errors: ${gstErrors.join(', ')}`);
       }
     }
 
-    // If updating name, check if new name is already taken
+    // Check for unique product name if changing
     if (updateProductDto.productName) {
       const productWithSameName = await this.productRepository.findByName(
         updateProductDto.productName
       );
-      if (productWithSameName && productWithSameName.id !== id) {
-        throw new Error('Product with this name already exists');
-      }
+      validateUniqueness(productWithSameName, id, 'product', updateProductDto.productName);
     }
 
     const updatedProduct = await this.productRepository.update(
@@ -112,14 +158,10 @@ export class ProductService {
 
   async deleteProduct(id: number): Promise<void> {
     const product = await this.productRepository.findById(id);
-    if (!product) {
-      throw new Error('Product not found');
-    }
+    validateEntityExists(product, 'Product');
 
     const deleted = await this.productRepository.delete(id);
-    if (!deleted) {
-      throw new Error('Failed to delete product');
-    }
+    validateDeletion(deleted, 'product');
     logger.info(`Product deleted: ${id}`);
   }
 
@@ -128,11 +170,8 @@ export class ProductService {
   }
 
   async getProductCountByCategory(categoryId: number): Promise<number> {
-    // Verify category exists
     const category = await this.categoryRepository.findById(categoryId);
-    if (!category) {
-      throw new Error('Category not found');
-    }
+    validateEntityExists(category, 'Category');
 
     return this.productRepository.countByCategory(categoryId);
   }

@@ -29,11 +29,21 @@ const AppMenu = () => {
                     label: 'Users',
                     icon: 'pi pi-fw pi-users',
                     to: '/admin/users'
-                }, 
+                },
+                {
+                    label: 'Departments',
+                    icon: 'pi pi-fw pi-building',
+                    to: '/admin/departments'
+                },
                 {
                     label: 'Categories',
                     icon: 'pi pi-fw pi-tags',
                     to: '/admin/categories'
+                },
+                {
+                    label: 'Sub-Categories',
+                    icon: 'pi pi-fw pi-sitemap',
+                    to: '/admin/sub-categories'
                 },
                 {
                     label: 'Products',

@@ -128,7 +128,7 @@ const LoginPage = () => {
                     {/* Footer */}
                     <div className="login-footer">
                         <span className="text-600">
-                            Don't have an account? <a className="font-semibold text-primary no-underline cursor-pointer">Sign up</a>
+                            Don&apos;t have an account? <a className="font-semibold text-primary no-underline cursor-pointer">Sign up</a>
                         </span>
                     </div>
                 </div>

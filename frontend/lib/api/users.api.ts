@@ -1,4 +1,4 @@
-import { httpService } from './http';
+import { createCrudApi } from './api.factory';
 
 export interface UserRole {
     id: number;
@@ -30,14 +30,6 @@ export interface UserQueryParams {
     order?: 'ASC' | 'DESC';
 }
 
-export interface PaginatedUsersResponse {
-    data: User[];
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-}
-
 export interface CreateUserDto {
     username: string;
     Firstname: string;
@@ -48,41 +40,8 @@ export interface CreateUserDto {
     roleId?: number;
 }
 
-export const usersApi = {
-    getAll: async (params?: UserQueryParams) => {
-        // Filter out undefined values
-        const filteredParams: any = {};
-        if (params) {
-            Object.keys(params).forEach(key => {
-                const value = (params as any)[key];
-                if (value !== undefined && value !== null && value !== '') {
-                    filteredParams[key] = value;
-                }
-            });
-        }
-        const queryString = Object.keys(filteredParams).length > 0
-            ? '?' + new URLSearchParams(filteredParams).toString()
-            : '';
-        return httpService.get<PaginatedUsersResponse>(`/users${queryString}`);
-    },
-
-    getById: async (id: number) => {
-        return httpService.get<User>(`/users/${id}`);
-    },
-
-    create: async (data: CreateUserDto) => {
-        return httpService.post<User>('/users', data);
-    },
-
-    update: async (id: number, data: Partial<User>) => {
-        return httpService.put<User>(`/users/${id}`, data);
-    },
-
-    delete: async (id: number) => {
-        return httpService.delete(`/users/${id}`);
-    },
-
-    getCount: async () => {
-        return httpService.get<{ count: number }>('/users/stats/count');
-    }
-};
+/**
+ * Users API
+ * Uses generic CRUD factory to reduce code duplication
+ */
+export const usersApi = createCrudApi<User, CreateUserDto, Partial<User>>('/users');

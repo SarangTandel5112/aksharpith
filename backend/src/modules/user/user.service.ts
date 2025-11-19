@@ -1,10 +1,17 @@
-import { UserRepository, UserQueryOptions, PaginatedResult } from './user.repository';
+import { UserRepository, UserQueryOptions } from './user.repository';
 import { CreateUserDto, LoginDto } from './dtos';
 import { User } from '@entities';
+import { PaginatedResult } from '@common/types';
 import { BcryptHelper } from '@helpers/bcrypt.helper';
 import { TokenHelper } from '@helpers/token.helper';
+import { removePasswordHash, removePassword, validateEntityExists, validateDeletion } from '@helpers/entity.helper';
 import logger from '@setup/logger';
 
+/**
+ * User Service
+ * Uses entity helpers to reduce code duplication
+ * Implements business logic for user management and authentication
+ */
 export class UserService {
   constructor(private userRepository: UserRepository) {}
 
@@ -12,10 +19,7 @@ export class UserService {
     const result = await this.userRepository.findAll(query);
 
     // Remove password from all users
-    const dataWithoutPassword = result.data.map(user => {
-      const { passwordHash, ...userWithoutPassword } = user;
-      return userWithoutPassword;
-    });
+    const dataWithoutPassword = result.data.map(user => removePasswordHash(user));
 
     return {
       ...result,
@@ -23,21 +27,16 @@ export class UserService {
     };
   }
 
-  async getUserById(id: number): Promise<Omit<User, 'passwordHash'> | null> {
+  async getUserById(id: number): Promise<Omit<User, 'passwordHash'>> {
     const user = await this.userRepository.findById(id);
-    if (!user) {
-      throw new Error('User not found');
-    }
+    validateEntityExists(user, 'User');
 
-    const { passwordHash, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+    return removePasswordHash(user);
   }
 
   async updateUser(id: number, userData: Partial<User> & { password?: string }): Promise<Omit<User, 'passwordHash'>> {
     const existingUser = await this.userRepository.findById(id);
-    if (!existingUser) {
-      throw new Error('User not found');
-    }
+    validateEntityExists(existingUser, 'User');
 
     // If updating email, check if new email is already taken
     if (userData.email && userData.email !== existingUser.email) {
@@ -52,28 +51,22 @@ export class UserService {
 
     // If password is provided, hash it
     if (userData.password) {
-      const hashedPassword = await BcryptHelper.hash(userData.password);
-      updateData.passwordHash = hashedPassword;
-      delete (updateData as any).password; // Remove plain password from update data
+      updateData.passwordHash = await BcryptHelper.hash(userData.password);
+      delete (updateData as any).password;
     }
 
     const updatedUser = await this.userRepository.update(id, updateData);
     logger.info(`User updated: ${id}`);
 
-    const { passwordHash, ...userWithoutPassword } = updatedUser!;
-    return userWithoutPassword;
+    return removePasswordHash(updatedUser!);
   }
 
   async deleteUser(id: number): Promise<void> {
     const user = await this.userRepository.findById(id);
-    if (!user) {
-      throw new Error('User not found');
-    }
+    validateEntityExists(user, 'User');
 
     const deleted = await this.userRepository.delete(id);
-    if (!deleted) {
-      throw new Error('Failed to delete user');
-    }
+    validateDeletion(deleted, 'user');
     logger.info(`User deleted: ${id}`);
   }
 
@@ -82,16 +75,13 @@ export class UserService {
   }
 
   async createUser(createUserDto: CreateUserDto): Promise<Omit<User, 'passwordHash'>> {
-    // Check if user already exists
     const existingUserByEmail = await this.userRepository.findByEmail(createUserDto.email);
     if (existingUserByEmail) {
       throw new Error('User with this email already exists');
     }
 
-    // Hash password
     const hashedPassword = await BcryptHelper.hash(createUserDto.password);
 
-    // Create user
     const user = await this.userRepository.create({
       username: createUserDto.username,
       Firstname: createUserDto.Firstname,
@@ -99,40 +89,37 @@ export class UserService {
       Lastname: createUserDto.Lastname,
       email: createUserDto.email,
       passwordHash: hashedPassword,
-      roleId: createUserDto.roleId || 2, // Default to User role
+      roleId: createUserDto.roleId || 2,
       isTempPassword: false
     });
 
     logger.info(`User created: ${user.email}`);
 
-    // Return user without password
-    const { passwordHash, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+    return removePasswordHash(user);
   }
 
   async register(createUserDto: CreateUserDto): Promise<{
-    user: Omit<User, 'password'>;
+    user: Omit<User, 'passwordHash'>;
     token: string;
   }> {
-    // Check if user already exists
-    const existingUser = await this.userRepository.findByEmail(
-      createUserDto.email
-    );
+    const existingUser = await this.userRepository.findByEmail(createUserDto.email);
     if (existingUser) {
       throw new Error('User with this email already exists');
     }
 
-    // Hash password
     const hashedPassword = await BcryptHelper.hash(createUserDto.password);
 
-    // Create user
     const user = await this.userRepository.create({
+      username: createUserDto.username,
+      Firstname: createUserDto.Firstname,
+      Middlename: createUserDto.Middlename,
+      Lastname: createUserDto.Lastname,
       email: createUserDto.email,
-      password: hashedPassword,
-      name: createUserDto.name,
+      passwordHash: hashedPassword,
+      roleId: createUserDto.roleId || 2,
+      isTempPassword: false
     });
 
-    // Generate JWT token
     const token = TokenHelper.generateToken({
       userId: user.id,
       email: user.email,
@@ -140,34 +127,29 @@ export class UserService {
 
     logger.info(`User registered: ${user.email}`);
 
-    // Return user without password
-    const { password, ...userWithoutPassword } = user;
     return {
-      user: userWithoutPassword,
+      user: removePasswordHash(user),
       token,
     };
   }
 
   async login(loginDto: LoginDto): Promise<{
-    user: Omit<User, 'password'>;
+    user: Omit<User, 'passwordHash'>;
     token: string;
   }> {
-    // Find user by email
     const user = await this.userRepository.findByEmail(loginDto.email);
     if (!user) {
       throw new Error('Invalid email or password');
     }
 
-    // Verify password
     const isPasswordValid = await BcryptHelper.compare(
       loginDto.password,
-      user.password
+      user.passwordHash
     );
     if (!isPasswordValid) {
       throw new Error('Invalid email or password');
     }
 
-    // Generate JWT token
     const token = TokenHelper.generateToken({
       userId: user.id,
       email: user.email,
@@ -175,21 +157,18 @@ export class UserService {
 
     logger.info(`User logged in: ${user.email}`);
 
-    // Return user without password
-    const { password, ...userWithoutPassword } = user;
     return {
-      user: userWithoutPassword,
+      user: removePasswordHash(user),
       token,
     };
   }
 
-  async getProfile(userId: string): Promise<Omit<User, 'password'> | null> {
+  async getProfile(userId: number): Promise<Omit<User, 'passwordHash'> | null> {
     const user = await this.userRepository.findById(userId);
     if (!user) {
       return null;
     }
 
-    const { password, ...userWithoutPassword } = user;
-    return userWithoutPassword;
+    return removePasswordHash(user);
   }
 }
