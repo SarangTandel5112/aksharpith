@@ -28,7 +28,8 @@
       "@setup/*": ["src/setup/*"],
       "@routes/*": ["src/routes/*"],
       "@entities": ["src/entities/index"],
-      "@entities/*": ["src/entities/*"]
+      "@entities/*": ["src/entities/*"],
+      "@test/*": ["src/__tests__/*"]
     }
   },
   "include": ["src/**/*"],
