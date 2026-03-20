@@ -1,12 +1,15 @@
 import { Repository, ObjectLiteral, SelectQueryBuilder } from 'typeorm';
 import { BaseQueryOptions, PaginatedResult } from './types';
+import { IRepository } from './interfaces/repository.interface';
 
 /**
  * Base Repository class providing common data access patterns
  * Implements Repository pattern with shared pagination and filtering logic
  * Follows DRY and Single Responsibility principles
  */
-export abstract class BaseRepository<T extends ObjectLiteral> {
+export abstract class BaseRepository<T extends ObjectLiteral>
+  implements IRepository<T>
+{
   constructor(protected repository: Repository<T>) {}
 
   /**
@@ -86,10 +89,7 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
   /**
    * Find entity by ID
    */
-  async findById(
-    id: number,
-    relations?: string[]
-  ): Promise<T | null> {
+  async findById(id: number, relations?: string[]): Promise<T | null> {
     return this.repository.findOne({
       where: { id, isActive: true } as any,
       relations,
@@ -101,7 +101,7 @@ export abstract class BaseRepository<T extends ObjectLiteral> {
    */
   async create(entityData: Partial<T>): Promise<T> {
     const entity = this.repository.create(entityData as any);
-    return this.repository.save(entity);
+    return this.repository.save(entity) as unknown as Promise<T>;
   }
 
   /**
