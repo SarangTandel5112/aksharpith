@@ -28,7 +28,8 @@ export class AuthService {
 
   async signUp(signUpDto: SignUpDto): Promise<{ message: string }> {
     try {
-      const { firstName, middleName, lastName, email, password, roleId } = signUpDto;
+      const { firstName, middleName, lastName, email, password, roleId } =
+        signUpDto;
 
       const emailExists = await this.userRepo.findOne({ where: { email } });
       if (emailExists) {
@@ -60,7 +61,8 @@ export class AuthService {
   async signIn(user: User): Promise<{ accessToken: string }> {
     try {
       const payload = { email: user.email, id: user.id };
-      const expiresIn = this.configService.get<AuthKeyConfig>(AuthKeyConfigName);
+      const expiresIn =
+        this.configService.get<AuthKeyConfig>(AuthKeyConfigName);
 
       return {
         accessToken: this.jwtService.sign(payload, {
@@ -77,6 +79,7 @@ export class AuthService {
     try {
       const user = await this.userRepository.findByEmail(email);
       if (user && bcrypt.compareSync(password, user.password)) {
+        if (!user.isActive) return null;
         return user;
       }
       return null;

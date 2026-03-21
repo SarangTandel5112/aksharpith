@@ -27,7 +27,7 @@ const makeUser = (overrides: Partial<User> = {}): User =>
     updatedAt: new Date(),
     deletedAt: null,
     ...overrides,
-  } as User);
+  }) as User;
 
 describe('AuthService', () => {
   let service: AuthService;
@@ -67,7 +67,10 @@ describe('AuthService', () => {
 
     jest.clearAllMocks();
     mockJwtService.sign.mockReturnValue('signed-token');
-    mockConfigService.get.mockReturnValue({ jwtSecret: 'secret', expiresIn: '1h' });
+    mockConfigService.get.mockReturnValue({
+      jwtSecret: 'secret',
+      expiresIn: '1h',
+    });
   });
 
   describe('signUp', () => {
@@ -86,7 +89,9 @@ describe('AuthService', () => {
 
       const result = await service.signUp(dto);
 
-      expect(mockUserRepo.findOne).toHaveBeenCalledWith({ where: { email: dto.email } });
+      expect(mockUserRepo.findOne).toHaveBeenCalledWith({
+        where: { email: dto.email },
+      });
       expect(mockUserRepo.create).toHaveBeenCalledWith(
         expect.objectContaining({
           firstName: dto.firstName,
@@ -113,7 +118,10 @@ describe('AuthService', () => {
       };
 
       mockUserRepo.findOne.mockResolvedValue(null);
-      const savedUser = makeUser({ middleName: 'Robert', roleId: 'role-uuid-1' });
+      const savedUser = makeUser({
+        middleName: 'Robert',
+        roleId: 'role-uuid-1',
+      });
       mockUserRepo.create.mockReturnValue(savedUser);
       mockUserRepo.save.mockResolvedValue(savedUser);
 
@@ -139,7 +147,9 @@ describe('AuthService', () => {
       mockUserRepo.create.mockReturnValue(makeUser());
       mockUserRepo.save.mockRejectedValue(new Error('DB connection lost'));
 
-      await expect(service.signUp(dto)).rejects.toThrow(InternalServerErrorException);
+      await expect(service.signUp(dto)).rejects.toThrow(
+        InternalServerErrorException,
+      );
     });
   });
 
@@ -162,7 +172,9 @@ describe('AuthService', () => {
         throw new Error('JWT signing error');
       });
 
-      await expect(service.signIn(makeUser())).rejects.toThrow(InternalServerErrorException);
+      await expect(service.signIn(makeUser())).rejects.toThrow(
+        InternalServerErrorException,
+      );
     });
   });
 
@@ -180,7 +192,9 @@ describe('AuthService', () => {
     });
 
     it('returns null when password is incorrect', async () => {
-      const user = makeUser({ password: await bcrypt.hash('correct-password', 10) });
+      const user = makeUser({
+        password: await bcrypt.hash('correct-password', 10),
+      });
       mockUserRepository.findByEmail.mockResolvedValue(user);
 
       const result = await service.validateUser(user.email, 'wrong-password');
@@ -191,7 +205,10 @@ describe('AuthService', () => {
     it('returns null when user is not found (findByEmail returns null)', async () => {
       mockUserRepository.findByEmail.mockResolvedValue(null);
 
-      const result = await service.validateUser('nobody@example.com', 'password');
+      const result = await service.validateUser(
+        'nobody@example.com',
+        'password',
+      );
 
       expect(result).toBeNull();
     });
@@ -199,7 +216,24 @@ describe('AuthService', () => {
     it('returns null when repository throws', async () => {
       mockUserRepository.findByEmail.mockRejectedValue(new Error('DB error'));
 
-      const result = await service.validateUser('error@example.com', 'password');
+      const result = await service.validateUser(
+        'error@example.com',
+        'password',
+      );
+
+      expect(result).toBeNull();
+    });
+
+    it('returns null when user is inactive (isActive: false)', async () => {
+      const plainPassword = 'password123';
+      const hashed = await bcrypt.hash(plainPassword, 10);
+      const inactiveUser = makeUser({ password: hashed, isActive: false });
+      mockUserRepository.findByEmail.mockResolvedValue(inactiveUser);
+
+      const result = await service.validateUser(
+        inactiveUser.email,
+        plainPassword,
+      );
 
       expect(result).toBeNull();
     });
