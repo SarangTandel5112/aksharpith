@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import { AppDataSource } from '@config/database.config';
+import { Department } from '@entities/department.entity';
 import { DepartmentController } from './department.controller';
 import { DepartmentService } from './department.service';
 import { DepartmentRepository } from './department.repository';
@@ -12,7 +14,7 @@ export class DepartmentModule {
 
   constructor() {
     // Initialize dependencies (DI pattern)
-    this.departmentRepository = new DepartmentRepository();
+    this.departmentRepository = new DepartmentRepository(AppDataSource.getRepository(Department));
     this.departmentService = new DepartmentService(this.departmentRepository);
     this.departmentController = new DepartmentController(this.departmentService);
 

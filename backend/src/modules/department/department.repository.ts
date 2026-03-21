@@ -1,12 +1,16 @@
-import { AppDataSource } from '@config/database.config';
 import { Department } from '@entities/department.entity';
 import { Repository, SelectQueryBuilder } from 'typeorm';
 import { BaseRepository } from '@common/base.repository';
+import { IDepartmentRepository } from './interfaces/department.repository.interface';
 import { QueryDepartmentDto } from './dtos';
+import { PaginatedResult } from '@common/types';
 
-export class DepartmentRepository extends BaseRepository<Department> {
-  constructor() {
-    super(AppDataSource.getRepository(Department));
+export class DepartmentRepository
+  extends BaseRepository<Department>
+  implements IDepartmentRepository
+{
+  constructor(repo: Repository<Department>) {
+    super(repo);
   }
 
   protected getEntityName(): string {
@@ -24,7 +28,7 @@ export class DepartmentRepository extends BaseRepository<Department> {
     );
   }
 
-  async findAll(queryOptions: QueryDepartmentDto) {
+  async findAll(queryOptions: QueryDepartmentDto): Promise<PaginatedResult<Department>> {
     return this.findAllWithPagination(queryOptions, (qb) => {
       if (queryOptions.departmentName) {
         qb.andWhere('department.departmentName LIKE :name', {
@@ -42,30 +46,11 @@ export class DepartmentRepository extends BaseRepository<Department> {
     });
   }
 
-  async findById(id: number): Promise<Department | null> {
-    return this.repository.findOne({ where: { id } });
-  }
-
   async findByCode(departmentCode: string): Promise<Department | null> {
-    return this.repository.findOne({ where: { departmentCode } });
+    return this.repository.findOne({ where: { departmentCode, isActive: true } });
   }
 
-  async create(data: Partial<Department>): Promise<Department> {
-    const department = this.repository.create(data);
-    return this.repository.save(department);
-  }
-
-  async update(id: number, data: Partial<Department>): Promise<Department | null> {
-    await this.repository.update(id, data);
-    return this.findById(id);
-  }
-
-  async delete(id: number): Promise<boolean> {
-    const result = await this.repository.delete(id);
-    return (result.affected ?? 0) > 0;
-  }
-
-  async getCount(): Promise<number> {
-    return this.repository.count();
+  async findByName(departmentName: string): Promise<Department | null> {
+    return this.repository.findOne({ where: { departmentName, isActive: true } });
   }
 }

@@ -1,74 +1,105 @@
 import { Department } from '@entities/department.entity';
-import { DepartmentRepository } from './department.repository';
-import { CreateDepartmentDto, UpdateDepartmentDto, QueryDepartmentDto } from './dtos';
-import { validateEntityExists, validateUniqueness, validateDeletion } from '@helpers/entity.helper';
+import { IDepartmentRepository } from './interfaces/department.repository.interface';
+import {
+  CreateDepartmentDto,
+  UpdateDepartmentDto,
+  QueryDepartmentDto,
+} from './dtos';
+import {
+  validateEntityExists,
+  validateUniqueness,
+  validateDeletion,
+} from '@helpers/entity.helper';
+import { PaginatedResult } from '@common/types';
 
 export class DepartmentService {
-  constructor(private departmentRepository: DepartmentRepository) {}
+  constructor(private repo: IDepartmentRepository) {}
 
-  async getAllDepartments(query: QueryDepartmentDto) {
-    return this.departmentRepository.findAll(query);
+  async getAllDepartments(
+    query: QueryDepartmentDto
+  ): Promise<PaginatedResult<Department>> {
+    return this.repo.findAll(query);
   }
 
   async getDepartmentById(id: number): Promise<Department> {
-    const department = await this.departmentRepository.findById(id);
+    const department = await this.repo.findById(id);
     validateEntityExists(department, 'Department');
     return department;
   }
 
   async createDepartment(data: CreateDepartmentDto): Promise<Department> {
     // Check for unique department name
-    const existingByName = await this.departmentRepository.findAll({
-      departmentName: data.departmentName,
-      limit: 1,
-    });
-    const existing = existingByName.data.length > 0 ? existingByName.data[0] : null;
-    validateUniqueness(existing, undefined, 'department name', data.departmentName);
+    const existingByName = await this.repo.findByName(data.departmentName);
+    validateUniqueness(
+      existingByName,
+      undefined,
+      'department name',
+      data.departmentName
+    );
 
     // Check for unique department code if provided
     if (data.departmentCode) {
-      const existingByCode = await this.departmentRepository.findByCode(data.departmentCode);
-      validateUniqueness(existingByCode, undefined, 'department code', data.departmentCode);
+      const existingByCode = await this.repo.findByCode(data.departmentCode);
+      validateUniqueness(
+        existingByCode,
+        undefined,
+        'department code',
+        data.departmentCode
+      );
     }
 
-    return this.departmentRepository.create(data);
+    return this.repo.create(data);
   }
 
-  async updateDepartment(id: number, data: UpdateDepartmentDto): Promise<Department> {
-    const department = await this.departmentRepository.findById(id);
+  async updateDepartment(
+    id: number,
+    data: UpdateDepartmentDto
+  ): Promise<Department> {
+    const department = await this.repo.findById(id);
     validateEntityExists(department, 'Department');
 
     // Check for unique department name if changing
-    if (data.departmentName && data.departmentName !== department.departmentName) {
-      const existingByName = await this.departmentRepository.findAll({
-        departmentName: data.departmentName,
-        limit: 1,
-      });
-      const existing = existingByName.data.length > 0 ? existingByName.data[0] : null;
-      validateUniqueness(existing, id, 'department name', data.departmentName);
+    if (
+      data.departmentName &&
+      data.departmentName !== department.departmentName
+    ) {
+      const existingByName = await this.repo.findByName(data.departmentName);
+      validateUniqueness(
+        existingByName,
+        id,
+        'department name',
+        data.departmentName
+      );
     }
 
     // Check for unique department code if changing
-    if (data.departmentCode && data.departmentCode !== department.departmentCode) {
-      const existingByCode = await this.departmentRepository.findByCode(data.departmentCode);
-      validateUniqueness(existingByCode, id, 'department code', data.departmentCode);
+    if (
+      data.departmentCode &&
+      data.departmentCode !== department.departmentCode
+    ) {
+      const existingByCode = await this.repo.findByCode(data.departmentCode);
+      validateUniqueness(
+        existingByCode,
+        id,
+        'department code',
+        data.departmentCode
+      );
     }
 
-    const updated = await this.departmentRepository.update(id, data);
+    const updated = await this.repo.update(id, data);
     validateEntityExists(updated, 'Department');
     return updated;
   }
 
   async deleteDepartment(id: number): Promise<void> {
-    const department = await this.departmentRepository.findById(id);
+    const department = await this.repo.findById(id);
     validateEntityExists(department, 'Department');
 
-    // Note: Cannot delete department if products exist (enforced by database RESTRICT constraint)
-    const deleted = await this.departmentRepository.delete(id);
-    validateDeletion(deleted, 'Department', 'Products may be associated with this department');
+    const deleted = await this.repo.delete(id);
+    validateDeletion(deleted, 'Department');
   }
 
   async getDepartmentCount(): Promise<number> {
-    return this.departmentRepository.getCount();
+    return this.repo.count();
   }
 }

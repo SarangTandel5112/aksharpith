@@ -6,6 +6,8 @@ import { CategoryRepository } from '@modules/category/category.repository';
 import { DepartmentRepository } from '@modules/department/department.repository';
 import { SubCategoryRepository } from '@modules/sub-category/sub-category.repository';
 import { createProductRoutes } from './product.routes';
+import { AppDataSource } from '@config/database.config';
+import { Department } from '@entities/department.entity';
 
 export class ProductModule {
   public router: Router;
@@ -20,7 +22,9 @@ export class ProductModule {
     // Initialize dependencies (DI pattern)
     this.productRepository = new ProductRepository();
     this.categoryRepository = new CategoryRepository();
-    this.departmentRepository = new DepartmentRepository();
+    this.departmentRepository = new DepartmentRepository(
+      AppDataSource.getRepository(Department)
+    );
     this.subCategoryRepository = new SubCategoryRepository();
     this.productService = new ProductService(
       this.productRepository,
