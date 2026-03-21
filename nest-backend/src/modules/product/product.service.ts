@@ -78,7 +78,7 @@ export class ProductService {
     if (dto.groupId && dto.groupId !== existing.groupId) {
       const valueCount = await this.productRepo.countGroupFieldValues(id);
       if (valueCount > 0) {
-        if (!(dto as any).clearFieldValues) {
+        if (!dto.clearFieldValues) {
           throw new ConflictException(
             `Cannot change group: ${valueCount} field values exist. Pass clearFieldValues: true to delete them.`,
           );
