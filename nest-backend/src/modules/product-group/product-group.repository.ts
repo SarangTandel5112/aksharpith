@@ -3,12 +3,15 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike, FindOptionsWhere } from 'typeorm';
 import { ProductGroup } from './entities/product-group.entity';
 import { GroupField } from './entities/group-field.entity';
+import { GroupFieldOption } from './entities/group-field-option.entity';
 import { ProductGroupFieldValue } from '../product/entities/product-group-field-value.entity';
 import { CreateProductGroupDto } from './dto/create-product-group.dto';
 import { UpdateProductGroupDto } from './dto/update-product-group.dto';
 import { QueryProductGroupDto } from './dto/query-product-group.dto';
 import { AddGroupFieldDto } from './dto/add-group-field.dto';
 import { UpdateGroupFieldDto } from './dto/update-group-field.dto';
+import { CreateGroupFieldOptionDto } from './dto/create-group-field-option.dto';
+import { UpdateGroupFieldOptionDto } from './dto/update-group-field-option.dto';
 
 @Injectable()
 export class ProductGroupRepository {
@@ -17,6 +20,8 @@ export class ProductGroupRepository {
     private readonly repo: Repository<ProductGroup>,
     @InjectRepository(GroupField)
     private readonly fieldRepo: Repository<GroupField>,
+    @InjectRepository(GroupFieldOption)
+    private readonly optionRepo: Repository<GroupFieldOption>,
     @InjectRepository(ProductGroupFieldValue)
     private readonly groupFieldValueRepo: Repository<ProductGroupFieldValue>,
   ) {}
@@ -127,5 +132,36 @@ export class ProductGroupRepository {
 
   async countFieldValues(fieldId: string): Promise<number> {
     return this.groupFieldValueRepo.count({ where: { fieldId } });
+  }
+
+  async addOption(
+    fieldId: string,
+    dto: CreateGroupFieldOptionDto,
+  ): Promise<GroupFieldOption> {
+    const option = this.optionRepo.create({ ...dto, fieldId });
+    return this.optionRepo.save(option) as unknown as Promise<GroupFieldOption>;
+  }
+
+  async findOptionById(optionId: string): Promise<GroupFieldOption | null> {
+    return this.optionRepo.findOne({ where: { id: optionId } });
+  }
+
+  async updateOption(
+    optionId: string,
+    dto: UpdateGroupFieldOptionDto,
+  ): Promise<GroupFieldOption | null> {
+    await this.optionRepo.update(optionId, dto);
+    return this.optionRepo.findOne({ where: { id: optionId } });
+  }
+
+  async deleteOption(optionId: string): Promise<boolean> {
+    const result = await this.optionRepo.delete(optionId);
+    return (result.affected ?? 0) > 0;
+  }
+
+  async countOptionUsage(optionId: string): Promise<number> {
+    return this.groupFieldValueRepo.count({
+      where: { valueOptionId: optionId },
+    });
   }
 }

@@ -13,6 +13,9 @@ const mockService = () => ({
   addField: jest.fn(),
   updateField: jest.fn(),
   removeField: jest.fn(),
+  addOption: jest.fn(),
+  updateOption: jest.fn(),
+  removeOption: jest.fn(),
 });
 
 describe('ProductGroupController', () => {
@@ -137,6 +140,56 @@ describe('ProductGroupController', () => {
       await expect(controller.removeField('g-1', 'f-1')).rejects.toThrow(
         ConflictException,
       );
+    });
+  });
+
+  describe('addOption', () => {
+    it('delegates to service', async () => {
+      service.addOption.mockResolvedValue({ id: 'o-1', optionLabel: 'Hindi' });
+      const result = await controller.addOption('g-1', 'f-1', {
+        optionLabel: 'Hindi',
+        optionValue: 'hi',
+      });
+      expect(result).toHaveProperty('optionLabel', 'Hindi');
+    });
+
+    it('propagates 404', async () => {
+      service.addOption.mockRejectedValue(new NotFoundException());
+      await expect(
+        controller.addOption('bad', 'f-1', {
+          optionLabel: 'X',
+          optionValue: 'x',
+        }),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('updateOption', () => {
+    it('delegates to service', async () => {
+      service.updateOption.mockResolvedValue({
+        id: 'o-1',
+        optionLabel: 'Updated',
+      });
+      const result = await controller.updateOption('g-1', 'f-1', 'o-1', {
+        optionLabel: 'Updated',
+      });
+      expect(result).toHaveProperty('optionLabel', 'Updated');
+    });
+  });
+
+  describe('removeOption', () => {
+    it('delegates to service', async () => {
+      service.removeOption.mockResolvedValue(undefined);
+      await expect(
+        controller.removeOption('g-1', 'f-1', 'o-1'),
+      ).resolves.toBeUndefined();
+    });
+
+    it('propagates 409 when products used option', async () => {
+      service.removeOption.mockRejectedValue(new ConflictException());
+      await expect(
+        controller.removeOption('g-1', 'f-1', 'o-1'),
+      ).rejects.toThrow(ConflictException);
     });
   });
 });

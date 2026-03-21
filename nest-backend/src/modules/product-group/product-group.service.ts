@@ -13,6 +13,9 @@ import { PaginatedResponseDto } from '../../common/dto/paginated-response.dto';
 import { AddGroupFieldDto } from './dto/add-group-field.dto';
 import { UpdateGroupFieldDto } from './dto/update-group-field.dto';
 import { GroupField, FieldType } from './entities/group-field.entity';
+import { GroupFieldOption } from './entities/group-field-option.entity';
+import { CreateGroupFieldOptionDto } from './dto/create-group-field-option.dto';
+import { UpdateGroupFieldOptionDto } from './dto/update-group-field-option.dto';
 
 @Injectable()
 export class ProductGroupService {
@@ -119,5 +122,65 @@ export class ProductGroupService {
         `Cannot delete: ${valueCount} products have values for this field`,
       );
     await this.groupRepo.deleteField(fieldId);
+  }
+
+  async addOption(
+    groupId: string,
+    fieldId: string,
+    dto: CreateGroupFieldOptionDto,
+  ): Promise<GroupFieldOption> {
+    const group = await this.groupRepo.findById(groupId);
+    if (!group) throw new NotFoundException(`Group ${groupId} not found`);
+    const field = await this.groupRepo.findFieldById(fieldId);
+    if (!field || field.groupId !== groupId)
+      throw new NotFoundException(
+        `Field ${fieldId} not found in group ${groupId}`,
+      );
+    return this.groupRepo.addOption(fieldId, dto);
+  }
+
+  async updateOption(
+    groupId: string,
+    fieldId: string,
+    optionId: string,
+    dto: UpdateGroupFieldOptionDto,
+  ): Promise<GroupFieldOption> {
+    const group = await this.groupRepo.findById(groupId);
+    if (!group) throw new NotFoundException(`Group ${groupId} not found`);
+    const field = await this.groupRepo.findFieldById(fieldId);
+    if (!field || field.groupId !== groupId)
+      throw new NotFoundException(
+        `Field ${fieldId} not found in group ${groupId}`,
+      );
+    const option = await this.groupRepo.findOptionById(optionId);
+    if (!option || option.fieldId !== fieldId)
+      throw new NotFoundException(`Option ${optionId} not found`);
+    return this.groupRepo.updateOption(
+      optionId,
+      dto,
+    ) as Promise<GroupFieldOption>;
+  }
+
+  async removeOption(
+    groupId: string,
+    fieldId: string,
+    optionId: string,
+  ): Promise<void> {
+    const group = await this.groupRepo.findById(groupId);
+    if (!group) throw new NotFoundException(`Group ${groupId} not found`);
+    const field = await this.groupRepo.findFieldById(fieldId);
+    if (!field || field.groupId !== groupId)
+      throw new NotFoundException(
+        `Field ${fieldId} not found in group ${groupId}`,
+      );
+    const option = await this.groupRepo.findOptionById(optionId);
+    if (!option || option.fieldId !== fieldId)
+      throw new NotFoundException(`Option ${optionId} not found`);
+    const usageCount = await this.groupRepo.countOptionUsage(optionId);
+    if (usageCount > 0)
+      throw new ConflictException(
+        `Cannot delete: ${usageCount} products have selected this option`,
+      );
+    await this.groupRepo.deleteOption(optionId);
   }
 }

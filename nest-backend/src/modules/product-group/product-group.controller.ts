@@ -23,6 +23,8 @@ import { UpdateProductGroupDto } from './dto/update-product-group.dto';
 import { QueryProductGroupDto } from './dto/query-product-group.dto';
 import { AddGroupFieldDto } from './dto/add-group-field.dto';
 import { UpdateGroupFieldDto } from './dto/update-group-field.dto';
+import { CreateGroupFieldOptionDto } from './dto/create-group-field-option.dto';
+import { UpdateGroupFieldOptionDto } from './dto/update-group-field-option.dto';
 
 @ApiTags('product-groups')
 @ApiBearerAuth()
@@ -99,5 +101,38 @@ export class ProductGroupController {
     @Param('fieldId', ParseUUIDPipe) fieldId: string,
   ) {
     return this.service.removeField(id, fieldId);
+  }
+
+  @Post(':id/fields/:fieldId/options')
+  @Roles([ROLE.ADMIN])
+  @HttpCode(HttpStatus.CREATED)
+  addOption(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('fieldId', ParseUUIDPipe) fieldId: string,
+    @Body() dto: CreateGroupFieldOptionDto,
+  ) {
+    return this.service.addOption(id, fieldId, dto);
+  }
+
+  @Patch(':id/fields/:fieldId/options/:optId')
+  @Roles([ROLE.ADMIN])
+  updateOption(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('fieldId', ParseUUIDPipe) fieldId: string,
+    @Param('optId', ParseUUIDPipe) optId: string,
+    @Body() dto: UpdateGroupFieldOptionDto,
+  ) {
+    return this.service.updateOption(id, fieldId, optId, dto);
+  }
+
+  @Delete(':id/fields/:fieldId/options/:optId')
+  @Roles([ROLE.ADMIN])
+  @HttpCode(HttpStatus.NO_CONTENT)
+  removeOption(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('fieldId', ParseUUIDPipe) fieldId: string,
+    @Param('optId', ParseUUIDPipe) optId: string,
+  ) {
+    return this.service.removeOption(id, fieldId, optId);
   }
 }

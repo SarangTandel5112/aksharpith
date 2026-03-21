@@ -16,6 +16,11 @@ const mockGroupRepo = () => ({
   updateField: jest.fn(),
   deleteField: jest.fn(),
   countFieldValues: jest.fn(),
+  addOption: jest.fn(),
+  updateOption: jest.fn(),
+  deleteOption: jest.fn(),
+  countOptionUsage: jest.fn(),
+  findOptionById: jest.fn(),
 });
 
 const mockGroup = {
@@ -251,6 +256,90 @@ describe('ProductGroupService', () => {
         groupId: 'other-group',
       });
       await expect(service.removeField('g-1', 'f-1')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('addOption', () => {
+    it('adds option to existing field in group', async () => {
+      repo.findById.mockResolvedValue({ id: 'g-1' });
+      repo.findFieldById.mockResolvedValue({
+        id: 'f-1',
+        groupId: 'g-1',
+        fieldType: 'dropdown',
+      });
+      repo.addOption.mockResolvedValue({
+        id: 'o-1',
+        optionLabel: 'Hindi',
+        optionValue: 'hi',
+      });
+      const result = await service.addOption('g-1', 'f-1', {
+        optionLabel: 'Hindi',
+        optionValue: 'hi',
+      });
+      expect(result).toHaveProperty('optionLabel', 'Hindi');
+    });
+
+    it('throws 404 if group not found', async () => {
+      repo.findById.mockResolvedValue(null);
+      await expect(
+        service.addOption('bad', 'f-1', { optionLabel: 'X', optionValue: 'x' }),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('throws 404 if field not found', async () => {
+      repo.findById.mockResolvedValue({ id: 'g-1' });
+      repo.findFieldById.mockResolvedValue(null);
+      await expect(
+        service.addOption('g-1', 'bad', { optionLabel: 'X', optionValue: 'x' }),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('updateOption', () => {
+    it('updates option', async () => {
+      repo.findById.mockResolvedValue({ id: 'g-1' });
+      repo.findFieldById.mockResolvedValue({ id: 'f-1', groupId: 'g-1' });
+      repo.findOptionById.mockResolvedValue({ id: 'o-1', fieldId: 'f-1' });
+      repo.updateOption.mockResolvedValue({
+        id: 'o-1',
+        optionLabel: 'Updated',
+      });
+      const result = await service.updateOption('g-1', 'f-1', 'o-1', {
+        optionLabel: 'Updated',
+      });
+      expect(result).toHaveProperty('optionLabel', 'Updated');
+    });
+  });
+
+  describe('removeOption', () => {
+    it('blocks deletion if products used this option', async () => {
+      repo.findById.mockResolvedValue({ id: 'g-1' });
+      repo.findFieldById.mockResolvedValue({ id: 'f-1', groupId: 'g-1' });
+      repo.findOptionById.mockResolvedValue({ id: 'o-1', fieldId: 'f-1' });
+      repo.countOptionUsage.mockResolvedValue(8);
+      await expect(service.removeOption('g-1', 'f-1', 'o-1')).rejects.toThrow(
+        ConflictException,
+      );
+    });
+
+    it('deletes option when no products used it', async () => {
+      repo.findById.mockResolvedValue({ id: 'g-1' });
+      repo.findFieldById.mockResolvedValue({ id: 'f-1', groupId: 'g-1' });
+      repo.findOptionById.mockResolvedValue({ id: 'o-1', fieldId: 'f-1' });
+      repo.countOptionUsage.mockResolvedValue(0);
+      repo.deleteOption.mockResolvedValue(true);
+      await expect(
+        service.removeOption('g-1', 'f-1', 'o-1'),
+      ).resolves.toBeUndefined();
+    });
+
+    it('throws 404 if option not found', async () => {
+      repo.findById.mockResolvedValue({ id: 'g-1' });
+      repo.findFieldById.mockResolvedValue({ id: 'f-1', groupId: 'g-1' });
+      repo.findOptionById.mockResolvedValue(null);
+      await expect(service.removeOption('g-1', 'f-1', 'o-1')).rejects.toThrow(
         NotFoundException,
       );
     });
