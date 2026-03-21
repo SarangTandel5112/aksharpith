@@ -21,12 +21,6 @@ export class ProductController extends BaseController {
     'Product retrieved successfully'
   );
 
-  getProductsByCategory = this.handleGetById(
-    (categoryId) => this.productService.getProductsByCategory(categoryId),
-    'Products retrieved successfully',
-    'categoryId'
-  );
-
   createProduct = this.handleCreate(
     (data) => this.productService.createProduct(data),
     'Product created successfully'
@@ -45,11 +39,5 @@ export class ProductController extends BaseController {
   getProductCount = this.handleGetCount(
     () => this.productService.getProductCount(),
     'Product count retrieved successfully'
-  );
-
-  getProductCountByCategory = this.handleGetById(
-    (categoryId) => this.productService.getProductCountByCategory(categoryId).then(count => ({ count })),
-    'Product count retrieved successfully',
-    'categoryId'
   );
 }

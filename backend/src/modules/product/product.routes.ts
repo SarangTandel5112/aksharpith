@@ -2,11 +2,7 @@ import { Router } from 'express';
 import { ProductController } from './product.controller';
 import { validationMiddleware } from '@middlewares/validation.middleware';
 import { authMiddleware } from '@middlewares/auth.middleware';
-import {
-  CreateProductDto,
-  UpdateProductDto,
-  QueryProductDto,
-} from './dtos';
+import { CreateProductDto, UpdateProductDto, QueryProductDto } from './dtos';
 
 export const createProductRoutes = (
   productController: ProductController
@@ -16,20 +12,13 @@ export const createProductRoutes = (
   // Public routes (GET)
   router.get(
     '/',
-    validationMiddleware(QueryProductDto, 'query'),
+    validationMiddleware(QueryProductDto),
     productController.getAllProducts
   );
 
-  router.get('/:id', productController.getProductById);
-
-  router.get('/category/:categoryId', productController.getProductsByCategory);
-
   router.get('/stats/count', productController.getProductCount);
 
-  router.get(
-    '/stats/count/category/:categoryId',
-    productController.getProductCountByCategory
-  );
+  router.get('/:id', productController.getProductById);
 
   // Protected routes (require authentication)
   router.post(

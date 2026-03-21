@@ -8,8 +8,13 @@ export class QueryProductDto {
 
   @IsOptional()
   @Transform(({ value }) => parseInt(value, 10))
-  @IsInt({ message: 'Category ID must be an integer' })
-  categoryId?: number;
+  @IsInt({ message: 'Department ID must be an integer' })
+  departmentId?: number;
+
+  @IsOptional()
+  @Transform(({ value }) => parseInt(value, 10))
+  @IsInt({ message: 'Sub-category ID must be an integer' })
+  subCategoryId?: number;
 
   @IsOptional()
   @Transform(({ value }) => parseFloat(value))

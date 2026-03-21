@@ -5,12 +5,10 @@ import {
   IsNumber,
   IsInt,
   IsBoolean,
-  IsArray,
-  IsObject,
+  IsIn,
   Min,
   MaxLength,
   Matches,
-  ArrayMaxSize,
 } from 'class-validator';
 
 export class CreateProductDto {
@@ -32,9 +30,8 @@ export class CreateProductDto {
   productName!: string;
 
   @IsString({ message: 'Product type must be a string' })
-  @IsOptional()
-  @MaxLength(50, { message: 'Product type must not exceed 50 characters' })
-  productType?: string; // Standard or Lot Matrix
+  @IsIn(['Standard', 'Lot Matrix'], { message: 'Product type must be Standard or Lot Matrix' })
+  productType!: string;
 
   @IsString({ message: 'Description must be a string' })
   @IsOptional()
@@ -53,6 +50,10 @@ export class CreateProductDto {
   @IsInt({ message: 'Sub-category ID must be an integer' })
   @IsNotEmpty({ message: 'Sub-category ID is required' })
   subCategoryId!: number;
+
+  @IsOptional()
+  @IsInt({ message: 'Group ID must be an integer' })
+  groupId?: number;
 
   @IsString({ message: 'Size must be a string' })
   @IsOptional()
@@ -74,34 +75,6 @@ export class CreateProductDto {
   @MaxLength(8, { message: 'HSN code must not exceed 8 characters' })
   @Matches(/^\d{4,8}$/, { message: 'HSN code must be 4, 6, or 8 digits' })
   hsnCode!: string;
-
-  // GST Fields
-  @IsBoolean({ message: 'GST 1 SGST must be a boolean' })
-  @IsNotEmpty({ message: 'GST 1 SGST is required' })
-  gst1Sgst!: boolean; // SGST
-
-  @IsString({ message: 'GST 1 slab must be a string' })
-  @IsNotEmpty({ message: 'GST 1 slab is required' })
-  @MaxLength(10, { message: 'GST 1 slab must not exceed 10 characters' })
-  gst1Slab!: string;
-
-  @IsBoolean({ message: 'GST 2 CGST must be a boolean' })
-  @IsNotEmpty({ message: 'GST 2 CGST is required' })
-  gst2Cgst!: boolean; // CGST
-
-  @IsString({ message: 'GST 2 slab must be a string' })
-  @IsNotEmpty({ message: 'GST 2 slab is required' })
-  @MaxLength(10, { message: 'GST 2 slab must not exceed 10 characters' })
-  gst2Slab!: string;
-
-  @IsBoolean({ message: 'GST 3 IGST must be a boolean' })
-  @IsNotEmpty({ message: 'GST 3 IGST is required' })
-  gst3Igst!: boolean; // IGST
-
-  @IsString({ message: 'GST 3 slab must be a string' })
-  @IsNotEmpty({ message: 'GST 3 slab is required' })
-  @MaxLength(10, { message: 'GST 3 slab must not exceed 10 characters' })
-  gst3Slab!: string;
 
   @IsBoolean({ message: 'Non taxable must be a boolean' })
   @IsNotEmpty({ message: 'Non taxable is required' })

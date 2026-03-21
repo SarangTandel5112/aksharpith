@@ -38,8 +38,8 @@ export class Product {
   @Column({ name: 'product_name', type: 'varchar', length: 150 })
   productName!: string;
 
-  @Column({ name: 'product_type', type: 'varchar', length: 20, nullable: true })
-  productType!: string | null; // 'Standard' or 'Lot Matrix'
+  @Column({ name: 'product_type', type: 'varchar', length: 20, default: 'Standard' })
+  productType!: string; // 'Standard' | 'Lot Matrix'
 
   @Column({ type: 'text', nullable: true })
   description!: string | null;
@@ -53,6 +53,9 @@ export class Product {
 
   @Column({ name: 'sub_category_id', type: 'int' })
   subCategoryId!: number;
+
+  @Column({ name: 'group_id', type: 'int', nullable: true })
+  groupId!: number | null;
 
   @Column({ type: 'varchar', length: 20, nullable: true })
   size!: string | null;
@@ -72,25 +75,6 @@ export class Product {
 
   @Column({ name: 'stock_quantity', type: 'int', default: 0 })
   stockQuantity!: number;
-
-  // GST Fields
-  @Column({ name: 'gst_1_sgst', type: 'boolean', default: false })
-  gst1Sgst!: boolean;
-
-  @Column({ name: 'gst_1_slab', type: 'varchar', length: 10 })
-  gst1Slab!: string;
-
-  @Column({ name: 'gst_2_cgst', type: 'boolean', default: false })
-  gst2Cgst!: boolean;
-
-  @Column({ name: 'gst_2_slab', type: 'varchar', length: 10 })
-  gst2Slab!: string;
-
-  @Column({ name: 'gst_3_igst', type: 'boolean', default: false })
-  gst3Igst!: boolean;
-
-  @Column({ name: 'gst_3_slab', type: 'varchar', length: 10 })
-  gst3Slab!: string;
 
   @Column({ name: 'non_taxable', type: 'boolean', default: false })
   nonTaxable!: boolean;

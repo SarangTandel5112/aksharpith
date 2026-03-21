@@ -1,26 +1,13 @@
-import { SelectQueryBuilder } from 'typeorm';
-import { AppDataSource } from '@config/database.config';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { Product } from '@entities';
 import { BaseRepository } from '@common/base.repository';
-import { BaseQueryOptions, PaginatedResult } from '@common/types';
+import { PaginatedResult } from '@common/types';
+import { IProductRepository } from './interfaces/product.repository.interface';
+import { QueryProductDto } from './dtos';
 
-export interface ProductQueryOptions extends BaseQueryOptions {
-  departmentId?: number;
-  subCategoryId?: number;
-  categoryId?: number; // For backward compatibility
-  minPrice?: number;
-  maxPrice?: number;
-  minStock?: number;
-}
-
-/**
- * Product Repository
- * Extends BaseRepository to inherit common data access patterns
- * Implements product-specific filtering logic
- */
-export class ProductRepository extends BaseRepository<Product> {
-  constructor() {
-    super(AppDataSource.getRepository(Product));
+export class ProductRepository extends BaseRepository<Product> implements IProductRepository {
+  constructor(repo: Repository<Product>) {
+    super(repo);
   }
 
   protected getEntityName(): string {
@@ -50,10 +37,8 @@ export class ProductRepository extends BaseRepository<Product> {
     );
   }
 
-  async findAll(
-    options: ProductQueryOptions
-  ): Promise<PaginatedResult<Product>> {
-    const { departmentId, subCategoryId, categoryId, minPrice, maxPrice, minStock, sortBy, order } = options;
+  async findAll(options: QueryProductDto): Promise<PaginatedResult<Product>> {
+    const { departmentId, subCategoryId, minPrice, maxPrice, minStock, sortBy, order } = options;
 
     return this.findAllWithPagination(options, (qb) => {
       // Add relations
@@ -69,11 +54,6 @@ export class ProductRepository extends BaseRepository<Product> {
       // Apply sub-category filter
       if (subCategoryId) {
         qb.andWhere('product.subCategoryId = :subCategoryId', { subCategoryId });
-      }
-
-      // Apply category filter (via subCategory)
-      if (categoryId) {
-        qb.andWhere('subCategory.categoryId = :categoryId', { categoryId });
       }
 
       // Apply price range filter
@@ -95,36 +75,33 @@ export class ProductRepository extends BaseRepository<Product> {
 
       // Handle special case for sorting
       if (sortBy === 'department') {
-        qb.orderBy('department.departmentName', order || 'DESC');
-      } else if (sortBy === 'subCategory' || sortBy === 'categoryId') {
-        qb.orderBy('subCategory.subCategoryName', order || 'DESC');
+        qb.orderBy('department.departmentName', order ?? 'DESC');
+      } else if (sortBy === 'subCategory') {
+        qb.orderBy('subCategory.subCategoryName', order ?? 'DESC');
       }
     });
   }
 
   async findById(id: number): Promise<Product | null> {
     return this.repository.findOne({
-      where: { id },
+      where: { id, isActive: true },
       relations: ['department', 'subCategory', 'subCategory.category'],
     });
+  }
+
+  async findByCode(productCode: string): Promise<Product | null> {
+    return this.repository.findOne({ where: { productCode, isActive: true } });
   }
 
   async findByName(productName: string): Promise<Product | null> {
     return this.repository.findOne({ where: { productName, isActive: true } });
   }
 
-  async findByCategoryId(categoryId: number): Promise<Product[]> {
-    return this.repository
-      .createQueryBuilder('product')
-      .leftJoinAndSelect('product.department', 'department')
-      .leftJoinAndSelect('product.subCategory', 'subCategory')
-      .leftJoinAndSelect('subCategory.category', 'category')
-      .where('subCategory.categoryId = :categoryId', { categoryId })
-      .andWhere('product.isActive = :isActive', { isActive: true })
-      .getMany();
+  async findByDepartmentId(departmentId: number): Promise<Product[]> {
+    return this.repository.find({ where: { departmentId, isActive: true } });
   }
 
-  async countByCategory(categoryId: number): Promise<number> {
-    return this.count({ categoryId });
+  async findBySubCategoryId(subCategoryId: number): Promise<Product[]> {
+    return this.repository.find({ where: { subCategoryId, isActive: true } });
   }
 }

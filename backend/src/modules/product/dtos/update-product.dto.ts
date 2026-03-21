@@ -4,6 +4,7 @@ import {
   IsNumber,
   IsInt,
   IsBoolean,
+  IsIn,
   Min,
   MaxLength,
   Matches,
@@ -27,6 +28,7 @@ export class UpdateProductDto {
 
   @IsString()
   @IsOptional()
+  @IsIn(['Standard', 'Lot Matrix'])
   productType?: string;
 
   @IsString()
@@ -45,6 +47,10 @@ export class UpdateProductDto {
   @IsOptional()
   subCategoryId?: number;
 
+  @IsOptional()
+  @IsInt()
+  groupId?: number;
+
   @IsString()
   @IsOptional()
   size?: string;
@@ -61,31 +67,6 @@ export class UpdateProductDto {
   @IsOptional()
   @Matches(/^\d{4,8}$/)
   hsnCode?: string;
-
-  // GST Fields
-  @IsBoolean()
-  @IsOptional()
-  gst1Sgst?: boolean;
-
-  @IsString()
-  @IsOptional()
-  gst1Slab?: string;
-
-  @IsBoolean()
-  @IsOptional()
-  gst2Cgst?: boolean;
-
-  @IsString()
-  @IsOptional()
-  gst2Slab?: string;
-
-  @IsBoolean()
-  @IsOptional()
-  gst3Igst?: boolean;
-
-  @IsString()
-  @IsOptional()
-  gst3Slab?: string;
 
   @IsBoolean()
   @IsOptional()
