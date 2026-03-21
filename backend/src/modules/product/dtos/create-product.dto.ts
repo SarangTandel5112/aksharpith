@@ -30,7 +30,9 @@ export class CreateProductDto {
   productName!: string;
 
   @IsString({ message: 'Product type must be a string' })
-  @IsIn(['Standard', 'Lot Matrix'], { message: 'Product type must be Standard or Lot Matrix' })
+  @IsIn(['Standard', 'Lot Matrix'], {
+    message: 'Product type must be Standard or Lot Matrix',
+  })
   productType!: string;
 
   @IsString({ message: 'Description must be a string' })
@@ -51,9 +53,9 @@ export class CreateProductDto {
   @IsNotEmpty({ message: 'Sub-category ID is required' })
   subCategoryId!: number;
 
-  @IsOptional()
   @IsInt({ message: 'Group ID must be an integer' })
-  groupId?: number;
+  @IsNotEmpty({ message: 'Group ID is required' })
+  groupId!: number;
 
   @IsString({ message: 'Size must be a string' })
   @IsOptional()

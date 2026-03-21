@@ -8,6 +8,7 @@ const VALID_PRODUCT = {
   productType: 'Standard' as const,
   departmentId: 1,
   subCategoryId: 1,
+  groupId: 1,
   hsnCode: '12345678',
   nonTaxable: false,
   itemInactive: false,
@@ -27,8 +28,16 @@ describe('ProductService', () => {
 
   describe('getAllProducts', () => {
     it('returns paginated products', async () => {
-      await repo.create({ ...VALID_PRODUCT, productName: 'Product A', productCode: 'PA001' });
-      await repo.create({ ...VALID_PRODUCT, productName: 'Product B', productCode: 'PB002' });
+      await repo.create({
+        ...VALID_PRODUCT,
+        productName: 'Product A',
+        productCode: 'PA001',
+      });
+      await repo.create({
+        ...VALID_PRODUCT,
+        productName: 'Product B',
+        productCode: 'PB002',
+      });
       const result = await service.getAllProducts({});
       expect(result.data).toHaveLength(2);
       expect(result.total).toBe(2);
@@ -50,13 +59,17 @@ describe('ProductService', () => {
     });
 
     it('throws when product not found', async () => {
-      await expect(service.getProductById(999)).rejects.toThrow('Product not found');
+      await expect(service.getProductById(999)).rejects.toThrow(
+        'Product not found'
+      );
     });
 
     it('throws when product is soft-deleted', async () => {
       const product = await repo.create({ ...VALID_PRODUCT });
       await repo.delete(product.id);
-      await expect(service.getProductById(product.id)).rejects.toThrow('Product not found');
+      await expect(service.getProductById(product.id)).rejects.toThrow(
+        'Product not found'
+      );
     });
   });
 
@@ -70,7 +83,10 @@ describe('ProductService', () => {
     it('throws when product code already exists', async () => {
       await repo.create({ ...VALID_PRODUCT });
       await expect(
-        service.createProduct({ ...VALID_PRODUCT, productName: 'Different Name' })
+        service.createProduct({
+          ...VALID_PRODUCT,
+          productName: 'Different Name',
+        })
       ).rejects.toThrow('already exists');
     });
 
@@ -98,7 +114,11 @@ describe('ProductService', () => {
     });
 
     it('throws when productCode conflicts with another product', async () => {
-      await repo.create({ ...VALID_PRODUCT, productName: 'Other Product', productCode: 'OTHER01' });
+      await repo.create({
+        ...VALID_PRODUCT,
+        productName: 'Other Product',
+        productCode: 'OTHER01',
+      });
       const product2 = await repo.create({
         ...VALID_PRODUCT,
         productName: 'My Product',
@@ -128,14 +148,24 @@ describe('ProductService', () => {
     });
 
     it('throws when product not found', async () => {
-      await expect(service.deleteProduct(999)).rejects.toThrow('Product not found');
+      await expect(service.deleteProduct(999)).rejects.toThrow(
+        'Product not found'
+      );
     });
   });
 
   describe('getProductCount', () => {
     it('returns count of active products', async () => {
-      await repo.create({ ...VALID_PRODUCT, productCode: 'P001', productName: 'Product 1' });
-      await repo.create({ ...VALID_PRODUCT, productCode: 'P002', productName: 'Product 2' });
+      await repo.create({
+        ...VALID_PRODUCT,
+        productCode: 'P001',
+        productName: 'Product 1',
+      });
+      await repo.create({
+        ...VALID_PRODUCT,
+        productCode: 'P002',
+        productName: 'Product 2',
+      });
       const count = await service.getProductCount();
       expect(count).toBe(2);
     });

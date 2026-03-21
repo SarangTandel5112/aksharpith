@@ -16,6 +16,9 @@ import { ProductMarketingMedia } from './product-marketing-media.entity';
 import { ProductVendor } from './product-vendor.entity';
 import { ProductZone } from './product-zone.entity';
 import { ProductPhysicalAttributes } from './product-physical-attributes.entity';
+import { ProductGroup } from './product-group.entity';
+import { ProductAttribute } from './product-attribute.entity';
+import { ProductVariant } from './product-variant.entity';
 
 @Entity('products')
 @Index('idx_dept_subcat', ['departmentId', 'subCategoryId'])
@@ -38,7 +41,12 @@ export class Product {
   @Column({ name: 'product_name', type: 'varchar', length: 150 })
   productName!: string;
 
-  @Column({ name: 'product_type', type: 'varchar', length: 20, default: 'Standard' })
+  @Column({
+    name: 'product_type',
+    type: 'varchar',
+    length: 20,
+    default: 'Standard',
+  })
   productType!: string; // 'Standard' | 'Lot Matrix'
 
   @Column({ type: 'text', nullable: true })
@@ -54,8 +62,8 @@ export class Product {
   @Column({ name: 'sub_category_id', type: 'int' })
   subCategoryId!: number;
 
-  @Column({ name: 'group_id', type: 'int', nullable: true })
-  groupId!: number | null;
+  @Column({ name: 'group_id', type: 'int' })
+  groupId!: number;
 
   @Column({ type: 'varchar', length: 20, nullable: true })
   size!: string | null;
@@ -112,7 +120,10 @@ export class Product {
   @OneToMany(() => ProductMedia, (media) => media.product)
   media!: ProductMedia[];
 
-  @OneToMany(() => ProductMarketingMedia, (marketingMedia) => marketingMedia.product)
+  @OneToMany(
+    () => ProductMarketingMedia,
+    (marketingMedia) => marketingMedia.product
+  )
   marketingMedia!: ProductMarketingMedia[];
 
   @OneToMany(() => ProductVendor, (vendor) => vendor.product)
@@ -121,6 +132,19 @@ export class Product {
   @OneToMany(() => ProductZone, (zone) => zone.product)
   zones!: ProductZone[];
 
-  @OneToMany(() => ProductPhysicalAttributes, (attributes) => attributes.product)
+  @OneToMany(
+    () => ProductPhysicalAttributes,
+    (attributes) => attributes.product
+  )
   physicalAttributes!: ProductPhysicalAttributes[];
+
+  @ManyToOne(() => ProductGroup, { onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'group_id' })
+  group!: ProductGroup;
+
+  @OneToMany(() => ProductAttribute, (attr) => attr.product)
+  attributes!: ProductAttribute[];
+
+  @OneToMany(() => ProductVariant, (variant) => variant.product)
+  variants!: ProductVariant[];
 }
