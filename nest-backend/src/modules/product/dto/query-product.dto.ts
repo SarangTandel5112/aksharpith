@@ -1,4 +1,11 @@
-import { IsOptional, IsBoolean, IsUUID, IsEnum, IsNumber, Min } from 'class-validator';
+import {
+  IsOptional,
+  IsBoolean,
+  IsUUID,
+  IsEnum,
+  IsNumber,
+  Min,
+} from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 import { ApiPropertyOptional } from '@nestjs/swagger';
 import { PaginationDto } from '../../../common/dto/pagination.dto';
@@ -57,4 +64,13 @@ export class QueryProductDto extends PaginationDto {
   @IsNumber()
   @Min(0)
   minStock?: number;
+
+  @ApiPropertyOptional({
+    description:
+      'Filter by group field values. E.g. gf[author]=$ilike:tolkien, gf[pages]=$btw:100,500',
+    type: 'object',
+    additionalProperties: { type: 'string' },
+  })
+  @IsOptional()
+  gf?: Record<string, string>;
 }

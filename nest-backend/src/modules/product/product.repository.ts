@@ -6,6 +6,7 @@ import {
   FindOptionsWhere,
   Between,
   MoreThanOrEqual,
+  SelectQueryBuilder,
 } from 'typeorm';
 import { Product } from './entities/product.entity';
 import { ProductMedia } from './entities/product-media.entity';
@@ -83,11 +84,77 @@ export class ProductRepository {
       where.stockQuantity = MoreThanOrEqual(minStock) as any;
     }
 
+    const { gf } = query;
+    if (gf && Object.keys(gf).length > 0) {
+      const qb = this.repo
+        .createQueryBuilder('product')
+        .where(where)
+        .orderBy(`product.${sortBy}`, order as 'ASC' | 'DESC')
+        .skip((page - 1) * limit)
+        .take(limit);
+      this.applyGroupFieldFilters(qb, gf);
+      return qb.getManyAndCount();
+    }
+
     return this.repo.findAndCount({
       where,
       order: { [sortBy]: order },
       skip: (page - 1) * limit,
       take: limit,
+    });
+  }
+
+  applyGroupFieldFilters(
+    qb: SelectQueryBuilder<Product>,
+    gf: Record<string, string>,
+  ): void {
+    Object.entries(gf).forEach(([key, rawValue], idx) => {
+      const paramPrefix = `gf_${idx}`;
+      let condition: string;
+      let params: Record<string, unknown> = { [`${paramPrefix}_key`]: key };
+
+      if (rawValue.startsWith('$btw:')) {
+        const [min, max] = rawValue.slice(5).split(',').map(Number);
+        condition = `v${idx}.value_number BETWEEN :${paramPrefix}_min AND :${paramPrefix}_max`;
+        params = {
+          ...params,
+          [`${paramPrefix}_min`]: min,
+          [`${paramPrefix}_max`]: max,
+        };
+      } else if (rawValue.startsWith('$gte:')) {
+        condition = `v${idx}.value_number >= :${paramPrefix}_val`;
+        params = {
+          ...params,
+          [`${paramPrefix}_val`]: Number(rawValue.slice(5)),
+        };
+      } else if (rawValue.startsWith('$lte:')) {
+        condition = `v${idx}.value_number <= :${paramPrefix}_val`;
+        params = {
+          ...params,
+          [`${paramPrefix}_val`]: Number(rawValue.slice(5)),
+        };
+      } else if (rawValue.startsWith('$ilike:')) {
+        condition = `v${idx}.value_text ILIKE :${paramPrefix}_val`;
+        params = {
+          ...params,
+          [`${paramPrefix}_val`]: `%${rawValue.slice(7)}%`,
+        };
+      } else {
+        condition = `(v${idx}.value_text = :${paramPrefix}_val OR v${idx}.value_boolean::text = :${paramPrefix}_val OR EXISTS (SELECT 1 FROM group_field_options o${idx} WHERE o${idx}.id = v${idx}.value_option_id AND o${idx}.option_value = :${paramPrefix}_val))`;
+        params = { ...params, [`${paramPrefix}_val`]: rawValue };
+      }
+
+      qb.andWhere(
+        `EXISTS (
+          SELECT 1 FROM product_group_field_values v${idx}
+          JOIN group_fields f${idx} ON f${idx}.id = v${idx}.field_id
+          WHERE v${idx}.product_id = product.id
+            AND f${idx}.field_key = :${paramPrefix}_key
+            AND f${idx}.is_filterable = true
+            AND ${condition}
+        )`,
+        params,
+      );
     });
   }
 

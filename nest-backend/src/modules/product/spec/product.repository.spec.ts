@@ -407,4 +407,61 @@ describe('ProductRepository', () => {
       );
     });
   });
+
+  describe('applyGroupFieldFilters', () => {
+    let qb: any;
+
+    beforeEach(() => {
+      qb = {
+        andWhere: jest.fn().mockReturnThis(),
+        setParameter: jest.fn().mockReturnThis(),
+      };
+    });
+
+    it('adds no subquery for empty gf object', () => {
+      productRepo.applyGroupFieldFilters(qb, {});
+      expect(qb.andWhere).not.toHaveBeenCalled();
+    });
+
+    it('adds EXISTS subquery for equality filter', () => {
+      productRepo.applyGroupFieldFilters(qb, { language: 'hi' });
+      expect(qb.andWhere).toHaveBeenCalledTimes(1);
+      const [clause] = qb.andWhere.mock.calls[0];
+      expect(clause).toContain('EXISTS');
+      expect(clause).toContain('field_key');
+    });
+
+    it('adds EXISTS subquery for $btw range filter', () => {
+      productRepo.applyGroupFieldFilters(qb, { pages: '$btw:100,500' });
+      expect(qb.andWhere).toHaveBeenCalledTimes(1);
+      const [clause] = qb.andWhere.mock.calls[0];
+      expect(clause).toContain('BETWEEN');
+    });
+
+    it('adds EXISTS subquery for $ilike text filter', () => {
+      productRepo.applyGroupFieldFilters(qb, { author: '$ilike:tolkien' });
+      const [clause] = qb.andWhere.mock.calls[0];
+      expect(clause).toContain('ILIKE');
+    });
+
+    it('adds EXISTS subquery for $gte filter', () => {
+      productRepo.applyGroupFieldFilters(qb, { pages: '$gte:100' });
+      const [clause] = qb.andWhere.mock.calls[0];
+      expect(clause).toContain('>=');
+    });
+
+    it('adds EXISTS subquery for $lte filter', () => {
+      productRepo.applyGroupFieldFilters(qb, { pages: '$lte:500' });
+      const [clause] = qb.andWhere.mock.calls[0];
+      expect(clause).toContain('<=');
+    });
+
+    it('adds multiple AND-joined EXISTS for multiple keys', () => {
+      productRepo.applyGroupFieldFilters(qb, {
+        language: 'hi',
+        pages: '$btw:100,500',
+      });
+      expect(qb.andWhere).toHaveBeenCalledTimes(2);
+    });
+  });
 });
