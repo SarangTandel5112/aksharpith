@@ -16,8 +16,10 @@ import { GroupFieldOption } from './group-field-option.entity';
 
 export enum FieldType {
   TEXT = 'text',
+  TEXTAREA = 'textarea',
   NUMBER = 'number',
-  SELECT = 'select',
+  BOOLEAN = 'boolean',
+  DROPDOWN = 'dropdown',
 }
 
 @Entity('group_fields')
@@ -38,9 +40,22 @@ export class GroupField {
   @Expose()
   fieldName: string;
 
-  @Column({ name: 'field_type', type: 'enum', enum: FieldType, default: FieldType.TEXT })
+  @Column({
+    name: 'field_type',
+    type: 'enum',
+    enum: FieldType,
+    default: FieldType.TEXT,
+  })
   @Expose()
   fieldType: FieldType;
+
+  @Column({ name: 'field_key', length: 100 })
+  @Expose()
+  fieldKey: string;
+
+  @Column({ name: 'is_filterable', type: 'boolean', default: false })
+  @Expose()
+  isFilterable: boolean;
 
   @Column({ name: 'is_required', type: 'boolean', default: false })
   @Expose()

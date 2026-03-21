@@ -1,0 +1,26 @@
+{
+  "editor.defaultFormatter": "biome.biome",
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.organizeImports.biome": "explicit"
+  },
+  "[javascript]": {
+    "editor.defaultFormatter": "biome.biome"
+  },
+  "[javascriptreact]": {
+    "editor.defaultFormatter": "biome.biome"
+  },
+  "[typescript]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "biomejs.biome"
+  },
+  "[json]": {
+    "editor.defaultFormatter": "biome.biome"
+  },
+  "[jsonc]": {
+    "editor.defaultFormatter": "biome.biome"
+  },
+  "tailwindCSS.experimental.configFile": "src/app/globals.css"
+}

@@ -1,0 +1,20 @@
+pre-commit:
+  parallel: false
+  commands:
+    type-check:
+      run: npm run type-check
+      fail_text: "TypeScript errors — fix before committing"
+    check:
+      run: npm run check
+      fail_text: "Biome check errors — fix before committing"
+    no-hardcoded-colors:
+      run: node scripts/check-no-hardcoded-colors.js
+      fail_text: "Hardcoded colors in source files — use CSS variables from globals.css"
+    test:
+      run: CI=true npm test
+      fail_text: "Tests failing — fix before committing"
+
+commit-msg:
+  commands:
+    conventional-commits:
+      run: node scripts/commit-msg.js {1}

@@ -1,0 +1,889 @@
+@import "tailwindcss";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   DESIGN TOKENS
+   ─────────────────────────────────────────────────────────────────────────
+   This is the ONLY place you need to edit to retheme the entire app.
+   All values here are referenced throughout the file — nothing is hardcoded
+   anywhere else.
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root {
+  /* ── Primary Brand Color (Burgundy / Maroon) ───────────────────────────── */
+  --primary-100: #ddd3d8;
+  --primary-200: #9a7c89;
+  --primary-300: #aa8695;
+  --primary-400: #795062;
+  --primary-500: #57243b; /* ← Main brand color */
+  --primary-600: #4e2035;
+  --primary-700: #4a1f32;
+  --primary-800: #461d2f;
+  --primary-900: #411b2c;
+
+  /* ── Secondary Color (Neutral Gray) ────────────────────────────────────── */
+  --secondary-100: #eeeeef;
+  --secondary-200: #cbccce;
+  --secondary-300: #b9bbbe;
+  --secondary-400: #b9bbbe;
+  --secondary-500: #a8aaae; /* ← Main secondary color */
+  --secondary-600: #97999d;
+  --secondary-700: #8f9094;
+  --secondary-800: #86888b;
+  --secondary-900: #7e8082;
+
+  /* ── Semantic / Status Colors ───────────────────────────────────────────── */
+  --color-success: #28c76f;
+  --color-warning: #ff9f43;
+  --color-danger: #ea5455;
+  --color-info: #00cfe8;
+
+  /* ── Typography Colors ──────────────────────────────────────────────────── */
+  --text-heading: #4b465c;
+  --text-body: #6f6b7d;
+  --text-muted: #a5a2ad;
+  --text-placeholder: #b7b5be;
+
+  /* ── Surface / Background Colors ───────────────────────────────────────── */
+  --surface-shell: #1d1d1d; /* ← POS outer chrome (layout, sidebar, top nav) */
+  --surface-page: #ffffff;
+  --surface-subtle: #f8f7fa;
+  --surface-border: #ebebeb;
+
+  /* ── Opacity Scale ─────────────────────────────────────────────────────────
+     Change any percentage here and ALL colors at that level update together.  */
+  --opacity-1: 8%;
+  --opacity-2: 16%;
+  --opacity-3: 24%;
+  --opacity-4: 32%;
+  --opacity-5: 40%;
+  --opacity-6: 48%;
+
+  /* ── Opacity Variants (auto-derived via color-mix) ──────────────────────────
+     Rule: change the BASE color above → every alpha variant below updates.
+     Change an --opacity-* level → that level updates across ALL colors.    */
+
+  --primary-alpha-1: color-mix(
+    in srgb,
+    var(--primary-500) var(--opacity-1),
+    transparent
+  );
+  --primary-alpha-2: color-mix(
+    in srgb,
+    var(--primary-500) var(--opacity-2),
+    transparent
+  );
+  --primary-alpha-3: color-mix(
+    in srgb,
+    var(--primary-500) var(--opacity-3),
+    transparent
+  );
+  --primary-alpha-4: color-mix(
+    in srgb,
+    var(--primary-500) var(--opacity-4),
+    transparent
+  );
+  --primary-alpha-5: color-mix(
+    in srgb,
+    var(--primary-500) var(--opacity-5),
+    transparent
+  );
+  --primary-alpha-6: color-mix(
+    in srgb,
+    var(--primary-500) var(--opacity-6),
+    transparent
+  );
+
+  --secondary-alpha-1: color-mix(
+    in srgb,
+    var(--secondary-500) var(--opacity-1),
+    transparent
+  );
+  --secondary-alpha-2: color-mix(
+    in srgb,
+    var(--secondary-500) var(--opacity-2),
+    transparent
+  );
+  --secondary-alpha-3: color-mix(
+    in srgb,
+    var(--secondary-500) var(--opacity-3),
+    transparent
+  );
+  --secondary-alpha-4: color-mix(
+    in srgb,
+    var(--secondary-500) var(--opacity-4),
+    transparent
+  );
+  --secondary-alpha-5: color-mix(
+    in srgb,
+    var(--secondary-500) var(--opacity-5),
+    transparent
+  );
+  --secondary-alpha-6: color-mix(
+    in srgb,
+    var(--secondary-500) var(--opacity-6),
+    transparent
+  );
+
+  --success-alpha-1: color-mix(
+    in srgb,
+    var(--color-success) var(--opacity-1),
+    transparent
+  );
+  --success-alpha-2: color-mix(
+    in srgb,
+    var(--color-success) var(--opacity-2),
+    transparent
+  );
+  --success-alpha-3: color-mix(
+    in srgb,
+    var(--color-success) var(--opacity-3),
+    transparent
+  );
+  --success-alpha-4: color-mix(
+    in srgb,
+    var(--color-success) var(--opacity-4),
+    transparent
+  );
+  --success-alpha-5: color-mix(
+    in srgb,
+    var(--color-success) var(--opacity-5),
+    transparent
+  );
+  --success-alpha-6: color-mix(
+    in srgb,
+    var(--color-success) var(--opacity-6),
+    transparent
+  );
+
+  --warning-alpha-1: color-mix(
+    in srgb,
+    var(--color-warning) var(--opacity-1),
+    transparent
+  );
+  --warning-alpha-2: color-mix(
+    in srgb,
+    var(--color-warning) var(--opacity-2),
+    transparent
+  );
+  --warning-alpha-3: color-mix(
+    in srgb,
+    var(--color-warning) var(--opacity-3),
+    transparent
+  );
+  --warning-alpha-4: color-mix(
+    in srgb,
+    var(--color-warning) var(--opacity-4),
+    transparent
+  );
+  --warning-alpha-5: color-mix(
+    in srgb,
+    var(--color-warning) var(--opacity-5),
+    transparent
+  );
+  --warning-alpha-6: color-mix(
+    in srgb,
+    var(--color-warning) var(--opacity-6),
+    transparent
+  );
+
+  --danger-alpha-1: color-mix(
+    in srgb,
+    var(--color-danger) var(--opacity-1),
+    transparent
+  );
+  --danger-alpha-2: color-mix(
+    in srgb,
+    var(--color-danger) var(--opacity-2),
+    transparent
+  );
+  --danger-alpha-3: color-mix(
+    in srgb,
+    var(--color-danger) var(--opacity-3),
+    transparent
+  );
+  --danger-alpha-4: color-mix(
+    in srgb,
+    var(--color-danger) var(--opacity-4),
+    transparent
+  );
+  --danger-alpha-5: color-mix(
+    in srgb,
+    var(--color-danger) var(--opacity-5),
+    transparent
+  );
+  --danger-alpha-6: color-mix(
+    in srgb,
+    var(--color-danger) var(--opacity-6),
+    transparent
+  );
+
+  --info-alpha-1: color-mix(
+    in srgb,
+    var(--color-info) var(--opacity-1),
+    transparent
+  );
+  --info-alpha-2: color-mix(
+    in srgb,
+    var(--color-info) var(--opacity-2),
+    transparent
+  );
+  --info-alpha-3: color-mix(
+    in srgb,
+    var(--color-info) var(--opacity-3),
+    transparent
+  );
+  --info-alpha-4: color-mix(
+    in srgb,
+    var(--color-info) var(--opacity-4),
+    transparent
+  );
+  --info-alpha-5: color-mix(
+    in srgb,
+    var(--color-info) var(--opacity-5),
+    transparent
+  );
+  --info-alpha-6: color-mix(
+    in srgb,
+    var(--color-info) var(--opacity-6),
+    transparent
+  );
+
+  /* ── Extra / Neutral colors ─────────────────────────────────────────────── */
+  --extra-dark: #4b4b4b;
+  --extra-light: #dfdfe3;
+  --extra-body-bg: #f8f7fa;
+  --extra-card-bg: #ffffff;
+  --extra-divider: #dbdade;
+  --extra-white: #ffffff;
+
+  /* Extra opacity — dark at 16% (opacity-2) */
+  --extra-dark-alpha: color-mix(
+    in srgb,
+    var(--extra-dark) var(--opacity-2),
+    transparent
+  );
+
+  /* ── Gradients ───────────────────────────────────────────────────────────
+     Edit the stop colors here — one place, reflects everywhere.             */
+  --gradient-primary: linear-gradient(45deg, #583fd0 0%, #856ef7 100%);
+  --gradient-secondary: linear-gradient(45deg, #82868b 0%, #9ca0a4 100%);
+  --gradient-success: linear-gradient(45deg, #28c76f 0%, #48da89 100%);
+  --gradient-danger: linear-gradient(45deg, #ea5455 0%, #f08182 100%);
+  --gradient-warning: linear-gradient(45deg, #ff9f43 0%, #ffb976 100%);
+  --gradient-info: linear-gradient(45deg, #00cfe8 0%, #1ce7ff 100%);
+
+  /* ── Shadows (neutral — default Tailwind shadow-sm/md/lg) ──────────────── */
+  --shadow-sm: 0px 2px 3px 0px rgba(168, 170, 174, 0.3);
+  --shadow-md: 0px 4px 16px 0px rgba(168, 170, 174, 0.45);
+  --shadow-lg: 0px 10px 20px 0px rgba(168, 170, 174, 0.4);
+
+  /* ── Shadow Opacity Levels ───────────────────────────────────────────────
+     Change one value → that shadow size updates for ALL colors below.       */
+  --shadow-color-opacity-sm: 30%;
+  --shadow-color-opacity-md: 45%;
+  --shadow-color-opacity-lg: 40%;
+
+  /* ── Colored Shadows ─────────────────────────────────────────────────────
+     SM  = soft  (2px  blur, 3px)   — subtle depth
+     MD  = medium (4px  blur, 16px) — cards, panels
+     LG  = dramatic (10px blur, 20px) — modals, dropdowns
+     Change base color above → all its shadows update automatically.         */
+
+  --shadow-primary-sm: 0px 2px 3px 0px
+    color-mix(
+      in srgb,
+      var(--primary-500) var(--shadow-color-opacity-sm),
+      transparent
+    );
+  --shadow-primary-md: 0px 4px 16px 0px
+    color-mix(
+      in srgb,
+      var(--primary-500) var(--shadow-color-opacity-md),
+      transparent
+    );
+  --shadow-primary-lg: 0px 10px 20px 0px
+    color-mix(
+      in srgb,
+      var(--primary-500) var(--shadow-color-opacity-lg),
+      transparent
+    );
+
+  --shadow-secondary-sm: 0px 2px 3px 0px
+    color-mix(
+      in srgb,
+      var(--secondary-500) var(--shadow-color-opacity-sm),
+      transparent
+    );
+  --shadow-secondary-md: 0px 4px 16px 0px
+    color-mix(
+      in srgb,
+      var(--secondary-500) var(--shadow-color-opacity-md),
+      transparent
+    );
+  --shadow-secondary-lg: 0px 10px 20px 0px
+    color-mix(
+      in srgb,
+      var(--secondary-500) var(--shadow-color-opacity-lg),
+      transparent
+    );
+
+  --shadow-success-sm: 0px 2px 3px 0px
+    color-mix(
+      in srgb,
+      var(--color-success) var(--shadow-color-opacity-sm),
+      transparent
+    );
+  --shadow-success-md: 0px 4px 16px 0px
+    color-mix(
+      in srgb,
+      var(--color-success) var(--shadow-color-opacity-md),
+      transparent
+    );
+  --shadow-success-lg: 0px 10px 20px 0px
+    color-mix(
+      in srgb,
+      var(--color-success) var(--shadow-color-opacity-lg),
+      transparent
+    );
+
+  --shadow-warning-sm: 0px 2px 3px 0px
+    color-mix(
+      in srgb,
+      var(--color-warning) var(--shadow-color-opacity-sm),
+      transparent
+    );
+  --shadow-warning-md: 0px 4px 16px 0px
+    color-mix(
+      in srgb,
+      var(--color-warning) var(--shadow-color-opacity-md),
+      transparent
+    );
+  --shadow-warning-lg: 0px 10px 20px 0px
+    color-mix(
+      in srgb,
+      var(--color-warning) var(--shadow-color-opacity-lg),
+      transparent
+    );
+
+  --shadow-danger-sm: 0px 2px 3px 0px
+    color-mix(
+      in srgb,
+      var(--color-danger) var(--shadow-color-opacity-sm),
+      transparent
+    );
+  --shadow-danger-md: 0px 4px 16px 0px
+    color-mix(
+      in srgb,
+      var(--color-danger) var(--shadow-color-opacity-md),
+      transparent
+    );
+  --shadow-danger-lg: 0px 10px 20px 0px
+    color-mix(
+      in srgb,
+      var(--color-danger) var(--shadow-color-opacity-lg),
+      transparent
+    );
+
+  --shadow-info-sm: 0px 2px 3px 0px
+    color-mix(
+      in srgb,
+      var(--color-info) var(--shadow-color-opacity-sm),
+      transparent
+    );
+  --shadow-info-md: 0px 4px 16px 0px
+    color-mix(
+      in srgb,
+      var(--color-info) var(--shadow-color-opacity-md),
+      transparent
+    );
+  --shadow-info-lg: 0px 10px 20px 0px
+    color-mix(
+      in srgb,
+      var(--color-info) var(--shadow-color-opacity-lg),
+      transparent
+    );
+
+  /* ── Border Radius Base ─────────────────────────────────────────────────── */
+  --radius: 0.625rem;
+
+  /* ── Typography Scale ───────────────────────────────────────────────────── */
+  /* Confirmed values from Figma. Token-based values marked with ← TODO.     */
+
+  /* 1. Large Heading — 24/24 */
+  --heading-large-size: 1.5rem; /* 24px */
+  --heading-large-weight: 800;
+  --heading-large-leading: 1.5rem; /* 24px */
+
+  /* 2. Page Heading — 20/24 */
+  --heading-page-size: 1.25rem; /* 20px */
+  --heading-page-weight: 700;
+  --heading-page-leading: 1.5rem; /* 24px */
+
+  /* 3. Section Heading — 16/20 (uppercase) */
+  --heading-section-size: 1rem; /* 16px */
+  --heading-section-weight: 600;
+  --heading-section-leading: 1.25rem; /* 20px */
+
+  /* 4. Card Heading — 14/16 (uppercase) */
+  --heading-card-size: 0.875rem; /* 14px */
+  --heading-card-weight: 600;
+  --heading-card-leading: 1rem; /* 16px */
+
+  /* 5. CTA Text — 14/16 (default button) */
+  --text-cta-size: 0.875rem; /* 14px */
+  --text-cta-weight: 700;
+  --text-cta-leading: 1rem; /* 16px */
+
+  /* 6. CTA Large Text — 16/20 (large button) */
+  --text-cta-large-size: 1rem; /* 16px */
+  --text-cta-large-weight: 700;
+  --text-cta-large-leading: 1.25rem; /* 20px */
+
+  /* ── Body Text Scale ────────────────────────────────────────────────────── */
+  /* Size + line-height defined once per group; weight varies per variant.    */
+
+  /* Large Text (1-3) — 16px / 20px */
+  --body-large-size: 1rem; /* 16px */
+  --body-large-leading: 1.25rem; /* 20px */
+
+  /* Text Regular (4-6) — 14px / 20px */
+  --body-regular-size: 0.875rem; /* 14px */
+  --body-regular-leading: 1.25rem; /* 20px */
+
+  /* Normal Text (7-9) — 12px / 16px */
+  --body-normal-size: 0.75rem; /* 12px */
+  --body-normal-leading: 1rem; /* 16px */
+
+  /* Smallest Text (10-12) — 10px / 12px */
+  --body-smallest-size: 0.625rem; /* 10px */
+  --body-smallest-leading: 0.75rem; /* 12px */
+
+  /* ── Typography Fonts ───────────────────────────────────────────────────── */
+  --font-sans: var(--font-dm-sans); /* ← default font for entire app */
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TAILWIND v4 THEME BRIDGE
+   ─────────────────────────────────────────────────────────────────────────
+   Registers your design tokens as Tailwind utility classes.
+   e.g. bg-primary-500, text-text-heading, shadow-md, rounded-xl
+   Do NOT edit values here — edit the :root block above instead.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@theme inline {
+  /* Primary palette */
+  --color-primary-50: var(--primary-50);
+  --color-primary-100: var(--primary-100);
+  --color-primary-200: var(--primary-200);
+  --color-primary-300: var(--primary-300);
+  --color-primary-400: var(--primary-400);
+  --color-primary-500: var(--primary-500);
+  --color-primary-600: var(--primary-600);
+  --color-primary-700: var(--primary-700);
+  --color-primary-800: var(--primary-800);
+  --color-primary-900: var(--primary-900);
+
+  /* Secondary palette */
+  --color-secondary-50: var(--secondary-50);
+  --color-secondary-100: var(--secondary-100);
+  --color-secondary-200: var(--secondary-200);
+  --color-secondary-300: var(--secondary-300);
+  --color-secondary-400: var(--secondary-400);
+  --color-secondary-500: var(--secondary-500);
+  --color-secondary-600: var(--secondary-600);
+  --color-secondary-700: var(--secondary-700);
+  --color-secondary-800: var(--secondary-800);
+  --color-secondary-900: var(--secondary-900);
+
+  /* Semantic */
+  --color-success: var(--color-success);
+  --color-warning: var(--color-warning);
+  --color-danger: var(--color-danger);
+  --color-info: var(--color-info);
+
+  /* Opacity variants — bg-primary-alpha-1, bg-success-alpha-3, etc. */
+  --color-primary-alpha-1: var(--primary-alpha-1);
+  --color-primary-alpha-2: var(--primary-alpha-2);
+  --color-primary-alpha-3: var(--primary-alpha-3);
+  --color-primary-alpha-4: var(--primary-alpha-4);
+  --color-primary-alpha-5: var(--primary-alpha-5);
+  --color-primary-alpha-6: var(--primary-alpha-6);
+
+  --color-secondary-alpha-1: var(--secondary-alpha-1);
+  --color-secondary-alpha-2: var(--secondary-alpha-2);
+  --color-secondary-alpha-3: var(--secondary-alpha-3);
+  --color-secondary-alpha-4: var(--secondary-alpha-4);
+  --color-secondary-alpha-5: var(--secondary-alpha-5);
+  --color-secondary-alpha-6: var(--secondary-alpha-6);
+
+  --color-success-alpha-1: var(--success-alpha-1);
+  --color-success-alpha-2: var(--success-alpha-2);
+  --color-success-alpha-3: var(--success-alpha-3);
+  --color-success-alpha-4: var(--success-alpha-4);
+  --color-success-alpha-5: var(--success-alpha-5);
+  --color-success-alpha-6: var(--success-alpha-6);
+
+  --color-warning-alpha-1: var(--warning-alpha-1);
+  --color-warning-alpha-2: var(--warning-alpha-2);
+  --color-warning-alpha-3: var(--warning-alpha-3);
+  --color-warning-alpha-4: var(--warning-alpha-4);
+  --color-warning-alpha-5: var(--warning-alpha-5);
+  --color-warning-alpha-6: var(--warning-alpha-6);
+
+  --color-danger-alpha-1: var(--danger-alpha-1);
+  --color-danger-alpha-2: var(--danger-alpha-2);
+  --color-danger-alpha-3: var(--danger-alpha-3);
+  --color-danger-alpha-4: var(--danger-alpha-4);
+  --color-danger-alpha-5: var(--danger-alpha-5);
+  --color-danger-alpha-6: var(--danger-alpha-6);
+
+  --color-info-alpha-1: var(--info-alpha-1);
+  --color-info-alpha-2: var(--info-alpha-2);
+  --color-info-alpha-3: var(--info-alpha-3);
+  --color-info-alpha-4: var(--info-alpha-4);
+  --color-info-alpha-5: var(--info-alpha-5);
+  --color-info-alpha-6: var(--info-alpha-6);
+
+  /* Extra / Neutral */
+  --color-extra-dark: var(--extra-dark);
+  --color-extra-light: var(--extra-light);
+  --color-extra-body-bg: var(--extra-body-bg);
+  --color-extra-card-bg: var(--extra-card-bg);
+  --color-extra-divider: var(--extra-divider);
+  --color-extra-white: var(--extra-white);
+  --color-extra-dark-alpha: var(--extra-dark-alpha);
+
+  /* Gradients */
+  --background-image-gradient-primary: var(--gradient-primary);
+  --background-image-gradient-secondary: var(--gradient-secondary);
+  --background-image-gradient-success: var(--gradient-success);
+  --background-image-gradient-danger: var(--gradient-danger);
+  --background-image-gradient-warning: var(--gradient-warning);
+  --background-image-gradient-info: var(--gradient-info);
+
+  /* Text */
+  --color-text-heading: var(--text-heading);
+  --color-text-body: var(--text-body);
+  --color-text-muted: var(--text-muted);
+  --color-text-placeholder: var(--text-placeholder);
+
+  /* Surface */
+  --color-surface-shell: var(--surface-shell);
+  --color-surface: var(--surface-page);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-surface-border: var(--surface-border);
+
+  /* Shadows — neutral */
+  --shadow-sm: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+
+  /* Colored shadows — shadow-primary-sm, shadow-danger-lg, etc. */
+  --shadow-primary-sm: var(--shadow-primary-sm);
+  --shadow-primary-md: var(--shadow-primary-md);
+  --shadow-primary-lg: var(--shadow-primary-lg);
+  --shadow-secondary-sm: var(--shadow-secondary-sm);
+  --shadow-secondary-md: var(--shadow-secondary-md);
+  --shadow-secondary-lg: var(--shadow-secondary-lg);
+  --shadow-success-sm: var(--shadow-success-sm);
+  --shadow-success-md: var(--shadow-success-md);
+  --shadow-success-lg: var(--shadow-success-lg);
+  --shadow-warning-sm: var(--shadow-warning-sm);
+  --shadow-warning-md: var(--shadow-warning-md);
+  --shadow-warning-lg: var(--shadow-warning-lg);
+  --shadow-danger-sm: var(--shadow-danger-sm);
+  --shadow-danger-md: var(--shadow-danger-md);
+  --shadow-danger-lg: var(--shadow-danger-lg);
+  --shadow-info-sm: var(--shadow-info-sm);
+  --shadow-info-md: var(--shadow-info-md);
+  --shadow-info-lg: var(--shadow-info-lg);
+
+  /* Fonts */
+  --font-sans: var(--font-sans); /* DM Sans — default for everything */
+
+  /* Radius scale */
+  --radius-sm: calc(var(--radius) * 0.4);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  /* ── Shadcn / ui bridge ─────────────────────────────────────────────────── */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary-500);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary-500);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SHADCN LIGHT MODE
+   ═══════════════════════════════════════════════════════════════════════════ */
+:root {
+  --background: var(--surface-page);
+  --foreground: var(--text-heading);
+  --card: var(--surface-page);
+  --card-foreground: var(--text-heading);
+  --popover: var(--surface-page);
+  --popover-foreground: var(--text-heading);
+  --primary-foreground: #ffffff;
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
+  --destructive: var(--color-danger);
+  --border: var(--surface-border);
+  --input: var(--surface-border);
+  --ring: var(--primary-500);
+  --chart-1: oklch(0.809 0.105 251.813);
+  --chart-2: oklch(0.623 0.214 259.815);
+  --chart-3: oklch(0.546 0.245 262.881);
+  --chart-4: oklch(0.488 0.243 264.376);
+  --chart-5: oklch(0.424 0.199 265.638);
+  --sidebar: var(--surface-subtle);
+  --sidebar-foreground: var(--text-heading);
+  --sidebar-primary: var(--primary-500);
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: oklch(0.97 0 0);
+  --sidebar-accent-foreground: oklch(0.205 0 0);
+  --sidebar-border: var(--surface-border);
+  --sidebar-ring: var(--primary-500);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   SHADCN DARK MODE
+   ═══════════════════════════════════════════════════════════════════════════ */
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.809 0.105 251.813);
+  --chart-2: oklch(0.623 0.214 259.815);
+  --chart-3: oklch(0.546 0.245 262.881);
+  --chart-4: oklch(0.488 0.243 264.376);
+  --chart-5: oklch(0.424 0.199 265.638);
+  --sidebar: oklch(0.205 0 0);
+  --sidebar-foreground: oklch(0.985 0 0);
+  --sidebar-primary: oklch(0.488 0.243 264.376);
+  --sidebar-primary-foreground: oklch(0.985 0 0);
+  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent-foreground: oklch(0.985 0 0);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.556 0 0);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BASE STYLES
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  html {
+    @apply font-sans;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   TYPOGRAPHY COMPONENTS
+   ─────────────────────────────────────────────────────────────────────────
+   Usage:
+     <h1 className="heading-large">Dashboard</h1>
+     <h2 className="heading-page">Orders</h2>
+     <h3 className="heading-section">Today's Sales</h3>
+     <h4 className="heading-card">Recent Orders</h4>
+     <span className="text-cta">Checkout Now</span>
+
+   To change sizes / weights — edit the variables in :root above, not here.
+   ═══════════════════════════════════════════════════════════════════════════ */
+@layer components {
+  /* Large Heading — 24px / 800 / Inter */
+  .heading-large {
+    font-family: var(--font-sans);
+    font-size: var(--heading-large-size);
+    font-weight: var(--heading-large-weight);
+    line-height: var(--heading-large-leading);
+    color: var(--text-heading);
+  }
+
+  /* Page Heading — ~18px / 700 / Inter */
+  .heading-page {
+    font-family: var(--font-sans);
+    font-size: var(--heading-page-size);
+    font-weight: var(--heading-page-weight);
+    line-height: var(--heading-page-leading);
+    color: var(--text-heading);
+  }
+
+  /* Section Heading — ~14px / 600 / Inter / UPPERCASE */
+  .heading-section {
+    font-family: var(--font-sans);
+    font-size: var(--heading-section-size);
+    font-weight: var(--heading-section-weight);
+    line-height: var(--heading-section-leading);
+    text-transform: uppercase;
+    color: var(--text-heading);
+  }
+
+  /* Card Heading — 14px / 600 / Inter / UPPERCASE */
+  .heading-card {
+    font-family: var(--font-sans);
+    font-size: var(--heading-card-size);
+    font-weight: var(--heading-card-weight);
+    line-height: var(--heading-card-leading);
+    text-transform: uppercase;
+    color: var(--text-heading);
+  }
+
+  /* CTA Text — 14px / 700 (default button) */
+  .text-cta {
+    font-family: var(--font-sans);
+    font-size: var(--text-cta-size);
+    font-weight: var(--text-cta-weight);
+    line-height: var(--text-cta-leading);
+    color: var(--text-heading);
+  }
+
+  /* CTA Large Text — 16px / 700 (large button) */
+  .text-cta-large {
+    font-family: var(--font-sans);
+    font-size: var(--text-cta-large-size);
+    font-weight: var(--text-cta-large-weight);
+    line-height: var(--text-cta-large-leading);
+    color: var(--text-heading);
+  }
+
+  /* ── Body Text ─────────────────────────────────────────────────────────────
+     Usage:
+       <p className="text-large-1">Extra bold body</p>
+       <p className="text-regular-2">Medium body</p>
+       <span className="text-normal-3">Small regular</span>
+       <span className="text-smallest-1">Tiny bold label</span>
+     ──────────────────────────────────────────────────────────────────────── */
+
+  /* Large Text — 16px / 20px */
+  .text-large-1 {
+    font-family: var(--font-sans);
+    font-size: var(--body-large-size);
+    font-weight: 800;
+    line-height: var(--body-large-leading);
+  }
+  .text-large-2 {
+    font-family: var(--font-sans);
+    font-size: var(--body-large-size);
+    font-weight: 600;
+    line-height: var(--body-large-leading);
+  }
+  .text-large-3 {
+    font-family: var(--font-sans);
+    font-size: var(--body-large-size);
+    font-weight: 400;
+    line-height: var(--body-large-leading);
+  }
+
+  /* Text Regular — 14px / 20px */
+  .text-regular-1 {
+    font-family: var(--font-sans);
+    font-size: var(--body-regular-size);
+    font-weight: 700;
+    line-height: var(--body-regular-leading);
+  }
+  .text-regular-2 {
+    font-family: var(--font-sans);
+    font-size: var(--body-regular-size);
+    font-weight: 500;
+    line-height: var(--body-regular-leading);
+  }
+  .text-regular-3 {
+    font-family: var(--font-sans);
+    font-size: var(--body-regular-size);
+    font-weight: 400;
+    line-height: var(--body-regular-leading);
+  }
+
+  /* Normal Text — 12px / 16px */
+  .text-normal-1 {
+    font-family: var(--font-sans);
+    font-size: var(--body-normal-size);
+    font-weight: 800;
+    line-height: var(--body-normal-leading);
+  }
+  .text-normal-2 {
+    font-family: var(--font-sans);
+    font-size: var(--body-normal-size);
+    font-weight: 600;
+    line-height: var(--body-normal-leading);
+  }
+  .text-normal-3 {
+    font-family: var(--font-sans);
+    font-size: var(--body-normal-size);
+    font-weight: 400;
+    line-height: var(--body-normal-leading);
+  }
+
+  /* Smallest Text — 10px / 12px */
+  .text-smallest-1 {
+    font-family: var(--font-sans);
+    font-size: var(--body-smallest-size);
+    font-weight: 700;
+    line-height: var(--body-smallest-leading);
+  }
+  .text-smallest-2 {
+    font-family: var(--font-sans);
+    font-size: var(--body-smallest-size);
+    font-weight: 500;
+    line-height: var(--body-smallest-leading);
+  }
+  .text-smallest-3 {
+    font-family: var(--font-sans);
+    font-size: var(--body-smallest-size);
+    font-weight: 400;
+    line-height: var(--body-smallest-leading);
+  }
+}

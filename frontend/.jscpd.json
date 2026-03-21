@@ -1,0 +1,15 @@
+{
+  "threshold": 5,
+  "minLines": 10,
+  "minTokens": 70,
+  "pattern": ["src/**/*.ts", "src/**/*.tsx"],
+  "ignore": [
+    "src/__tests__/**",
+    "**/*.test.ts",
+    "**/*.test.tsx",
+    "**/*.types.ts",
+    "**/*.d.ts"
+  ],
+  "reporters": ["console"],
+  "gitignore": true
+}

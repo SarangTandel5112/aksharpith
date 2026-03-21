@@ -25,6 +25,10 @@ export class GroupFieldOption {
   @JoinColumn({ name: 'field_id' })
   field: GroupField;
 
+  @Column({ name: 'option_label', length: 100 })
+  @Expose()
+  optionLabel: string;
+
   @Column({ name: 'option_value', length: 255 })
   @Expose()
   optionValue: string;

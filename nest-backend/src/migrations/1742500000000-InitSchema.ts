@@ -150,6 +150,8 @@ export class InitSchema1742500000000 implements MigrationInterface {
         "group_id" uuid NOT NULL,
         "field_name" varchar(150) NOT NULL,
         "field_type" varchar(20) NOT NULL DEFAULT 'text',
+        "field_key" varchar(100) NOT NULL DEFAULT '',
+        "is_filterable" boolean NOT NULL DEFAULT false,
         "is_required" boolean NOT NULL DEFAULT false,
         "sort_order" int NOT NULL DEFAULT 0,
         "created_at" TIMESTAMP NOT NULL DEFAULT now(),
@@ -162,12 +164,21 @@ export class InitSchema1742500000000 implements MigrationInterface {
     await queryRunner.query(
       `CREATE INDEX "IDX_group_fields_group_id" ON "group_fields" ("group_id")`,
     );
+    await queryRunner.query(
+      `CREATE INDEX "idx_group_fields_key" ON "group_fields" ("field_key")`,
+    );
+    await queryRunner.query(`
+      CREATE UNIQUE INDEX "uq_group_fields_group_key"
+      ON "group_fields" ("group_id", "field_key")
+      WHERE "deleted_at" IS NULL
+    `);
 
     // 9. group_field_options
     await queryRunner.query(`
       CREATE TABLE "group_field_options" (
         "id" uuid NOT NULL DEFAULT gen_random_uuid(),
         "field_id" uuid NOT NULL,
+        "option_label" varchar(100) NOT NULL DEFAULT '',
         "option_value" varchar(255) NOT NULL,
         "sort_order" int NOT NULL DEFAULT 0,
         "created_at" TIMESTAMP NOT NULL DEFAULT now(),

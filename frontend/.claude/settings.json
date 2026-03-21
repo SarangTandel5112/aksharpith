@@ -1,0 +1,51 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm run:*)",
+      "Bash(npm test:*)",
+      "Bash(npx vitest:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx knip:*)",
+      "Bash(npx lefthook:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git status:*)",
+      "Bash(git pull:*)",
+      "Bash(git stash:*)",
+      "Bash(git fetch:*)",
+      "Bash(git merge:*)",
+      "Bash(git worktree:*)",
+      "Bash(git checkout:*)",
+      "Bash(git branch:*)",
+      "Bash(git remote:*)",
+      "Bash(cat:*)",
+      "Bash(ls:*)",
+      "Bash(node --version)",
+      "Bash(npm --version)",
+      "Read(//Users/sarangtandel/.claude/**)",
+      "Read(//Users/sarangtandel/.claude/plugins/cache/claude-plugins-official/figma/**)"
+    ]
+  },
+  "autoApprove": [
+    "npm test",
+    "npm run test",
+    "npm run type-check",
+    "npm run lint",
+    "npm run check:arch",
+    "npx tsc --noEmit",
+    "npx knip",
+    "npx lefthook run pre-commit"
+  ],
+  "requireApproval": [
+    "npm install",
+    "npm uninstall",
+    "rm -rf",
+    "git push",
+    "git commit",
+    "npx playwright test"
+  ],
+  "contextFiles": ["CLAUDE.md", "src/shared/types/core.ts", "src/config/env.ts"]
+}
