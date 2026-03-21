@@ -14,4 +14,8 @@ export class RoleService {
     validateEntityExists(role, 'Role');
     return role;
   }
+
+  async getRoleByName(name: string): Promise<UserRole | null> {
+    return this.repo.findByName(name);
+  }
 }

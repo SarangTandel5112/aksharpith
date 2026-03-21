@@ -37,4 +37,17 @@ describe('RoleService', () => {
       await expect(service.getRoleById(999)).rejects.toThrow('Role not found');
     });
   });
+
+  describe('getRoleByName', () => {
+    it('returns role when found by name', async () => {
+      await repo.create({ roleName: 'Admin' });
+      const found = await service.getRoleByName('Admin');
+      expect(found?.roleName).toBe('Admin');
+    });
+
+    it('returns null when not found', async () => {
+      const found = await service.getRoleByName('NonExistent');
+      expect(found).toBeNull();
+    });
+  });
 });
