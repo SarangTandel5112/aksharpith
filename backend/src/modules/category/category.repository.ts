@@ -1,19 +1,16 @@
-import { SelectQueryBuilder } from 'typeorm';
-import { AppDataSource } from '@config/database.config';
-import { ProductCategory } from '@entities';
+import { Repository, SelectQueryBuilder } from 'typeorm';
+import { ProductCategory } from '@entities/product-category.entity';
 import { BaseRepository } from '@common/base.repository';
-import { BaseQueryOptions, PaginatedResult } from '@common/types';
+import { ICategoryRepository } from './interfaces/category.repository.interface';
+import { QueryCategoryDto } from './dtos';
+import { PaginatedResult } from '@common/types';
 
-export interface CategoryQueryOptions extends BaseQueryOptions {}
-
-/**
- * Category Repository
- * Extends BaseRepository to inherit common data access patterns
- * Only implements category-specific logic
- */
-export class CategoryRepository extends BaseRepository<ProductCategory> {
-  constructor() {
-    super(AppDataSource.getRepository(ProductCategory));
+export class CategoryRepository
+  extends BaseRepository<ProductCategory>
+  implements ICategoryRepository
+{
+  constructor(repo: Repository<ProductCategory>) {
+    super(repo);
   }
 
   protected getEntityName(): string {
@@ -34,13 +31,21 @@ export class CategoryRepository extends BaseRepository<ProductCategory> {
     );
   }
 
-  async findAll(
-    options: CategoryQueryOptions
-  ): Promise<PaginatedResult<ProductCategory>> {
-    return this.findAllWithPagination(options);
+  async findAll(options: QueryCategoryDto): Promise<PaginatedResult<ProductCategory>> {
+    return this.findAllWithPagination(options, (qb) => {
+      if (options.departmentId !== undefined) {
+        qb.andWhere('category.departmentId = :departmentId', {
+          departmentId: options.departmentId,
+        });
+      }
+    });
   }
 
   async findByName(categoryName: string): Promise<ProductCategory | null> {
     return this.repository.findOne({ where: { categoryName, isActive: true } });
+  }
+
+  async findByDepartmentId(departmentId: number): Promise<ProductCategory[]> {
+    return this.repository.find({ where: { departmentId, isActive: true } });
   }
 }

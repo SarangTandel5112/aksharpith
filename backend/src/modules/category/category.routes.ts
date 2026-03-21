@@ -2,11 +2,7 @@ import { Router } from 'express';
 import { CategoryController } from './category.controller';
 import { validationMiddleware } from '@middlewares/validation.middleware';
 import { authMiddleware } from '@middlewares/auth.middleware';
-import {
-  CreateCategoryDto,
-  UpdateCategoryDto,
-  QueryCategoryDto,
-} from './dtos';
+import { CreateCategoryDto, UpdateCategoryDto, QueryCategoryDto } from './dtos';
 
 export const createCategoryRoutes = (
   categoryController: CategoryController
@@ -16,7 +12,7 @@ export const createCategoryRoutes = (
   // Public routes (GET)
   router.get(
     '/',
-    validationMiddleware(QueryCategoryDto, 'query'),
+    validationMiddleware(QueryCategoryDto),
     categoryController.getAllCategories
   );
 

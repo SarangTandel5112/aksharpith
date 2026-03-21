@@ -25,4 +25,10 @@ export class QueryCategoryDto {
   @IsOptional()
   @IsString({ message: 'Order must be a string' })
   order?: 'ASC' | 'DESC' = 'DESC';
+
+  @IsOptional()
+  @Transform(({ value }) => parseInt(value, 10))
+  @IsInt({ message: 'Department ID must be an integer' })
+  @Min(1, { message: 'Department ID must be at least 1' })
+  departmentId?: number;
 }

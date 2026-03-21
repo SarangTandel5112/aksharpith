@@ -1,86 +1,51 @@
-import {
-  CategoryRepository,
-  CategoryQueryOptions,
-} from './category.repository';
+import { ProductCategory } from '@entities/product-category.entity';
+import { ICategoryRepository } from './interfaces/category.repository.interface';
 import { CreateCategoryDto, UpdateCategoryDto, QueryCategoryDto } from './dtos';
-import { ProductCategory } from '@entities';
 import { PaginatedResult } from '@common/types';
 import { validateEntityExists, validateUniqueness, validateDeletion } from '@helpers/entity.helper';
-import logger from '@setup/logger';
 
-/**
- * Category Service
- * Uses entity helpers to reduce code duplication
- * Implements business logic for category management
- */
 export class CategoryService {
-  constructor(private categoryRepository: CategoryRepository) {}
+  constructor(private repo: ICategoryRepository) {}
 
-  async getAllCategories(
-    query: QueryCategoryDto
-  ): Promise<PaginatedResult<ProductCategory>> {
-    const options: CategoryQueryOptions = {
-      search: query.search,
-      page: query.page || 1,
-      limit: query.limit || 10,
-      sortBy: query.sortBy || 'createdAt',
-      order: query.order || 'DESC',
-    };
-
-    return this.categoryRepository.findAll(options);
+  async getAllCategories(query: QueryCategoryDto): Promise<PaginatedResult<ProductCategory>> {
+    return this.repo.findAll(query);
   }
 
   async getCategoryById(id: number): Promise<ProductCategory> {
-    const category = await this.categoryRepository.findById(id);
+    const category = await this.repo.findById(id);
     validateEntityExists(category, 'Category');
     return category;
   }
 
-  async createCategory(
-    createCategoryDto: CreateCategoryDto
-  ): Promise<ProductCategory> {
-    const existingCategory = await this.categoryRepository.findByName(
-      createCategoryDto.categoryName
-    );
-    validateUniqueness(existingCategory, undefined, 'category', createCategoryDto.categoryName);
-
-    const category = await this.categoryRepository.create(createCategoryDto);
-    logger.info(`Category created: ${category.categoryName}`);
-    return category;
+  async createCategory(data: CreateCategoryDto): Promise<ProductCategory> {
+    const existing = await this.repo.findByName(data.categoryName);
+    validateUniqueness(existing, undefined, 'category name', data.categoryName);
+    return this.repo.create(data);
   }
 
-  async updateCategory(
-    id: number,
-    updateCategoryDto: UpdateCategoryDto
-  ): Promise<ProductCategory> {
-    const existingCategory = await this.categoryRepository.findById(id);
-    validateEntityExists(existingCategory, 'Category');
+  async updateCategory(id: number, data: UpdateCategoryDto): Promise<ProductCategory> {
+    const category = await this.repo.findById(id);
+    validateEntityExists(category, 'Category');
 
-    if (updateCategoryDto.categoryName) {
-      const categoryWithSameName = await this.categoryRepository.findByName(
-        updateCategoryDto.categoryName
-      );
-      validateUniqueness(categoryWithSameName, id, 'category', updateCategoryDto.categoryName);
+    if (data.categoryName && data.categoryName !== category.categoryName) {
+      const existing = await this.repo.findByName(data.categoryName);
+      validateUniqueness(existing, id, 'category name', data.categoryName);
     }
 
-    const updatedCategory = await this.categoryRepository.update(
-      id,
-      updateCategoryDto
-    );
-    logger.info(`Category updated: ${id}`);
-    return updatedCategory!;
+    const updated = await this.repo.update(id, data);
+    validateEntityExists(updated, 'Category');
+    return updated;
   }
 
   async deleteCategory(id: number): Promise<void> {
-    const category = await this.categoryRepository.findById(id);
+    const category = await this.repo.findById(id);
     validateEntityExists(category, 'Category');
 
-    const deleted = await this.categoryRepository.delete(id);
-    validateDeletion(deleted, 'category');
-    logger.info(`Category deleted: ${id}`);
+    const deleted = await this.repo.delete(id);
+    validateDeletion(deleted, 'Category');
   }
 
   async getCategoryCount(): Promise<number> {
-    return this.categoryRepository.count();
+    return this.repo.count();
   }
 }
