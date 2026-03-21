@@ -165,10 +165,10 @@ export class InitSchema1742500000000 implements MigrationInterface {
       `CREATE INDEX "IDX_group_fields_group_id" ON "group_fields" ("group_id")`,
     );
     await queryRunner.query(
-      `CREATE INDEX "idx_group_fields_key" ON "group_fields" ("field_key")`,
+      `CREATE INDEX "IDX_group_fields_field_key" ON "group_fields" ("field_key")`,
     );
     await queryRunner.query(`
-      CREATE UNIQUE INDEX "uq_group_fields_group_key"
+      CREATE UNIQUE INDEX "UQ_group_fields_group_key"
       ON "group_fields" ("group_id", "field_key")
       WHERE "deleted_at" IS NULL
     `);
