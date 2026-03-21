@@ -26,7 +26,6 @@ import { CreateProductMediaDto } from './dto/create-product-media.dto';
 import { UpsertPhysicalAttributesDto } from './dto/upsert-physical-attributes.dto';
 import { CreateMarketingMediaDto } from './dto/create-marketing-media.dto';
 import { CreateProductZoneDto } from './dto/create-product-zone.dto';
-import { UpsertGroupFieldValueDto } from './dto/upsert-group-field-value.dto';
 import { BulkUpsertGroupFieldValuesDto } from './dto/bulk-upsert-group-field-values.dto';
 import { CreateProductVendorDto } from './dto/create-product-vendor.dto';
 

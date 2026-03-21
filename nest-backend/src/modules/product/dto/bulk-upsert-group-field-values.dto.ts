@@ -8,14 +8,18 @@ import {
   IsBoolean,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class FieldValueItemDto {
-  @IsUUID('4') fieldId: string;
-  @IsOptional() @IsString() valueText?: string | null;
-  @IsOptional() @IsNumber() valueNumber?: number | null;
-  @IsOptional() @IsBoolean() valueBoolean?: boolean | null;
-  @IsOptional() @IsUUID('4') valueOptionId?: string | null;
+  @ApiProperty() @IsUUID('4') fieldId: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() valueText?: string | null;
+  @ApiPropertyOptional() @IsOptional() @IsNumber() valueNumber?: number | null;
+  @ApiPropertyOptional() @IsOptional() @IsBoolean() valueBoolean?:
+    | boolean
+    | null;
+  @ApiPropertyOptional() @IsOptional() @IsUUID('4') valueOptionId?:
+    | string
+    | null;
 }
 
 export class BulkUpsertGroupFieldValuesDto {
