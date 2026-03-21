@@ -89,10 +89,12 @@ export class ProductGroupRepository {
   }
 
   private slugify(name: string): string {
-    return name
+    const slug = name
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, '_')
       .replace(/^_|_$/g, '');
+    if (!slug) throw new Error('Cannot slugify empty field name');
+    return slug;
   }
 
   async addField(groupId: string, dto: any): Promise<GroupField> {
@@ -106,7 +108,7 @@ export class ProductGroupRepository {
     return this.fieldRepo.findOne({ where: { id: fieldId } });
   }
 
-  async updateField(fieldId: string, dto: any): Promise<GroupField> {
+  async updateField(fieldId: string, dto: any): Promise<GroupField | null> {
     // never update fieldKey — explicitly exclude it
     const { fieldKey: _ignored, ...safeDto } = dto as any;
     await this.fieldRepo.update(fieldId, safeDto);
