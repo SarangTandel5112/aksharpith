@@ -12,32 +12,43 @@ import { SignUpDto } from './dto/signup.dto';
 import { SignInDto } from './dto/signin.dto';
 import { LocalAuthGuard } from 'src/security/local-auth.guard';
 import { GetUser } from 'src/core/decorators/user.decorator';
-import { UserDto } from '../user/dto/user.dto';
+import { User } from '../user/entities/user.entity';
 import { Response } from 'express';
+
+const COOKIE_NAME = 'access_token';
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: process.env.NODE_ENV === 'production',
+  sameSite: 'strict' as const,
+  path: '/',
+};
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  // User Sign-Up
   @Post('registration')
   async signUp(@Body() signUpDto: SignUpDto) {
     return this.authService.signUp(signUpDto);
   }
 
-  // User Sign-In
   @UseGuards(LocalAuthGuard)
   @Post('login')
-  @HttpCode(HttpStatus.OK) // Prevents 201 response for sign-in
+  @HttpCode(HttpStatus.OK)
   async signIn(
-    @Body() signInDto: SignInDto,
-    @GetUser() user,
+    @Body() _signInDto: SignInDto,
+    @GetUser() user: User,
     @Res({ passthrough: true }) res: Response,
   ) {
-    const loginResponse = await this.authService.signIn(user);
+    const { accessToken } = await this.authService.signIn(user);
+    res.cookie(COOKIE_NAME, accessToken, COOKIE_OPTIONS);
+    return { message: 'Login successful' };
+  }
 
-    res.setHeader('access-token', `Bearer ${loginResponse.accessToken}`);
-
-    return new UserDto(user);
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  logout(@Res({ passthrough: true }) res: Response) {
+    res.clearCookie(COOKIE_NAME, { path: '/' });
+    return { message: 'Logout successful' };
   }
 }

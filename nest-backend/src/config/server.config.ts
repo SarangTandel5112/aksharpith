@@ -7,6 +7,7 @@ export interface ServerConfig {
   port: number;
   timezone: string;
   logDirectory: string;
+  corsOrigin: string;
 }
 
 export default registerAs(ServerConfigName, () => ({
@@ -14,4 +15,5 @@ export default registerAs(ServerConfigName, () => ({
   port: parseInt(process.env.PORT || '3000'),
   timezone: process.env.TZ,
   logDirectory: process.env.LOG_DIR,
+  corsOrigin: process.env.CORS_ORIGIN,
 }));

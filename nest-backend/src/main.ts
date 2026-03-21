@@ -6,6 +6,7 @@ import {
 } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import * as compression from 'compression';
+import * as cookieParser from 'cookie-parser';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { Response } from 'express';
 import { ServerConfigName } from './config/server.config';
@@ -26,11 +27,13 @@ async function bootstrap() {
   const serverConfig = configService.getOrThrow<ServerConfig>(ServerConfigName);
 
   app.enableCors({
-    origin: '*', // Default to '*' if no CORS origin specified
+    origin: serverConfig.corsOrigin ?? true,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     allowedHeaders: 'Content-Type, Authorization',
-    exposedHeaders: 'access-token', // Expose the Authorization header
+    credentials: true,
   });
+
+  app.use(cookieParser());
 
   // Register helmet for security headers
   app.use(helmet());
