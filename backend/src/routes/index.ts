@@ -6,6 +6,7 @@ import { ProductModule } from '@modules/product/product.module';
 import { RoleModule } from '@modules/role/role.module';
 import { DepartmentModule } from '@modules/department/department.module';
 import { SubCategoryModule } from '@modules/sub-category/sub-category.module';
+import { ProductGroupModule } from '@modules/product-group/product-group.module';
 
 const router = Router();
 
@@ -17,6 +18,7 @@ const subCategoryModule = new SubCategoryModule();
 const departmentModule = new DepartmentModule();
 const productModule = new ProductModule();
 const roleModule = new RoleModule();
+const productGroupModule = new ProductGroupModule();
 
 // Register module routes
 router.use('/auth', authModule.getRoutes());
@@ -26,5 +28,6 @@ router.use('/sub-categories', subCategoryModule.getRoutes());
 router.use('/departments', departmentModule.getRoutes());
 router.use('/products', productModule.getRoutes());
 router.use('/roles', roleModule.getRoutes());
+router.use('/product-groups', productGroupModule.getRoutes());
 
 export default router;
