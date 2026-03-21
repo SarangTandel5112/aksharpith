@@ -1,4 +1,3 @@
-import { Request } from 'express';
 import { BaseController } from '@common/base.controller';
 import { SubCategoryService } from './sub-category.service';
 
@@ -27,14 +26,8 @@ export class SubCategoryController extends BaseController {
     'Sub-category updated successfully'
   );
 
-  deleteSubCategory = this.handleDelete((id) => this.subCategoryService.deleteSubCategory(id), 'Sub-category deleted successfully');
-
-  getSubCategoryCount = this.asyncHandler(
-    async (req: Request) => {
-      const categoryId = req.query.categoryId ? parseInt(req.query.categoryId as string, 10) : undefined;
-      const count = await this.subCategoryService.getSubCategoryCount(categoryId);
-      return { count };
-    },
-    { successMessage: 'Sub-category count retrieved successfully' }
+  deleteSubCategory = this.handleDelete(
+    (id) => this.subCategoryService.deleteSubCategory(id),
+    'Sub-category deleted successfully'
   );
 }

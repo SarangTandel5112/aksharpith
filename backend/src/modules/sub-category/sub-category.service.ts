@@ -1,67 +1,58 @@
 import { SubCategory } from '@entities/sub-category.entity';
-import { SubCategoryRepository } from './sub-category.repository';
+import { ISubCategoryRepository } from './interfaces/sub-category.repository.interface';
 import { CreateSubCategoryDto, UpdateSubCategoryDto, QuerySubCategoryDto } from './dtos';
+import { PaginatedResult } from '@common/types';
 import { validateEntityExists, validateDeletion } from '@helpers/entity.helper';
 
 export class SubCategoryService {
-  constructor(private subCategoryRepository: SubCategoryRepository) {}
+  constructor(private repo: ISubCategoryRepository) {}
 
-  async getAllSubCategories(query: QuerySubCategoryDto) {
-    return this.subCategoryRepository.findAll(query);
+  async getAllSubCategories(query: QuerySubCategoryDto): Promise<PaginatedResult<SubCategory>> {
+    return this.repo.findAll(query);
   }
 
   async getSubCategoryById(id: number): Promise<SubCategory> {
-    const subCategory = await this.subCategoryRepository.findById(id);
+    const subCategory = await this.repo.findById(id);
     validateEntityExists(subCategory, 'SubCategory');
     return subCategory;
   }
 
   async createSubCategory(data: CreateSubCategoryDto): Promise<SubCategory> {
-    // Check for unique sub-category name within the same category
-    const existing = await this.subCategoryRepository.findByCategoryAndName(data.categoryId, data.subCategoryName);
+    const existing = await this.repo.findByNameAndCategory(data.subCategoryName, data.categoryId);
     if (existing) {
-      throw new Error('Sub-category name already exists in this category');
+      throw new Error(`Sub-category name '${data.subCategoryName}' already exists in this category`);
     }
-
-    return this.subCategoryRepository.create(data);
+    return this.repo.create(data);
   }
 
   async updateSubCategory(id: number, data: UpdateSubCategoryDto): Promise<SubCategory> {
-    const subCategory = await this.subCategoryRepository.findById(id);
+    const subCategory = await this.repo.findById(id);
     validateEntityExists(subCategory, 'SubCategory');
 
-    // Check for unique sub-category name if changing
     if (
       data.subCategoryName &&
-      (data.subCategoryName !== subCategory.subCategoryName || (data.categoryId && data.categoryId !== subCategory.categoryId))
+      (data.subCategoryName !== subCategory.subCategoryName ||
+        (data.categoryId && data.categoryId !== subCategory.categoryId))
     ) {
-      const targetCategoryId = data.categoryId || subCategory.categoryId;
-      const existing = await this.subCategoryRepository.findByCategoryAndName(targetCategoryId, data.subCategoryName);
+      const targetCategoryId = data.categoryId ?? subCategory.categoryId;
+      const existing = await this.repo.findByNameAndCategory(data.subCategoryName, targetCategoryId);
       if (existing && existing.id !== id) {
-        throw new Error('Sub-category name already exists in this category');
+        throw new Error(
+          `Sub-category name '${data.subCategoryName}' already exists in this category`
+        );
       }
     }
 
-    const updated = await this.subCategoryRepository.update(id, data);
+    const updated = await this.repo.update(id, data);
     validateEntityExists(updated, 'SubCategory');
     return updated;
   }
 
   async deleteSubCategory(id: number): Promise<void> {
-    const subCategory = await this.subCategoryRepository.findById(id);
+    const subCategory = await this.repo.findById(id);
     validateEntityExists(subCategory, 'SubCategory');
 
-    // Note: Cannot delete sub-category if products exist (enforced by database RESTRICT constraint)
-    const deleted = await this.subCategoryRepository.delete(id);
-    if (!deleted) {
-      throw new Error('Failed to delete SubCategory. Products may be associated with this sub-category');
-    }
-  }
-
-  async getSubCategoryCount(categoryId?: number): Promise<number> {
-    if (categoryId) {
-      return this.subCategoryRepository.getCountByCategory(categoryId);
-    }
-    return this.subCategoryRepository.getCount();
+    const deleted = await this.repo.delete(id);
+    validateDeletion(deleted, 'SubCategory');
   }
 }
