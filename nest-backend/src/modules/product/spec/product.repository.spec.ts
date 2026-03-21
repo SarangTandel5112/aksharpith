@@ -55,13 +55,16 @@ const mockGroupFieldValueRepo = () => ({
   save: jest.fn(),
   delete: jest.fn(),
   findOne: jest.fn(),
+  upsert: jest.fn(),
 });
 
 describe('ProductRepository', () => {
   let productRepo: ProductRepository;
   let repo: ReturnType<typeof mockRepo>;
   let mediaRepo: ReturnType<typeof mockMediaRepo>;
+  let physRepo: ReturnType<typeof mockPhysRepo>;
   let marketingMediaRepo: ReturnType<typeof mockMarketingMediaRepo>;
+  let groupFieldValueRepo: ReturnType<typeof mockGroupFieldValueRepo>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -94,7 +97,11 @@ describe('ProductRepository', () => {
     productRepo = module.get(ProductRepository);
     repo = module.get(getRepositoryToken(Product));
     mediaRepo = module.get(getRepositoryToken(ProductMedia));
+    physRepo = module.get(getRepositoryToken(ProductPhysicalAttributes));
     marketingMediaRepo = module.get(getRepositoryToken(ProductMarketingMedia));
+    groupFieldValueRepo = module.get(
+      getRepositoryToken(ProductGroupFieldValue),
+    );
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -301,6 +308,103 @@ describe('ProductRepository', () => {
       mediaRepo.create.mockReturnValue(media);
       mediaRepo.save.mockResolvedValue(media);
       expect(await productRepo.addMedia('uuid-1', dto as any)).toEqual(media);
+    });
+  });
+
+  describe('upsertPhysicalAttributes', () => {
+    it('creates new record when none exists', async () => {
+      const dto = { weight: 1.5, length: 10, width: 5, height: 3 };
+      const saved = { id: 'pa-1', productId: 'uuid-1', ...dto };
+      physRepo.findOne.mockResolvedValue(null);
+      physRepo.create.mockReturnValue(saved);
+      physRepo.save.mockResolvedValue(saved);
+      const result = await productRepo.upsertPhysicalAttributes(
+        'uuid-1',
+        dto as any,
+      );
+      expect(result).toEqual(saved);
+      expect(physRepo.create).toHaveBeenCalledWith(
+        expect.objectContaining({ productId: 'uuid-1', ...dto }),
+      );
+    });
+
+    it('updates existing record', async () => {
+      const existing = {
+        id: 'pa-1',
+        productId: 'uuid-1',
+        weight: 1.0,
+        length: 8,
+        width: 4,
+        height: 2,
+      };
+      const dto = { weight: 2.0 };
+      const updated = { ...existing, weight: 2.0 };
+      physRepo.findOne.mockResolvedValue(existing);
+      physRepo.save.mockResolvedValue(updated);
+      const result = await productRepo.upsertPhysicalAttributes(
+        'uuid-1',
+        dto as any,
+      );
+      expect(result.weight).toBe(2.0);
+      expect(physRepo.create).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getPhysicalAttributes', () => {
+    it('returns record when found', async () => {
+      const attrs = { id: 'pa-1', productId: 'uuid-1', weight: 1.5 };
+      physRepo.findOne.mockResolvedValue(attrs);
+      expect(await productRepo.getPhysicalAttributes('uuid-1')).toEqual(attrs);
+    });
+
+    it('returns null when not found', async () => {
+      physRepo.findOne.mockResolvedValue(null);
+      expect(await productRepo.getPhysicalAttributes('uuid-1')).toBeNull();
+    });
+  });
+
+  describe('bulkUpsertGroupFieldValues', () => {
+    it('upserts all values via ON CONFLICT', async () => {
+      groupFieldValueRepo.upsert.mockResolvedValue({ identifiers: [] });
+      await productRepo.bulkUpsertGroupFieldValues('prod-1', [
+        { fieldId: 'f-1', valueText: 'Tolkien' },
+        { fieldId: 'f-2', valueNumber: 450 },
+      ]);
+      expect(groupFieldValueRepo.upsert).toHaveBeenCalledWith(
+        expect.arrayContaining([
+          expect.objectContaining({
+            productId: 'prod-1',
+            fieldId: 'f-1',
+            valueText: 'Tolkien',
+          }),
+        ]),
+        { conflictPaths: ['productId', 'fieldId'] },
+      );
+    });
+
+    it('is a no-op for empty values array', async () => {
+      await productRepo.bulkUpsertGroupFieldValues('prod-1', []);
+      expect(groupFieldValueRepo.upsert).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getGroupFieldValues', () => {
+    it('returns field values with field + options loaded', async () => {
+      groupFieldValueRepo.find.mockResolvedValue([
+        {
+          fieldId: 'f-1',
+          valueText: 'Tolkien',
+          field: { fieldName: 'Author', fieldKey: 'author' },
+        },
+      ]);
+      const result = await productRepo.getGroupFieldValues('prod-1');
+      expect(result[0]).toHaveProperty('field');
+      expect(groupFieldValueRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { productId: 'prod-1' },
+          relations: expect.arrayContaining(['field', 'field.options']),
+        }),
+      );
     });
   });
 });

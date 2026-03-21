@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { ProductController } from '../product.controller';
 import { ProductService } from '../product.service';
 
@@ -15,6 +19,9 @@ const mockService = () => ({
   deleteMedia: jest.fn(),
   upsertPhysicalAttributes: jest.fn(),
   getPhysicalAttributes: jest.fn(),
+  bulkUpsertGroupFieldValues: jest.fn(),
+  getGroupFieldValuesBulk: jest.fn(),
+  getGroupFieldValues: jest.fn(),
 });
 
 describe('ProductController', () => {
@@ -88,9 +95,7 @@ describe('ProductController', () => {
 
   it('deleteMedia delegates to service', async () => {
     service.deleteMedia.mockResolvedValue(undefined);
-    expect(
-      await controller.deleteMedia('uuid-1', 'media-1'),
-    ).toBeUndefined();
+    expect(await controller.deleteMedia('uuid-1', 'media-1')).toBeUndefined();
   });
 
   it('upsertPhysicalAttributes delegates to service', async () => {
@@ -98,5 +103,42 @@ describe('ProductController', () => {
     expect(
       await controller.upsertPhysicalAttributes('uuid-1', { weight: 1.5 }),
     ).toHaveProperty('id');
+  });
+
+  describe('bulkUpsertGroupFieldValues', () => {
+    it('delegates to service', async () => {
+      service.bulkUpsertGroupFieldValues.mockResolvedValue(undefined);
+      await expect(
+        controller.bulkUpsertGroupFieldValues('prod-1', { values: [] }),
+      ).resolves.toBeUndefined();
+    });
+
+    it('propagates 400 when no group', async () => {
+      service.bulkUpsertGroupFieldValues.mockRejectedValue(
+        new BadRequestException(),
+      );
+      await expect(
+        controller.bulkUpsertGroupFieldValues('prod-1', { values: [] }),
+      ).rejects.toThrow(BadRequestException);
+    });
+  });
+
+  describe('getGroupFieldValues (bulk)', () => {
+    it('delegates to service', async () => {
+      service.getGroupFieldValuesBulk.mockResolvedValue([
+        { fieldId: 'f-1', valueText: 'Tolkien' },
+      ]);
+      const result = await controller.getGroupFieldValues('prod-1');
+      expect(result).toHaveLength(1);
+    });
+
+    it('propagates 404 when product not found', async () => {
+      service.getGroupFieldValuesBulk.mockRejectedValue(
+        new NotFoundException(),
+      );
+      await expect(controller.getGroupFieldValues('bad')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
   });
 });

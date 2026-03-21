@@ -35,6 +35,7 @@ const mockGroupFieldValueRepo = () => ({
   create: jest.fn(),
   save: jest.fn(),
   delete: jest.fn(),
+  upsert: jest.fn(),
 });
 
 const mockProductServiceFactory = () => ({
@@ -61,6 +62,8 @@ const mockProductServiceFactory = () => ({
   removeVendor: jest.fn(),
   upsertGroupFieldValue: jest.fn(),
   getGroupFieldValues: jest.fn(),
+  getGroupFieldValuesBulk: jest.fn(),
+  bulkUpsertGroupFieldValues: jest.fn(),
   removeGroupFieldValue: jest.fn(),
 });
 
@@ -179,10 +182,12 @@ describe('ProductRepository – group field values', () => {
       gfvRepo.find.mockResolvedValue(values);
 
       const result = await productRepo.getGroupFieldValues(PRODUCT_ID);
-      expect(gfvRepo.find).toHaveBeenCalledWith({
-        where: { productId: PRODUCT_ID },
-        relations: ['field', 'valueOption'],
-      });
+      expect(gfvRepo.find).toHaveBeenCalledWith(
+        expect.objectContaining({
+          where: { productId: PRODUCT_ID },
+          relations: expect.arrayContaining(['field', 'valueOption']),
+        }),
+      );
       expect(result).toHaveLength(1);
     });
 
@@ -196,7 +201,10 @@ describe('ProductRepository – group field values', () => {
   describe('removeGroupFieldValue', () => {
     it('returns true when a record is deleted', async () => {
       gfvRepo.delete.mockResolvedValue({ affected: 1 });
-      const result = await productRepo.removeGroupFieldValue(PRODUCT_ID, FIELD_ID);
+      const result = await productRepo.removeGroupFieldValue(
+        PRODUCT_ID,
+        FIELD_ID,
+      );
       expect(gfvRepo.delete).toHaveBeenCalledWith({
         productId: PRODUCT_ID,
         fieldId: FIELD_ID,
@@ -206,7 +214,10 @@ describe('ProductRepository – group field values', () => {
 
     it('returns false when no record matched', async () => {
       gfvRepo.delete.mockResolvedValue({ affected: 0 });
-      const result = await productRepo.removeGroupFieldValue(PRODUCT_ID, FIELD_ID);
+      const result = await productRepo.removeGroupFieldValue(
+        PRODUCT_ID,
+        FIELD_ID,
+      );
       expect(result).toBe(false);
     });
   });
@@ -239,6 +250,7 @@ const mockProductRepoFactory = () => ({
   removeVendor: jest.fn(),
   upsertGroupFieldValue: jest.fn(),
   getGroupFieldValues: jest.fn(),
+  bulkUpsertGroupFieldValues: jest.fn(),
   removeGroupFieldValue: jest.fn(),
 });
 
@@ -261,7 +273,10 @@ describe('ProductService – group field values', () => {
   afterEach(() => jest.clearAllMocks());
 
   describe('upsertGroupFieldValue', () => {
-    const dto: UpsertGroupFieldValueDto = { fieldId: FIELD_ID, valueText: 'Hi' };
+    const dto: UpsertGroupFieldValueDto = {
+      fieldId: FIELD_ID,
+      valueText: 'Hi',
+    };
 
     it('delegates to repository after verifying product exists', async () => {
       repo.findById.mockResolvedValue(mockProduct);
@@ -351,33 +366,38 @@ describe('ProductController – group field values', () => {
 
   afterEach(() => jest.clearAllMocks());
 
-  it('GET group-field-values delegates to service', async () => {
-    service.getGroupFieldValues.mockResolvedValue([mockFieldValue]);
+  it('GET group-field-values delegates to service (bulk)', async () => {
+    service.getGroupFieldValuesBulk.mockResolvedValue([mockFieldValue]);
     const result = await controller.getGroupFieldValues(PRODUCT_ID);
-    expect(service.getGroupFieldValues).toHaveBeenCalledWith(PRODUCT_ID);
+    expect(service.getGroupFieldValuesBulk).toHaveBeenCalledWith(PRODUCT_ID);
     expect(result).toHaveLength(1);
   });
 
   it('GET group-field-values propagates NotFoundException', async () => {
-    service.getGroupFieldValues.mockRejectedValue(new NotFoundException());
+    service.getGroupFieldValuesBulk.mockRejectedValue(new NotFoundException());
     await expect(controller.getGroupFieldValues('bad-id')).rejects.toThrow(
       NotFoundException,
     );
   });
 
-  it('PUT group-field-values delegates to service', async () => {
-    const dto: UpsertGroupFieldValueDto = { fieldId: FIELD_ID, valueText: 'Hi' };
-    service.upsertGroupFieldValue.mockResolvedValue(mockFieldValue);
-    const result = await controller.upsertGroupFieldValue(PRODUCT_ID, dto);
-    expect(service.upsertGroupFieldValue).toHaveBeenCalledWith(PRODUCT_ID, dto);
-    expect(result).toEqual(mockFieldValue);
+  it('PUT group-field-values (bulk) delegates to service', async () => {
+    service.bulkUpsertGroupFieldValues.mockResolvedValue(undefined);
+    const result = await controller.bulkUpsertGroupFieldValues(PRODUCT_ID, {
+      values: [{ fieldId: FIELD_ID, valueText: 'Hi' }],
+    });
+    expect(service.bulkUpsertGroupFieldValues).toHaveBeenCalledWith(
+      PRODUCT_ID,
+      { values: [{ fieldId: FIELD_ID, valueText: 'Hi' }] },
+    );
+    expect(result).toBeUndefined();
   });
 
-  it('PUT group-field-values propagates NotFoundException', async () => {
-    const dto: UpsertGroupFieldValueDto = { fieldId: FIELD_ID };
-    service.upsertGroupFieldValue.mockRejectedValue(new NotFoundException());
+  it('PUT group-field-values (bulk) propagates NotFoundException', async () => {
+    service.bulkUpsertGroupFieldValues.mockRejectedValue(
+      new NotFoundException(),
+    );
     await expect(
-      controller.upsertGroupFieldValue('bad-id', dto),
+      controller.bulkUpsertGroupFieldValues('bad-id', { values: [] }),
     ).rejects.toThrow(NotFoundException);
   });
 

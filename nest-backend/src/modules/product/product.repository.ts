@@ -23,6 +23,7 @@ import { ProductVendor } from './entities/product-vendor.entity';
 import { CreateProductVendorDto } from './dto/create-product-vendor.dto';
 import { ProductGroupFieldValue } from './entities/product-group-field-value.entity';
 import { UpsertGroupFieldValueDto } from './dto/upsert-group-field-value.dto';
+import { FieldValueItemDto } from './dto/bulk-upsert-group-field-values.dto';
 
 @Injectable()
 export class ProductRepository {
@@ -244,7 +245,19 @@ export class ProductRepository {
   ): Promise<ProductGroupFieldValue[]> {
     return this.groupFieldValueRepo.find({
       where: { productId },
-      relations: ['field', 'valueOption'],
+      relations: ['field', 'field.options', 'valueOption'],
+      order: { field: { sortOrder: 'ASC' } } as any,
+    });
+  }
+
+  async bulkUpsertGroupFieldValues(
+    productId: string,
+    values: FieldValueItemDto[],
+  ): Promise<void> {
+    if (values.length === 0) return;
+    const rows = values.map((v) => ({ ...v, productId }));
+    await this.groupFieldValueRepo.upsert(rows, {
+      conflictPaths: ['productId', 'fieldId'],
     });
   }
 

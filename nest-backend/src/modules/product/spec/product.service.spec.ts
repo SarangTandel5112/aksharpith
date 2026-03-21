@@ -1,5 +1,9 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { ProductService } from '../product.service';
 import { ProductRepository } from '../product.repository';
 
@@ -16,6 +20,8 @@ const mockProductRepo = () => ({
   deleteMedia: jest.fn(),
   upsertPhysicalAttributes: jest.fn(),
   getPhysicalAttributes: jest.fn(),
+  bulkUpsertGroupFieldValues: jest.fn(),
+  getGroupFieldValues: jest.fn(),
 });
 
 const mockProduct = {
@@ -51,14 +57,22 @@ describe('ProductService', () => {
   describe('findAll', () => {
     it('returns paginated response', async () => {
       repo.findAll.mockResolvedValue([[mockProduct], 1]);
-      const result = await service.findAll({ page: 1, limit: 10, order: 'ASC' });
+      const result = await service.findAll({
+        page: 1,
+        limit: 10,
+        order: 'ASC',
+      });
       expect(result.total).toBe(1);
       expect(result.items).toHaveLength(1);
     });
 
     it('calculates totalPages', async () => {
       repo.findAll.mockResolvedValue([[mockProduct], 21]);
-      const result = await service.findAll({ page: 1, limit: 10, order: 'ASC' });
+      const result = await service.findAll({
+        page: 1,
+        limit: 10,
+        order: 'ASC',
+      });
       expect(result.totalPages).toBe(3);
     });
   });
@@ -141,7 +155,10 @@ describe('ProductService', () => {
   describe('addMedia', () => {
     it('adds media after validating product', async () => {
       repo.findById.mockResolvedValue(mockProduct);
-      repo.addMedia.mockResolvedValue({ id: 'media-1', url: 'http://img.com/1.jpg' });
+      repo.addMedia.mockResolvedValue({
+        id: 'media-1',
+        url: 'http://img.com/1.jpg',
+      });
       const result = await service.addMedia('uuid-1', {
         url: 'http://img.com/1.jpg',
       });
@@ -168,9 +185,99 @@ describe('ProductService', () => {
     it('throws NotFoundException when media not found', async () => {
       repo.findById.mockResolvedValue(mockProduct);
       repo.deleteMedia.mockResolvedValue(false);
+      await expect(service.deleteMedia('uuid-1', 'bad-media')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('upsertPhysicalAttributes', () => {
+    it('delegates to repo after validating product', async () => {
+      const attrs = { id: 'pa-1', productId: 'uuid-1', weight: 1.5 };
+      repo.findById.mockResolvedValue(mockProduct);
+      repo.upsertPhysicalAttributes.mockResolvedValue(attrs);
+      const result = await service.upsertPhysicalAttributes('uuid-1', {
+        weight: 1.5,
+      });
+      expect(result).toEqual(attrs);
+      expect(repo.upsertPhysicalAttributes).toHaveBeenCalledWith('uuid-1', {
+        weight: 1.5,
+      });
+    });
+
+    it('throws NotFoundException when product not found', async () => {
+      repo.findById.mockResolvedValue(null);
       await expect(
-        service.deleteMedia('uuid-1', 'bad-media'),
+        service.upsertPhysicalAttributes('bad', { weight: 1.5 }),
       ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('getPhysicalAttributes', () => {
+    it('returns attributes when found', async () => {
+      const attrs = { id: 'pa-1', productId: 'uuid-1', weight: 1.5 };
+      repo.findById.mockResolvedValue(mockProduct);
+      repo.getPhysicalAttributes.mockResolvedValue(attrs);
+      const result = await service.getPhysicalAttributes('uuid-1');
+      expect(result).toEqual(attrs);
+    });
+
+    it('returns null when no physical attributes set', async () => {
+      repo.findById.mockResolvedValue(mockProduct);
+      repo.getPhysicalAttributes.mockResolvedValue(null);
+      const result = await service.getPhysicalAttributes('uuid-1');
+      expect(result).toBeNull();
+    });
+
+    it('throws NotFoundException when product not found', async () => {
+      repo.findById.mockResolvedValue(null);
+      await expect(service.getPhysicalAttributes('bad')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('bulkUpsertGroupFieldValues', () => {
+    it('validates product exists, then delegates', async () => {
+      repo.findById.mockResolvedValue({ id: 'prod-1', groupId: 'g-1' });
+      repo.bulkUpsertGroupFieldValues.mockResolvedValue(undefined);
+      await expect(
+        service.bulkUpsertGroupFieldValues('prod-1', {
+          values: [{ fieldId: 'f-1', valueText: 'Tolkien' }],
+        }),
+      ).resolves.toBeUndefined();
+    });
+
+    it('throws 400 if product has no group', async () => {
+      repo.findById.mockResolvedValue({ id: 'prod-1', groupId: null });
+      await expect(
+        service.bulkUpsertGroupFieldValues('prod-1', { values: [] }),
+      ).rejects.toThrow(BadRequestException);
+    });
+
+    it('throws 404 if product not found', async () => {
+      repo.findById.mockResolvedValue(null);
+      await expect(
+        service.bulkUpsertGroupFieldValues('bad', { values: [] }),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('getGroupFieldValuesBulk', () => {
+    it('returns field values when product exists with group', async () => {
+      repo.findById.mockResolvedValue({ id: 'prod-1', groupId: 'g-1' });
+      repo.getGroupFieldValues.mockResolvedValue([
+        { fieldId: 'f-1', valueText: 'Tolkien' },
+      ]);
+      const result = await service.getGroupFieldValuesBulk('prod-1');
+      expect(result).toHaveLength(1);
+    });
+
+    it('throws 404 if product not found', async () => {
+      repo.findById.mockResolvedValue(null);
+      await expect(service.getGroupFieldValuesBulk('bad')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  BadRequestException,
 } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { ProductRepository } from './product.repository';
@@ -14,6 +15,7 @@ import { UpsertPhysicalAttributesDto } from './dto/upsert-physical-attributes.dt
 import { CreateMarketingMediaDto } from './dto/create-marketing-media.dto';
 import { CreateProductZoneDto } from './dto/create-product-zone.dto';
 import { UpsertGroupFieldValueDto } from './dto/upsert-group-field-value.dto';
+import { BulkUpsertGroupFieldValuesDto } from './dto/bulk-upsert-group-field-values.dto';
 import { CreateProductVendorDto } from './dto/create-product-vendor.dto';
 import { PaginatedResponseDto } from '../../common/dto/paginated-response.dto';
 import { ProductMedia } from './entities/product-media.entity';
@@ -191,6 +193,25 @@ export class ProductService {
     );
     if (!deleted)
       throw new NotFoundException(`Field value for field ${fieldId} not found`);
+  }
+
+  async bulkUpsertGroupFieldValues(
+    productId: string,
+    dto: BulkUpsertGroupFieldValuesDto,
+  ): Promise<void> {
+    const product = await this.productRepo.findById(productId);
+    if (!product) throw new NotFoundException(`Product ${productId} not found`);
+    if (!product.groupId)
+      throw new BadRequestException('Product has no group assigned');
+    await this.productRepo.bulkUpsertGroupFieldValues(productId, dto.values);
+  }
+
+  async getGroupFieldValuesBulk(
+    productId: string,
+  ): Promise<ProductGroupFieldValue[]> {
+    const product = await this.productRepo.findById(productId);
+    if (!product) throw new NotFoundException(`Product ${productId} not found`);
+    return this.productRepo.getGroupFieldValues(productId);
   }
 
   async addVendor(

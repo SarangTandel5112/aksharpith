@@ -27,6 +27,7 @@ import { UpsertPhysicalAttributesDto } from './dto/upsert-physical-attributes.dt
 import { CreateMarketingMediaDto } from './dto/create-marketing-media.dto';
 import { CreateProductZoneDto } from './dto/create-product-zone.dto';
 import { UpsertGroupFieldValueDto } from './dto/upsert-group-field-value.dto';
+import { BulkUpsertGroupFieldValuesDto } from './dto/bulk-upsert-group-field-values.dto';
 import { CreateProductVendorDto } from './dto/create-product-vendor.dto';
 
 @ApiTags('products')
@@ -184,16 +185,16 @@ export class ProductController {
   @Get(':id/group-field-values')
   @Roles([ROLE.ADMIN, ROLE.STAFF, ROLE.VIEWER])
   getGroupFieldValues(@Param('id', ParseUUIDPipe) id: string) {
-    return this.service.getGroupFieldValues(id);
+    return this.service.getGroupFieldValuesBulk(id);
   }
 
   @Put(':id/group-field-values')
-  @Roles([ROLE.ADMIN])
-  upsertGroupFieldValue(
+  @Roles([ROLE.ADMIN, ROLE.STAFF])
+  bulkUpsertGroupFieldValues(
     @Param('id', ParseUUIDPipe) id: string,
-    @Body() dto: UpsertGroupFieldValueDto,
+    @Body() dto: BulkUpsertGroupFieldValuesDto,
   ) {
-    return this.service.upsertGroupFieldValue(id, dto);
+    return this.service.bulkUpsertGroupFieldValues(id, dto);
   }
 
   @Delete(':id/group-field-values/:fieldId')
