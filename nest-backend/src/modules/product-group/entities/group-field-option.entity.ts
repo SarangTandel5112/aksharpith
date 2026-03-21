@@ -1,0 +1,43 @@
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToOne,
+  JoinColumn,
+  Index,
+} from 'typeorm';
+import { Expose } from 'class-transformer';
+import { GroupField } from './group-field.entity';
+
+@Entity('group_field_options')
+@Index(['fieldId'])
+export class GroupFieldOption {
+  @PrimaryGeneratedColumn('uuid')
+  @Expose()
+  id: string;
+
+  @Column({ name: 'field_id' })
+  fieldId: string;
+
+  @ManyToOne(() => GroupField, (f) => f.options, { onDelete: 'CASCADE' })
+  @JoinColumn({ name: 'field_id' })
+  field: GroupField;
+
+  @Column({ name: 'option_value', length: 255 })
+  @Expose()
+  optionValue: string;
+
+  @Column({ name: 'sort_order', type: 'int', default: 0 })
+  @Expose()
+  sortOrder: number;
+
+  @CreateDateColumn({ name: 'created_at' })
+  @Expose()
+  createdAt: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  @Expose()
+  updatedAt: Date;
+}
