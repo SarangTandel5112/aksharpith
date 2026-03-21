@@ -1,18 +1,17 @@
-import { RoleRepository } from './role.repository';
-import { UserRole } from '@entities';
+import { IRoleRepository } from './interfaces/role.repository.interface';
+import { UserRole } from '@entities/user-role.entity';
+import { validateEntityExists } from '@helpers/entity.helper';
 
 export class RoleService {
-  constructor(private roleRepository: RoleRepository) {}
+  constructor(private repo: IRoleRepository) {}
 
   async getAllRoles(): Promise<UserRole[]> {
-    return this.roleRepository.findAll();
+    return this.repo.findAll();
   }
 
-  async getRoleById(id: number): Promise<UserRole | null> {
-    const role = await this.roleRepository.findById(id);
-    if (!role) {
-      throw new Error('Role not found');
-    }
+  async getRoleById(id: number): Promise<UserRole> {
+    const role = await this.repo.findById(id);
+    validateEntityExists(role, 'Role');
     return role;
   }
 }
