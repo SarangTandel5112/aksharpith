@@ -21,4 +21,11 @@ describe('buildCombinationHash', () => {
     buildCombinationHash(ids);
     expect(ids).toEqual(['z', 'a']);
   });
+
+  it('returns a stable string for an empty array of IDs', () => {
+    const result = buildCombinationHash([]);
+    expect(typeof result).toBe('string');
+    // calling twice is deterministic
+    expect(buildCombinationHash([])).toBe(result);
+  });
 });

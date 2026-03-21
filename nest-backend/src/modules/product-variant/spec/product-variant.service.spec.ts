@@ -33,7 +33,10 @@ describe('ProductVariantService', () => {
         ProductVariantService,
         { provide: ProductVariantRepository, useFactory: mockVariantRepo },
         { provide: getRepositoryToken(Product), useFactory: mockProductRepo },
-        { provide: getRepositoryToken(ProductAttributeValue), useFactory: mockValueRepo },
+        {
+          provide: getRepositoryToken(ProductAttributeValue),
+          useFactory: mockValueRepo,
+        },
       ],
     }).compile();
     service = module.get(ProductVariantService);
@@ -49,29 +52,49 @@ describe('ProductVariantService', () => {
   describe('findAll', () => {
     it('returns paginated variants', async () => {
       productRepo.findOne.mockResolvedValue(mockProduct);
-      variantRepo.findAll.mockResolvedValue({ items: [], total: 0, page: 1, limit: 20, totalPages: 0 });
-      const result = await service.findAll('prod-1', { page: 1, limit: 20, order: 'ASC' });
+      variantRepo.findAll.mockResolvedValue({
+        items: [],
+        total: 0,
+        page: 1,
+        limit: 20,
+        totalPages: 0,
+      });
+      const result = await service.findAll('prod-1', {
+        page: 1,
+        limit: 20,
+        order: 'ASC',
+      });
       expect(result.items).toEqual([]);
     });
 
     it('throws 404 if product not found', async () => {
       productRepo.findOne.mockResolvedValue(null);
-      await expect(service.findAll('bad', { page: 1, limit: 20, order: 'ASC' })).rejects.toThrow(NotFoundException);
+      await expect(
+        service.findAll('bad', { page: 1, limit: 20, order: 'ASC' }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
   describe('findOne', () => {
     it('returns variant when found', async () => {
       productRepo.findOne.mockResolvedValue(mockProduct);
-      variantRepo.findById.mockResolvedValue({ id: 'v-1', productId: 'prod-1' });
+      variantRepo.findById.mockResolvedValue({
+        id: 'v-1',
+        productId: 'prod-1',
+      });
       const result = await service.findOne('prod-1', 'v-1');
       expect(result).toHaveProperty('id', 'v-1');
     });
 
     it('throws 404 if variant belongs to different product', async () => {
       productRepo.findOne.mockResolvedValue(mockProduct);
-      variantRepo.findById.mockResolvedValue({ id: 'v-1', productId: 'other-prod' });
-      await expect(service.findOne('prod-1', 'v-1')).rejects.toThrow(NotFoundException);
+      variantRepo.findById.mockResolvedValue({
+        id: 'v-1',
+        productId: 'other-prod',
+      });
+      await expect(service.findOne('prod-1', 'v-1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -101,68 +124,157 @@ describe('ProductVariantService', () => {
         deletedAt: null,
       });
       await expect(
-        service.create('prod-1', { sku: 'SKU-002', price: 10, attributeValueIds: ['val-a'] }),
+        service.create('prod-1', {
+          sku: 'SKU-002',
+          price: 10,
+          attributeValueIds: ['val-a'],
+        }),
       ).rejects.toThrow(ConflictException);
     });
 
     it('throws 404 if product not found', async () => {
       productRepo.findOne.mockResolvedValue(null);
       await expect(
-        service.create('bad', { sku: 'SKU', price: 1, attributeValueIds: ['val'] }),
+        service.create('bad', {
+          sku: 'SKU',
+          price: 1,
+          attributeValueIds: ['val'],
+        }),
       ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('update', () => {
+    it('updates variant fields and returns updated variant', async () => {
+      const updated = {
+        id: 'v-1',
+        productId: 'prod-1',
+        price: 19.99,
+        stockQuantity: 50,
+      };
+      productRepo.findOne.mockResolvedValue(mockProduct);
+      variantRepo.findById
+        .mockResolvedValueOnce({ id: 'v-1', productId: 'prod-1' }) // findOne check
+        .mockResolvedValueOnce(updated); // post-update fetch
+      variantRepo.update.mockResolvedValue(undefined);
+
+      const result = await service.update('prod-1', 'v-1', {
+        price: 19.99,
+        stockQuantity: 50,
+      });
+
+      expect(variantRepo.update).toHaveBeenCalledWith('v-1', {
+        price: 19.99,
+        stockQuantity: 50,
+      });
+      expect(result).toEqual(updated);
+    });
+
+    it('throws NotFoundException when product does not exist', async () => {
+      productRepo.findOne.mockResolvedValue(null);
+
+      await expect(
+        service.update('bad-prod', 'v-1', { price: 9.99 }),
+      ).rejects.toThrow(NotFoundException);
+      expect(variantRepo.update).not.toHaveBeenCalled();
+    });
+
+    it('throws NotFoundException when variant does not belong to the product', async () => {
+      productRepo.findOne.mockResolvedValue(mockProduct);
+      variantRepo.findById.mockResolvedValue({
+        id: 'v-1',
+        productId: 'other-prod',
+      });
+
+      await expect(
+        service.update('prod-1', 'v-1', { price: 9.99 }),
+      ).rejects.toThrow(NotFoundException);
+      expect(variantRepo.update).not.toHaveBeenCalled();
+    });
+
+    it('throws NotFoundException when variant does not exist (findById returns null)', async () => {
+      productRepo.findOne.mockResolvedValue(mockProduct);
+      variantRepo.findById.mockResolvedValue(null);
+
+      await expect(
+        service.update('prod-1', 'bad-variant', { price: 9.99 }),
+      ).rejects.toThrow(NotFoundException);
+      expect(variantRepo.update).not.toHaveBeenCalled();
     });
   });
 
   describe('generateMatrix', () => {
     it('creates all combinations: 2 attributes × 3+2 values = 6 variants', async () => {
       productRepo.findOne.mockResolvedValue(mockProduct);
-      valueRepo.find.mockImplementation((opts: { where: { attributeId: string } }) => {
-        if (opts.where.attributeId === 'attr-1') {
+      valueRepo.find.mockImplementation(
+        (opts: { where: { attributeId: string } }) => {
+          if (opts.where.attributeId === 'attr-1') {
+            return Promise.resolve([
+              { id: 'a1v1', attributeId: 'attr-1' },
+              { id: 'a1v2', attributeId: 'attr-1' },
+              { id: 'a1v3', attributeId: 'attr-1' },
+            ]);
+          }
           return Promise.resolve([
-            { id: 'a1v1', attributeId: 'attr-1' },
-            { id: 'a1v2', attributeId: 'attr-1' },
-            { id: 'a1v3', attributeId: 'attr-1' },
+            { id: 'a2v1', attributeId: 'attr-2' },
+            { id: 'a2v2', attributeId: 'attr-2' },
           ]);
-        }
-        return Promise.resolve([
-          { id: 'a2v1', attributeId: 'attr-2' },
-          { id: 'a2v2', attributeId: 'attr-2' },
-        ]);
-      });
+        },
+      );
       variantRepo.findByCombinationHash.mockResolvedValue(null);
-      variantRepo.createWithAttributes.mockImplementation(async (_pid: string, dto: { attributeValueIds: string[] }) => ({
-        id: `v-${dto.attributeValueIds.join('-')}`,
-        combinationHash: [...dto.attributeValueIds].sort().join('_'),
-      }));
+      variantRepo.createWithAttributes.mockImplementation(
+        async (_pid: string, dto: { attributeValueIds: string[] }) => ({
+          id: `v-${dto.attributeValueIds.join('-')}`,
+          combinationHash: [...dto.attributeValueIds].sort().join('_'),
+        }),
+      );
 
-      const result = await service.generateMatrix('prod-1', { attributeIds: ['attr-1', 'attr-2'] });
+      const result = await service.generateMatrix('prod-1', {
+        attributeIds: ['attr-1', 'attr-2'],
+      });
       expect(result).toHaveLength(6);
       expect(variantRepo.createWithAttributes).toHaveBeenCalledTimes(6);
     });
 
     it('skips existing non-deleted combinations', async () => {
       productRepo.findOne.mockResolvedValue(mockProduct);
-      valueRepo.find.mockResolvedValue([{ id: 'val-1', attributeId: 'attr-1' }]);
+      valueRepo.find.mockResolvedValue([
+        { id: 'val-1', attributeId: 'attr-1' },
+      ]);
       variantRepo.findByCombinationHash.mockResolvedValue({
         id: 'v-existing',
         isDeleted: false,
         deletedAt: null,
       });
 
-      const result = await service.generateMatrix('prod-1', { attributeIds: ['attr-1'] });
+      const result = await service.generateMatrix('prod-1', {
+        attributeIds: ['attr-1'],
+      });
       expect(result).toHaveLength(1);
       expect(variantRepo.createWithAttributes).not.toHaveBeenCalled();
     });
 
     it('restores soft-deleted combinations', async () => {
       productRepo.findOne.mockResolvedValue(mockProduct);
-      valueRepo.find.mockResolvedValue([{ id: 'val-1', attributeId: 'attr-1' }]);
-      const deletedVariant = { id: 'v-deleted', isDeleted: true, deletedAt: new Date() };
+      valueRepo.find.mockResolvedValue([
+        { id: 'val-1', attributeId: 'attr-1' },
+      ]);
+      const deletedVariant = {
+        id: 'v-deleted',
+        isDeleted: true,
+        deletedAt: new Date(),
+      };
       variantRepo.findByCombinationHash.mockResolvedValue(deletedVariant);
       variantRepo.restore.mockResolvedValue(undefined);
-      variantRepo.findById.mockResolvedValue({ ...deletedVariant, isDeleted: false, deletedAt: null });
+      variantRepo.findById.mockResolvedValue({
+        ...deletedVariant,
+        isDeleted: false,
+        deletedAt: null,
+      });
 
-      const result = await service.generateMatrix('prod-1', { attributeIds: ['attr-1'] });
+      const result = await service.generateMatrix('prod-1', {
+        attributeIds: ['attr-1'],
+      });
       expect(variantRepo.restore).toHaveBeenCalledWith('v-deleted');
       expect(result).toHaveLength(1);
     });
@@ -193,9 +305,11 @@ describe('ProductVariantService', () => {
         ];
       });
       variantRepo.findByCombinationHash.mockResolvedValue(null);
-      variantRepo.createWithAttributes.mockImplementation(async (_pid: string, dto: { attributeValueIds: string[] }) => ({
-        id: `v-${dto.attributeValueIds.join('-')}`,
-      }));
+      variantRepo.createWithAttributes.mockImplementation(
+        async (_pid: string, dto: { attributeValueIds: string[] }) => ({
+          id: `v-${dto.attributeValueIds.join('-')}`,
+        }),
+      );
 
       const result = await service.generateMatrix('prod-1', {
         attributeIds: ['attr-1', 'attr-2', 'attr-3'],
@@ -207,7 +321,10 @@ describe('ProductVariantService', () => {
   describe('remove', () => {
     it('soft-deletes variant', async () => {
       productRepo.findOne.mockResolvedValue(mockProduct);
-      variantRepo.findById.mockResolvedValue({ id: 'v-1', productId: 'prod-1' });
+      variantRepo.findById.mockResolvedValue({
+        id: 'v-1',
+        productId: 'prod-1',
+      });
       variantRepo.softDelete.mockResolvedValue(true);
       await service.remove('prod-1', 'v-1');
       expect(variantRepo.softDelete).toHaveBeenCalledWith('v-1');
@@ -216,7 +333,9 @@ describe('ProductVariantService', () => {
     it('throws 404 if variant not found', async () => {
       productRepo.findOne.mockResolvedValue(mockProduct);
       variantRepo.findById.mockResolvedValue(null);
-      await expect(service.remove('prod-1', 'bad')).rejects.toThrow(NotFoundException);
+      await expect(service.remove('prod-1', 'bad')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });
