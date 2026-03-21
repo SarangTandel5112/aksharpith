@@ -1,4 +1,6 @@
 import { Router } from 'express';
+import { AppDataSource } from '@config/database.config';
+import { User } from '@entities/user.entity';
 import { UserController } from './user.controller';
 import { UserService } from './user.service';
 import { UserRepository } from './user.repository';
@@ -12,7 +14,7 @@ export class UserModule {
 
   constructor() {
     // Initialize dependencies (DI pattern)
-    this.userRepository = new UserRepository();
+    this.userRepository = new UserRepository(AppDataSource.getRepository(User));
     this.userService = new UserService(this.userRepository);
     this.userController = new UserController(this.userService);
 

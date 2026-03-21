@@ -1,19 +1,13 @@
-import { SelectQueryBuilder } from 'typeorm';
-import { AppDataSource } from '@config/database.config';
+import { Repository, SelectQueryBuilder } from 'typeorm';
 import { User } from '@entities';
 import { BaseRepository } from '@common/base.repository';
-import { BaseQueryOptions, PaginatedResult } from '@common/types';
+import { PaginatedResult } from '@common/types';
+import { IUserRepository } from './interfaces/user.repository.interface';
+import { QueryUserDto } from './dtos';
 
-export interface UserQueryOptions extends BaseQueryOptions {}
-
-/**
- * User Repository
- * Extends BaseRepository to inherit common data access patterns
- * Only implements user-specific logic
- */
-export class UserRepository extends BaseRepository<User> {
-  constructor() {
-    super(AppDataSource.getRepository(User));
+export class UserRepository extends BaseRepository<User> implements IUserRepository {
+  constructor(repo: Repository<User>) {
+    super(repo);
   }
 
   protected getEntityName(): string {
@@ -24,22 +18,21 @@ export class UserRepository extends BaseRepository<User> {
     return ['id', 'username', 'email', 'createdAt', 'updatedAt'];
   }
 
-  protected applySearchFilter(
-    queryBuilder: SelectQueryBuilder<User>,
-    search: string
-  ): void {
+  protected applySearchFilter(queryBuilder: SelectQueryBuilder<User>, search: string): void {
     queryBuilder.andWhere(
       '(user.username LIKE :search OR user.email LIKE :search OR user.Firstname LIKE :search OR user.Lastname LIKE :search)',
       { search: `%${search}%` }
     );
   }
 
-  async findAll(options: UserQueryOptions): Promise<PaginatedResult<User>> {
-    // Override to add role relation
-    const result = await this.findAllWithPagination(options, (qb) => {
+  async findAll(options: QueryUserDto): Promise<PaginatedResult<User>> {
+    return this.findAllWithPagination(options, (qb) => {
       qb.leftJoinAndSelect('user.role', 'role');
     });
-    return result;
+  }
+
+  async findById(id: number): Promise<User | null> {
+    return super.findById(id, ['role']);
   }
 
   async findByEmail(email: string): Promise<User | null> {
@@ -49,7 +42,10 @@ export class UserRepository extends BaseRepository<User> {
     });
   }
 
-  async findById(id: number): Promise<User | null> {
-    return super.findById(id, ['role']);
+  async findByUsername(username: string): Promise<User | null> {
+    return this.repository.findOne({
+      where: { username, isActive: true },
+      relations: ['role'],
+    });
   }
 }
