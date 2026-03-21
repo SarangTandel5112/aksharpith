@@ -311,6 +311,30 @@ describe('ProductGroupService', () => {
       });
       expect(result).toHaveProperty('optionLabel', 'Updated');
     });
+
+    it('throws 404 if group not found', async () => {
+      repo.findById.mockResolvedValue(null);
+      await expect(
+        service.updateOption('bad', 'f-1', 'o-1', {}),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('throws 404 if field not found in group', async () => {
+      repo.findById.mockResolvedValue({ id: 'g-1' });
+      repo.findFieldById.mockResolvedValue(null);
+      await expect(
+        service.updateOption('g-1', 'bad', 'o-1', {}),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('throws 404 if option not found', async () => {
+      repo.findById.mockResolvedValue({ id: 'g-1' });
+      repo.findFieldById.mockResolvedValue({ id: 'f-1', groupId: 'g-1' });
+      repo.findOptionById.mockResolvedValue(null);
+      await expect(
+        service.updateOption('g-1', 'f-1', 'bad', {}),
+      ).rejects.toThrow(NotFoundException);
+    });
   });
 
   describe('removeOption', () => {
