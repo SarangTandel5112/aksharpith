@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { RoleController } from '../role.controller';
 import { RoleService } from '../role.service';
+import { Roles } from '../../../core/decorators/roles.decorator';
+import { ROLE } from '../../../utils/constants';
 
 const mockRoleService = () => ({
   findAll: jest.fn(),
@@ -37,7 +39,11 @@ describe('RoleController', () => {
   describe('findAll', () => {
     it('delegates to service and returns paginated result', async () => {
       service.findAll.mockResolvedValue(mockPaginated);
-      const result = await controller.findAll({ page: 1, limit: 10, order: 'ASC' });
+      const result = await controller.findAll({
+        page: 1,
+        limit: 10,
+        order: 'ASC',
+      });
       expect(result).toEqual(mockPaginated);
       expect(service.findAll).toHaveBeenCalledWith({
         page: 1,
@@ -55,8 +61,12 @@ describe('RoleController', () => {
     });
 
     it('propagates NotFoundException', async () => {
-      service.findOne.mockRejectedValue(new NotFoundException('Role not found'));
-      await expect(controller.findOne('bad-id')).rejects.toThrow(NotFoundException);
+      service.findOne.mockRejectedValue(
+        new NotFoundException('Role not found'),
+      );
+      await expect(controller.findOne('bad-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -102,7 +112,51 @@ describe('RoleController', () => {
 
     it('propagates NotFoundException', async () => {
       service.remove.mockRejectedValue(new NotFoundException());
-      await expect(controller.remove('bad-id')).rejects.toThrow(NotFoundException);
+      await expect(controller.remove('bad-id')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('RBAC metadata', () => {
+    it('findAll requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        RoleController.prototype.findAll,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('findOne requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        RoleController.prototype.findOne,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('create requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        RoleController.prototype.create,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('update requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        RoleController.prototype.update,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('remove requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        RoleController.prototype.remove,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
     });
   });
 });

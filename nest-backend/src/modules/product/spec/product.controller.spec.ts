@@ -6,6 +6,8 @@ import {
 } from '@nestjs/common';
 import { ProductController } from '../product.controller';
 import { ProductService } from '../product.service';
+import { Roles } from '../../../core/decorators/roles.decorator';
+import { ROLE } from '../../../utils/constants';
 
 const mockService = () => ({
   findAll: jest.fn(),
@@ -139,6 +141,208 @@ describe('ProductController', () => {
       await expect(controller.getGroupFieldValues('bad')).rejects.toThrow(
         NotFoundException,
       );
+    });
+  });
+
+  describe('RBAC metadata', () => {
+    it('findAll requires ADMIN, STAFF, VIEWER', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductController.prototype.findAll,
+      );
+      expect(meta).toEqual([ROLE.ADMIN, ROLE.STAFF, ROLE.VIEWER]);
+    });
+
+    it('getStats requires ADMIN, STAFF', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductController.prototype.getStats,
+      );
+      expect(meta).toEqual([ROLE.ADMIN, ROLE.STAFF]);
+    });
+
+    it('findOne requires ADMIN, STAFF, VIEWER', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductController.prototype.findOne,
+      );
+      expect(meta).toEqual([ROLE.ADMIN, ROLE.STAFF, ROLE.VIEWER]);
+    });
+
+    it('create requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductController.prototype.create,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('update requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductController.prototype.update,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('remove requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductController.prototype.remove,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('addMedia requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductController.prototype.addMedia,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('getMedia requires ADMIN, STAFF, VIEWER', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductController.prototype.getMedia,
+      );
+      expect(meta).toEqual([ROLE.ADMIN, ROLE.STAFF, ROLE.VIEWER]);
+    });
+
+    it('deleteMedia requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductController.prototype.deleteMedia,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('upsertPhysicalAttributes requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductController.prototype.upsertPhysicalAttributes,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('getPhysicalAttributes requires ADMIN, STAFF, VIEWER', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductController.prototype.getPhysicalAttributes,
+      );
+      expect(meta).toEqual([ROLE.ADMIN, ROLE.STAFF, ROLE.VIEWER]);
+    });
+
+    it('getMarketingMedia requires ADMIN, STAFF, VIEWER', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductController.prototype.getMarketingMedia,
+      );
+      expect(meta).toEqual([ROLE.ADMIN, ROLE.STAFF, ROLE.VIEWER]);
+    });
+
+    it('addMarketingMedia requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductController.prototype.addMarketingMedia,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('removeMarketingMedia requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductController.prototype.removeMarketingMedia,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('getZones requires ADMIN, STAFF, VIEWER', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductController.prototype.getZones,
+      );
+      expect(meta).toEqual([ROLE.ADMIN, ROLE.STAFF, ROLE.VIEWER]);
+    });
+
+    it('addZone requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductController.prototype.addZone,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('updateZone requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductController.prototype.updateZone,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('removeZone requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductController.prototype.removeZone,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('getGroupFieldValues requires ADMIN, STAFF, VIEWER', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductController.prototype.getGroupFieldValues,
+      );
+      expect(meta).toEqual([ROLE.ADMIN, ROLE.STAFF, ROLE.VIEWER]);
+    });
+
+    it('bulkUpsertGroupFieldValues requires ADMIN, STAFF', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductController.prototype.bulkUpsertGroupFieldValues,
+      );
+      expect(meta).toEqual([ROLE.ADMIN, ROLE.STAFF]);
+    });
+
+    it('removeGroupFieldValue requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductController.prototype.removeGroupFieldValue,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('getVendors requires ADMIN, STAFF, VIEWER', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductController.prototype.getVendors,
+      );
+      expect(meta).toEqual([ROLE.ADMIN, ROLE.STAFF, ROLE.VIEWER]);
+    });
+
+    it('addVendor requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductController.prototype.addVendor,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('updateVendor requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductController.prototype.updateVendor,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('removeVendor requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductController.prototype.removeVendor,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
     });
   });
 });

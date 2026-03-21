@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { ProductGroupController } from '../product-group.controller';
 import { ProductGroupService } from '../product-group.service';
+import { Roles } from '../../../core/decorators/roles.decorator';
+import { ROLE } from '../../../utils/constants';
 
 const mockService = () => ({
   findAll: jest.fn(),
@@ -190,6 +192,104 @@ describe('ProductGroupController', () => {
       await expect(
         controller.removeOption('g-1', 'f-1', 'o-1'),
       ).rejects.toThrow(ConflictException);
+    });
+  });
+
+  describe('RBAC metadata', () => {
+    it('findAll requires ADMIN, STAFF, VIEWER', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductGroupController.prototype.findAll,
+      );
+      expect(meta).toEqual([ROLE.ADMIN, ROLE.STAFF, ROLE.VIEWER]);
+    });
+
+    it('findOne requires ADMIN, STAFF, VIEWER', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductGroupController.prototype.findOne,
+      );
+      expect(meta).toEqual([ROLE.ADMIN, ROLE.STAFF, ROLE.VIEWER]);
+    });
+
+    it('findWithFields requires ADMIN, STAFF, VIEWER', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductGroupController.prototype.findWithFields,
+      );
+      expect(meta).toEqual([ROLE.ADMIN, ROLE.STAFF, ROLE.VIEWER]);
+    });
+
+    it('create requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductGroupController.prototype.create,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('update requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductGroupController.prototype.update,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('remove requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductGroupController.prototype.remove,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('addField requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductGroupController.prototype.addField,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('updateField requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductGroupController.prototype.updateField,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('removeField requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductGroupController.prototype.removeField,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('addOption requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductGroupController.prototype.addOption,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('updateOption requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductGroupController.prototype.updateOption,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('removeOption requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductGroupController.prototype.removeOption,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
     });
   });
 });

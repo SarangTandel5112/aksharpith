@@ -4,6 +4,8 @@ import { ProductVariantController } from '../product-variant.controller';
 import { ProductVariantService } from '../product-variant.service';
 import { JwtAuthGuard } from '../../../security/jwt-auth.guard';
 import { RolesGuard } from '../../../core/guards/roles.guard';
+import { Roles } from '../../../core/decorators/roles.decorator';
+import { ROLE } from '../../../utils/constants';
 
 const mockService = () => ({
   findAll: jest.fn(),
@@ -37,9 +39,16 @@ describe('ProductVariantController', () => {
   describe('findAll', () => {
     it('returns variants list', async () => {
       service.findAll.mockResolvedValue({ items: [], total: 0 });
-      const result = await controller.findAll('prod-1', { page: 1, limit: 20, order: 'ASC' });
+      const result = await controller.findAll('prod-1', {
+        page: 1,
+        limit: 20,
+        order: 'ASC',
+      });
       expect(result).toHaveProperty('items');
-      expect(service.findAll).toHaveBeenCalledWith('prod-1', expect.any(Object));
+      expect(service.findAll).toHaveBeenCalledWith(
+        'prod-1',
+        expect.any(Object),
+      );
     });
   });
 
@@ -52,7 +61,9 @@ describe('ProductVariantController', () => {
 
     it('propagates 404 from service', async () => {
       service.findOne.mockRejectedValue(new NotFoundException());
-      await expect(controller.findOne('prod-1', 'bad')).rejects.toThrow(NotFoundException);
+      await expect(controller.findOne('prod-1', 'bad')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -60,14 +71,22 @@ describe('ProductVariantController', () => {
     it('calls service.generateMatrix and returns variants', async () => {
       const variants = [{ id: 'v-1' }, { id: 'v-2' }];
       service.generateMatrix.mockResolvedValue(variants);
-      const result = await controller.generateMatrix('prod-1', { attributeIds: ['attr-1'] });
+      const result = await controller.generateMatrix('prod-1', {
+        attributeIds: ['attr-1'],
+      });
       expect(result).toEqual(variants);
-      expect(service.generateMatrix).toHaveBeenCalledWith('prod-1', { attributeIds: ['attr-1'] });
+      expect(service.generateMatrix).toHaveBeenCalledWith('prod-1', {
+        attributeIds: ['attr-1'],
+      });
     });
 
     it('propagates NotFoundException from service', async () => {
-      service.generateMatrix.mockRejectedValue(new NotFoundException('Product not found'));
-      await expect(controller.generateMatrix('bad', { attributeIds: ['attr-1'] })).rejects.toThrow(NotFoundException);
+      service.generateMatrix.mockRejectedValue(
+        new NotFoundException('Product not found'),
+      );
+      await expect(
+        controller.generateMatrix('bad', { attributeIds: ['attr-1'] }),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 
@@ -98,6 +117,56 @@ describe('ProductVariantController', () => {
       service.remove.mockResolvedValue(undefined);
       await controller.remove('prod-1', 'v-1');
       expect(service.remove).toHaveBeenCalledWith('prod-1', 'v-1');
+    });
+  });
+
+  describe('RBAC metadata', () => {
+    it('findAll requires ADMIN, STAFF, VIEWER', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductVariantController.prototype.findAll,
+      );
+      expect(meta).toEqual([ROLE.ADMIN, ROLE.STAFF, ROLE.VIEWER]);
+    });
+
+    it('findOne requires ADMIN, STAFF, VIEWER', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductVariantController.prototype.findOne,
+      );
+      expect(meta).toEqual([ROLE.ADMIN, ROLE.STAFF, ROLE.VIEWER]);
+    });
+
+    it('generateMatrix requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductVariantController.prototype.generateMatrix,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('create requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductVariantController.prototype.create,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('update requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductVariantController.prototype.update,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('remove requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductVariantController.prototype.remove,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
     });
   });
 });

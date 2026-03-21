@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { CategoryController } from '../category.controller';
 import { CategoryService } from '../category.service';
+import { Roles } from '../../../core/decorators/roles.decorator';
+import { ROLE } from '../../../utils/constants';
 
 const mockCatService = () => ({
   findAll: jest.fn(),
@@ -27,8 +29,18 @@ describe('CategoryController', () => {
   afterEach(() => jest.clearAllMocks());
 
   it('findAll delegates to service', async () => {
-    service.findAll.mockResolvedValue({ items: [], total: 0, page: 1, limit: 10, totalPages: 0 });
-    const result = await controller.findAll({ page: 1, limit: 10, order: 'ASC' });
+    service.findAll.mockResolvedValue({
+      items: [],
+      total: 0,
+      page: 1,
+      limit: 10,
+      totalPages: 0,
+    });
+    const result = await controller.findAll({
+      page: 1,
+      limit: 10,
+      order: 'ASC',
+    });
     expect(result).toHaveProperty('items');
   });
 
@@ -49,11 +61,55 @@ describe('CategoryController', () => {
 
   it('create propagates ConflictException', async () => {
     service.create.mockRejectedValue(new ConflictException());
-    await expect(controller.create({ name: 'Dup' })).rejects.toThrow(ConflictException);
+    await expect(controller.create({ name: 'Dup' })).rejects.toThrow(
+      ConflictException,
+    );
   });
 
   it('remove returns undefined', async () => {
     service.remove.mockResolvedValue(undefined);
     expect(await controller.remove('uuid-1')).toBeUndefined();
+  });
+
+  describe('RBAC metadata', () => {
+    it('findAll requires ADMIN, STAFF, VIEWER', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        CategoryController.prototype.findAll,
+      );
+      expect(meta).toEqual([ROLE.ADMIN, ROLE.STAFF, ROLE.VIEWER]);
+    });
+
+    it('findOne requires ADMIN, STAFF, VIEWER', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        CategoryController.prototype.findOne,
+      );
+      expect(meta).toEqual([ROLE.ADMIN, ROLE.STAFF, ROLE.VIEWER]);
+    });
+
+    it('create requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        CategoryController.prototype.create,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('update requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        CategoryController.prototype.update,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('remove requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        CategoryController.prototype.remove,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
   });
 });

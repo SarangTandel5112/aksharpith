@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { DepartmentController } from '../department.controller';
 import { DepartmentService } from '../department.service';
+import { Roles } from '../../../core/decorators/roles.decorator';
+import { ROLE } from '../../../utils/constants';
 
 const mockDeptService = () => ({
   findAll: jest.fn(),
@@ -27,8 +29,18 @@ describe('DepartmentController', () => {
   afterEach(() => jest.clearAllMocks());
 
   it('findAll returns paginated result', async () => {
-    service.findAll.mockResolvedValue({ items: [], total: 0, page: 1, limit: 10, totalPages: 0 });
-    const result = await controller.findAll({ page: 1, limit: 10, order: 'ASC' });
+    service.findAll.mockResolvedValue({
+      items: [],
+      total: 0,
+      page: 1,
+      limit: 10,
+      totalPages: 0,
+    });
+    const result = await controller.findAll({
+      page: 1,
+      limit: 10,
+      order: 'ASC',
+    });
     expect(result).toHaveProperty('items');
   });
 
@@ -44,21 +56,69 @@ describe('DepartmentController', () => {
 
   it('create returns new department', async () => {
     service.create.mockResolvedValue({ id: 'uuid-1', name: 'Electronics' });
-    expect(await controller.create({ name: 'Electronics' })).toHaveProperty('id');
+    expect(await controller.create({ name: 'Electronics' })).toHaveProperty(
+      'id',
+    );
   });
 
   it('create propagates ConflictException', async () => {
     service.create.mockRejectedValue(new ConflictException());
-    await expect(controller.create({ name: 'Dup' })).rejects.toThrow(ConflictException);
+    await expect(controller.create({ name: 'Dup' })).rejects.toThrow(
+      ConflictException,
+    );
   });
 
   it('update returns updated department', async () => {
     service.update.mockResolvedValue({ id: 'uuid-1', name: 'Updated' });
-    expect(await controller.update('uuid-1', { name: 'Updated' })).toHaveProperty('name');
+    expect(
+      await controller.update('uuid-1', { name: 'Updated' }),
+    ).toHaveProperty('name');
   });
 
   it('remove returns undefined', async () => {
     service.remove.mockResolvedValue(undefined);
     expect(await controller.remove('uuid-1')).toBeUndefined();
+  });
+
+  describe('RBAC metadata', () => {
+    it('findAll requires ADMIN, STAFF, VIEWER', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        DepartmentController.prototype.findAll,
+      );
+      expect(meta).toEqual([ROLE.ADMIN, ROLE.STAFF, ROLE.VIEWER]);
+    });
+
+    it('findOne requires ADMIN, STAFF, VIEWER', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        DepartmentController.prototype.findOne,
+      );
+      expect(meta).toEqual([ROLE.ADMIN, ROLE.STAFF, ROLE.VIEWER]);
+    });
+
+    it('create requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        DepartmentController.prototype.create,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('update requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        DepartmentController.prototype.update,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('remove requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        DepartmentController.prototype.remove,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
   });
 });

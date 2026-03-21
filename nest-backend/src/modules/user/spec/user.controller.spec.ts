@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { UserController } from '../user.controller';
 import { UserService } from '../user.service';
+import { Roles } from '../../../core/decorators/roles.decorator';
+import { ROLE } from '../../../utils/constants';
 
 const mockUserService = () => ({
   findAll: jest.fn(),
@@ -49,7 +51,11 @@ describe('UserController', () => {
   describe('findAll', () => {
     it('delegates to service and returns paginated result', async () => {
       service.findAll.mockResolvedValue(mockPaginated);
-      const result = await controller.findAll({ page: 1, limit: 10, order: 'ASC' });
+      const result = await controller.findAll({
+        page: 1,
+        limit: 10,
+        order: 'ASC',
+      });
       expect(result).toEqual(mockPaginated);
       expect(service.findAll).toHaveBeenCalledWith({
         page: 1,
@@ -67,7 +73,9 @@ describe('UserController', () => {
     });
 
     it('propagates NotFoundException', async () => {
-      service.findOne.mockRejectedValue(new NotFoundException('User not found'));
+      service.findOne.mockRejectedValue(
+        new NotFoundException('User not found'),
+      );
       await expect(controller.findOne('bad-id')).rejects.toThrow(
         NotFoundException,
       );
@@ -108,10 +116,12 @@ describe('UserController', () => {
     it('updates user by id', async () => {
       const updated = { ...mockUserDto, firstName: 'Jane' };
       service.update.mockResolvedValue(updated);
-      expect(
-        await controller.update('uuid-1', { firstName: 'Jane' }),
-      ).toEqual(updated);
-      expect(service.update).toHaveBeenCalledWith('uuid-1', { firstName: 'Jane' });
+      expect(await controller.update('uuid-1', { firstName: 'Jane' })).toEqual(
+        updated,
+      );
+      expect(service.update).toHaveBeenCalledWith('uuid-1', {
+        firstName: 'Jane',
+      });
     });
 
     it('propagates NotFoundException', async () => {
@@ -134,6 +144,48 @@ describe('UserController', () => {
       await expect(controller.remove('bad-id')).rejects.toThrow(
         NotFoundException,
       );
+    });
+  });
+
+  describe('RBAC metadata', () => {
+    it('findAll requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        UserController.prototype.findAll,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('findOne requires ADMIN, STAFF', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        UserController.prototype.findOne,
+      );
+      expect(meta).toEqual([ROLE.ADMIN, ROLE.STAFF]);
+    });
+
+    it('create requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        UserController.prototype.create,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('update requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        UserController.prototype.update,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('remove requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        UserController.prototype.remove,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
     });
   });
 });

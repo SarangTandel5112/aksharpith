@@ -2,6 +2,8 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ConflictException } from '@nestjs/common';
 import { ProductAttributeController } from '../product-attribute.controller';
 import { ProductAttributeService } from '../product-attribute.service';
+import { Roles } from '../../../core/decorators/roles.decorator';
+import { ROLE } from '../../../utils/constants';
 
 const mockService = () => ({
   findAll: jest.fn(),
@@ -22,7 +24,9 @@ describe('ProductAttributeController', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ProductAttributeController],
-      providers: [{ provide: ProductAttributeService, useFactory: mockService }],
+      providers: [
+        { provide: ProductAttributeService, useFactory: mockService },
+      ],
     }).compile();
     controller = module.get(ProductAttributeController);
     service = module.get(ProductAttributeService);
@@ -31,10 +35,16 @@ describe('ProductAttributeController', () => {
   afterEach(() => jest.clearAllMocks());
 
   it('findAll returns paginated result', async () => {
-    service.findAll.mockResolvedValue({ items: [], total: 0, page: 1, limit: 10, totalPages: 0 });
-    expect(await controller.findAll({ page: 1, limit: 10, order: 'ASC' })).toHaveProperty(
-      'items',
-    );
+    service.findAll.mockResolvedValue({
+      items: [],
+      total: 0,
+      page: 1,
+      limit: 10,
+      totalPages: 0,
+    });
+    expect(
+      await controller.findAll({ page: 1, limit: 10, order: 'ASC' }),
+    ).toHaveProperty('items');
   });
   it('findOne returns attribute', async () => {
     service.findOne.mockResolvedValue({ id: 'uuid-1' });
@@ -50,7 +60,9 @@ describe('ProductAttributeController', () => {
   });
   it('create propagates ConflictException', async () => {
     service.create.mockRejectedValue(new ConflictException());
-    await expect(controller.create({ name: 'Dup' })).rejects.toThrow(ConflictException);
+    await expect(controller.create({ name: 'Dup' })).rejects.toThrow(
+      ConflictException,
+    );
   });
   it('remove returns undefined', async () => {
     service.remove.mockResolvedValue(undefined);
@@ -58,14 +70,15 @@ describe('ProductAttributeController', () => {
   });
   it('addValue delegates to service', async () => {
     service.addValue.mockResolvedValue({ id: 'val-1', value: 'Red' });
-    expect(await controller.addValue('uuid-1', { value: 'Red' })).toHaveProperty('id');
+    expect(
+      await controller.addValue('uuid-1', { value: 'Red' }),
+    ).toHaveProperty('id');
   });
   it('updateValue delegates to service', async () => {
     service.updateValue.mockResolvedValue({ id: 'val-1', value: 'Blue' });
-    expect(await controller.updateValue('uuid-1', 'val-1', { value: 'Blue' })).toHaveProperty(
-      'value',
-      'Blue',
-    );
+    expect(
+      await controller.updateValue('uuid-1', 'val-1', { value: 'Blue' }),
+    ).toHaveProperty('value', 'Blue');
   });
   it('removeValue returns undefined', async () => {
     service.removeValue.mockResolvedValue(undefined);
@@ -74,5 +87,79 @@ describe('ProductAttributeController', () => {
   it('findOne propagates NotFoundException', async () => {
     service.findOne.mockRejectedValue(new NotFoundException());
     await expect(controller.findOne('bad')).rejects.toThrow(NotFoundException);
+  });
+
+  describe('RBAC metadata', () => {
+    it('findAll requires ADMIN, STAFF, VIEWER', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductAttributeController.prototype.findAll,
+      );
+      expect(meta).toEqual([ROLE.ADMIN, ROLE.STAFF, ROLE.VIEWER]);
+    });
+
+    it('findOne requires ADMIN, STAFF, VIEWER', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductAttributeController.prototype.findOne,
+      );
+      expect(meta).toEqual([ROLE.ADMIN, ROLE.STAFF, ROLE.VIEWER]);
+    });
+
+    it('findWithValues requires ADMIN, STAFF, VIEWER', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductAttributeController.prototype.findWithValues,
+      );
+      expect(meta).toEqual([ROLE.ADMIN, ROLE.STAFF, ROLE.VIEWER]);
+    });
+
+    it('create requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductAttributeController.prototype.create,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('update requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductAttributeController.prototype.update,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('remove requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductAttributeController.prototype.remove,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('addValue requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductAttributeController.prototype.addValue,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('updateValue requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductAttributeController.prototype.updateValue,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
+
+    it('removeValue requires ADMIN', () => {
+      const meta = Reflect.getMetadata(
+        Roles.KEY,
+        ProductAttributeController.prototype.removeValue,
+      );
+      expect(meta).toEqual([ROLE.ADMIN]);
+    });
   });
 });
