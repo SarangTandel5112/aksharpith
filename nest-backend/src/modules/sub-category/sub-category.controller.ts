@@ -1,8 +1,19 @@
 import {
-  Controller, Get, Post, Patch, Delete,
-  Body, Param, Query, UseGuards, HttpCode, HttpStatus, ParseUUIDPipe,
+  Controller,
+  Get,
+  Post,
+  Patch,
+  Delete,
+  Body,
+  Param,
+  Query,
+  UseGuards,
+  HttpCode,
+  HttpStatus,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
+import { JwtAuthGuard } from '../../security/jwt-auth.guard';
 import { RolesGuard } from '../../core/guards/roles.guard';
 import { Roles } from '../../core/decorators/roles.decorator';
 import { ROLE } from '../../utils/constants';
@@ -13,6 +24,7 @@ import { QuerySubCategoryDto } from './dto/query-sub-category.dto';
 
 @ApiTags('sub-categories')
 @ApiBearerAuth()
+@UseGuards(JwtAuthGuard)
 @Controller('sub-categories')
 export class SubCategoryController {
   constructor(private readonly subCategoryService: SubCategoryService) {}
@@ -42,7 +54,10 @@ export class SubCategoryController {
   @Patch(':id')
   @UseGuards(RolesGuard)
   @Roles([ROLE.ADMIN])
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateSubCategoryDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateSubCategoryDto,
+  ) {
     return this.subCategoryService.update(id, dto);
   }
 

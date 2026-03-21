@@ -69,6 +69,7 @@ export class ProductGroupRepository {
       fields:
         dto.fields?.map((f) => ({
           fieldName: f.fieldName,
+          fieldKey: this.slugify(f.fieldName),
           fieldType: f.fieldType,
           isRequired: f.isRequired ?? false,
           sortOrder: f.sortOrder ?? 0,

@@ -61,12 +61,12 @@ export class AuthService {
   async signIn(user: User): Promise<{ accessToken: string }> {
     try {
       const payload = { email: user.email, id: user.id };
-      const expiresIn =
+      const authConfig =
         this.configService.get<AuthKeyConfig>(AuthKeyConfigName);
 
       return {
         accessToken: this.jwtService.sign(payload, {
-          expiresIn: expiresIn.expiresIn,
+          expiresIn: authConfig.expiresIn,
         }),
       };
     } catch (error) {
