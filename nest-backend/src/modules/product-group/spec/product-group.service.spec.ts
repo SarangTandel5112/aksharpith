@@ -197,6 +197,18 @@ describe('ProductGroupService', () => {
         NotFoundException,
       );
     });
+
+    it('throws 404 if field belongs to different group', async () => {
+      repo.findById.mockResolvedValue({ id: 'g-1' });
+      repo.findFieldById.mockResolvedValue({
+        id: 'f-1',
+        fieldType: 'text',
+        groupId: 'other-group',
+      });
+      await expect(service.updateField('g-1', 'f-1', {})).rejects.toThrow(
+        NotFoundException,
+      );
+    });
   });
 
   describe('removeField', () => {
@@ -228,6 +240,17 @@ describe('ProductGroupService', () => {
     it('throws 404 if group not found', async () => {
       repo.findById.mockResolvedValue(null);
       await expect(service.removeField('bad', 'f-1')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('throws 404 if field belongs to different group', async () => {
+      repo.findById.mockResolvedValue({ id: 'g-1' });
+      repo.findFieldById.mockResolvedValue({
+        id: 'f-1',
+        groupId: 'other-group',
+      });
+      await expect(service.removeField('g-1', 'f-1')).rejects.toThrow(
         NotFoundException,
       );
     });

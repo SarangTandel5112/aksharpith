@@ -92,7 +92,9 @@ export class ProductGroupService {
     if (!group) throw new NotFoundException(`Group ${groupId} not found`);
     const field = await this.groupRepo.findFieldById(fieldId);
     if (!field || field.groupId !== groupId)
-      throw new NotFoundException(`Field ${fieldId} not found`);
+      throw new NotFoundException(
+        `Field ${fieldId} not found in group ${groupId}`,
+      );
     if (dto.fieldType && dto.fieldType !== field.fieldType) {
       const valueCount = await this.groupRepo.countFieldValues(fieldId);
       if (valueCount > 0)
@@ -108,7 +110,9 @@ export class ProductGroupService {
     if (!group) throw new NotFoundException(`Group ${groupId} not found`);
     const field = await this.groupRepo.findFieldById(fieldId);
     if (!field || field.groupId !== groupId)
-      throw new NotFoundException(`Field ${fieldId} not found`);
+      throw new NotFoundException(
+        `Field ${fieldId} not found in group ${groupId}`,
+      );
     const valueCount = await this.groupRepo.countFieldValues(fieldId);
     if (valueCount > 0)
       throw new ConflictException(

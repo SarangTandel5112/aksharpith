@@ -73,6 +73,7 @@ export class ProductGroupController {
 
   @Post(':id/fields')
   @Roles([ROLE.ADMIN])
+  @HttpCode(HttpStatus.CREATED)
   addField(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() dto: AddGroupFieldDto,
