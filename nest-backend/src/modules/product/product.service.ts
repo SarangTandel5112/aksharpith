@@ -216,6 +216,21 @@ export class ProductService {
     if (!product) throw new NotFoundException(`Product ${productId} not found`);
     if (!product.groupId)
       throw new BadRequestException('Product has no group assigned');
+
+    if (dto.values.length > 0) {
+      const validFieldIds = await this.productRepo.getFieldIdsByGroupId(
+        product.groupId,
+      );
+      const invalidIds = dto.values
+        .map((v) => v.fieldId)
+        .filter((id) => !validFieldIds.includes(id));
+      if (invalidIds.length > 0) {
+        throw new BadRequestException(
+          `Field IDs do not belong to product group: ${invalidIds.join(', ')}`,
+        );
+      }
+    }
+
     await this.productRepo.bulkUpsertGroupFieldValues(productId, dto.values);
   }
 

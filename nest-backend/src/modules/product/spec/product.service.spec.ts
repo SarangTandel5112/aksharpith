@@ -24,6 +24,7 @@ const mockProductRepo = () => ({
   getGroupFieldValues: jest.fn(),
   countGroupFieldValues: jest.fn(),
   deleteGroupFieldValues: jest.fn(),
+  getFieldIdsByGroupId: jest.fn(),
 });
 
 const mockProduct = {
@@ -242,6 +243,7 @@ describe('ProductService', () => {
   describe('bulkUpsertGroupFieldValues', () => {
     it('validates product exists, then delegates', async () => {
       repo.findById.mockResolvedValue({ id: 'prod-1', groupId: 'g-1' });
+      repo.getFieldIdsByGroupId.mockResolvedValue(['f-1']);
       repo.bulkUpsertGroupFieldValues.mockResolvedValue(undefined);
       await expect(
         service.bulkUpsertGroupFieldValues('prod-1', {
@@ -262,6 +264,70 @@ describe('ProductService', () => {
       await expect(
         service.bulkUpsertGroupFieldValues('bad', { values: [] }),
       ).rejects.toThrow(NotFoundException);
+    });
+
+    it('throws BadRequestException when fieldIds do not belong to the product group', async () => {
+      const productWithGroup = {
+        ...mockProduct,
+        id: 'uuid-1',
+        groupId: 'group-1',
+      };
+      repo.findById.mockResolvedValue(productWithGroup);
+      repo.getFieldIdsByGroupId.mockResolvedValue([
+        'field-valid-1',
+        'field-valid-2',
+      ]);
+
+      await expect(
+        service.bulkUpsertGroupFieldValues('uuid-1', {
+          values: [
+            { fieldId: 'field-valid-1', valueText: 'ok' },
+            { fieldId: 'field-ALIEN', valueText: 'bad' },
+          ],
+        }),
+      ).rejects.toThrow(BadRequestException);
+      expect(repo.bulkUpsertGroupFieldValues).not.toHaveBeenCalled();
+    });
+
+    it('skips field validation and upserts when values array is empty', async () => {
+      const productWithGroup = {
+        ...mockProduct,
+        id: 'uuid-1',
+        groupId: 'group-1',
+      };
+      repo.findById.mockResolvedValue(productWithGroup);
+      repo.bulkUpsertGroupFieldValues.mockResolvedValue(undefined);
+
+      await service.bulkUpsertGroupFieldValues('uuid-1', { values: [] });
+
+      expect(repo.getFieldIdsByGroupId).not.toHaveBeenCalled();
+      expect(repo.bulkUpsertGroupFieldValues).toHaveBeenCalledWith(
+        'uuid-1',
+        [],
+      );
+    });
+
+    it('upserts successfully when all fieldIds belong to the group', async () => {
+      const productWithGroup = {
+        ...mockProduct,
+        id: 'uuid-1',
+        groupId: 'group-1',
+      };
+      repo.findById.mockResolvedValue(productWithGroup);
+      repo.getFieldIdsByGroupId.mockResolvedValue(['f-1', 'f-2']);
+      repo.bulkUpsertGroupFieldValues.mockResolvedValue(undefined);
+
+      await service.bulkUpsertGroupFieldValues('uuid-1', {
+        values: [
+          { fieldId: 'f-1', valueText: 'hello' },
+          { fieldId: 'f-2', valueNumber: 42 },
+        ],
+      });
+
+      expect(repo.bulkUpsertGroupFieldValues).toHaveBeenCalledWith('uuid-1', [
+        { fieldId: 'f-1', valueText: 'hello' },
+        { fieldId: 'f-2', valueNumber: 42 },
+      ]);
     });
   });
 

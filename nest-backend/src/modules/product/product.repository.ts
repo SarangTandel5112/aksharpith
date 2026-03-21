@@ -25,6 +25,7 @@ import { CreateProductVendorDto } from './dto/create-product-vendor.dto';
 import { ProductGroupFieldValue } from './entities/product-group-field-value.entity';
 import { UpsertGroupFieldValueDto } from './dto/upsert-group-field-value.dto';
 import { FieldValueItemDto } from './dto/bulk-upsert-group-field-values.dto';
+import { GroupField } from '../product-group/entities/group-field.entity';
 
 @Injectable()
 export class ProductRepository {
@@ -43,6 +44,8 @@ export class ProductRepository {
     private readonly vendorRepo: Repository<ProductVendor>,
     @InjectRepository(ProductGroupFieldValue)
     private readonly groupFieldValueRepo: Repository<ProductGroupFieldValue>,
+    @InjectRepository(GroupField)
+    private readonly groupFieldRepo: Repository<GroupField>,
   ) {}
 
   async findAll(query: QueryProductDto): Promise<[Product[], number]> {
@@ -345,6 +348,14 @@ export class ProductRepository {
 
   async deleteGroupFieldValues(productId: string): Promise<void> {
     await this.groupFieldValueRepo.delete({ productId });
+  }
+
+  async getFieldIdsByGroupId(groupId: string): Promise<string[]> {
+    const fields = await this.groupFieldRepo.find({
+      where: { groupId },
+      select: ['id'],
+    });
+    return fields.map((f) => f.id);
   }
 
   // Vendor sub-resource

@@ -11,6 +11,7 @@ import { ProductMarketingMedia } from '../entities/product-marketing-media.entit
 import { ProductZone } from '../entities/product-zone.entity';
 import { ProductVendor } from '../entities/product-vendor.entity';
 import { ProductGroupFieldValue } from '../entities/product-group-field-value.entity';
+import { GroupField } from '../../product-group/entities/group-field.entity';
 
 // ─── Shared fixtures ────────────────────────────────────────────────────────
 
@@ -96,7 +97,10 @@ describe('ProductRepository – zone methods', () => {
       providers: [
         ProductRepository,
         { provide: getRepositoryToken(Product), useFactory: mockBaseRepo },
-        { provide: getRepositoryToken(ProductMedia), useFactory: mockMediaRepo },
+        {
+          provide: getRepositoryToken(ProductMedia),
+          useFactory: mockMediaRepo,
+        },
         {
           provide: getRepositoryToken(ProductPhysicalAttributes),
           useFactory: mockPhysRepo,
@@ -109,10 +113,17 @@ describe('ProductRepository – zone methods', () => {
           provide: getRepositoryToken(ProductZone),
           useFactory: mockZoneRepo,
         },
-        { provide: getRepositoryToken(ProductVendor), useFactory: mockVendorRepo },
+        {
+          provide: getRepositoryToken(ProductVendor),
+          useFactory: mockVendorRepo,
+        },
         {
           provide: getRepositoryToken(ProductGroupFieldValue),
           useFactory: mockGroupFieldValueRepo,
+        },
+        {
+          provide: getRepositoryToken(GroupField),
+          useFactory: () => ({ find: jest.fn() }),
         },
       ],
     }).compile();
@@ -131,7 +142,10 @@ describe('ProductRepository – zone methods', () => {
 
       const result = await productRepo.addZone(PRODUCT_ID, dto as any);
 
-      expect(zoneRepo.create).toHaveBeenCalledWith({ ...dto, productId: PRODUCT_ID });
+      expect(zoneRepo.create).toHaveBeenCalledWith({
+        ...dto,
+        productId: PRODUCT_ID,
+      });
       expect(zoneRepo.save).toHaveBeenCalled();
       expect(result).toEqual(mockZone);
     });
@@ -143,7 +157,9 @@ describe('ProductRepository – zone methods', () => {
 
       const result = await productRepo.getZones(PRODUCT_ID);
 
-      expect(zoneRepo.find).toHaveBeenCalledWith({ where: { productId: PRODUCT_ID } });
+      expect(zoneRepo.find).toHaveBeenCalledWith({
+        where: { productId: PRODUCT_ID },
+      });
       expect(result).toHaveLength(1);
       expect(result[0]).toEqual(mockZone);
     });
@@ -163,7 +179,9 @@ describe('ProductRepository – zone methods', () => {
 
       await productRepo.updateZone(ZONE_ID, { zoneName: 'Updated Zone' });
 
-      expect(zoneRepo.update).toHaveBeenCalledWith(ZONE_ID, { zoneName: 'Updated Zone' });
+      expect(zoneRepo.update).toHaveBeenCalledWith(ZONE_ID, {
+        zoneName: 'Updated Zone',
+      });
     });
   });
 
@@ -286,7 +304,9 @@ describe('ProductService – zone methods', () => {
     it('throws NotFoundException when product does not exist', async () => {
       repo.findById.mockResolvedValue(null);
 
-      await expect(service.getZones('bad-id')).rejects.toThrow(NotFoundException);
+      await expect(service.getZones('bad-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -295,10 +315,14 @@ describe('ProductService – zone methods', () => {
       repo.findById.mockResolvedValue(mockProduct);
       repo.updateZone.mockResolvedValue(undefined);
 
-      await service.updateZone(PRODUCT_ID, ZONE_ID, { zoneName: 'Updated Zone' });
+      await service.updateZone(PRODUCT_ID, ZONE_ID, {
+        zoneName: 'Updated Zone',
+      });
 
       expect(repo.findById).toHaveBeenCalledWith(PRODUCT_ID);
-      expect(repo.updateZone).toHaveBeenCalledWith(ZONE_ID, { zoneName: 'Updated Zone' });
+      expect(repo.updateZone).toHaveBeenCalledWith(ZONE_ID, {
+        zoneName: 'Updated Zone',
+      });
     });
 
     it('throws NotFoundException when product does not exist', async () => {
@@ -317,7 +341,9 @@ describe('ProductService – zone methods', () => {
       repo.findById.mockResolvedValue(mockProduct);
       repo.removeZone.mockResolvedValue(true);
 
-      await expect(service.removeZone(PRODUCT_ID, ZONE_ID)).resolves.toBeUndefined();
+      await expect(
+        service.removeZone(PRODUCT_ID, ZONE_ID),
+      ).resolves.toBeUndefined();
 
       expect(repo.findById).toHaveBeenCalledWith(PRODUCT_ID);
       expect(repo.removeZone).toHaveBeenCalledWith(ZONE_ID);
@@ -337,9 +363,9 @@ describe('ProductService – zone methods', () => {
       repo.findById.mockResolvedValue(mockProduct);
       repo.removeZone.mockResolvedValue(false);
 
-      await expect(service.removeZone(PRODUCT_ID, 'bad-zone-id')).rejects.toThrow(
-        NotFoundException,
-      );
+      await expect(
+        service.removeZone(PRODUCT_ID, 'bad-zone-id'),
+      ).rejects.toThrow(NotFoundException);
     });
   });
 });
@@ -396,7 +422,9 @@ describe('ProductController – zone endpoints', () => {
     it('propagates NotFoundException from service', async () => {
       service.getZones.mockRejectedValue(new NotFoundException());
 
-      await expect(controller.getZones('bad-id')).rejects.toThrow(NotFoundException);
+      await expect(controller.getZones('bad-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

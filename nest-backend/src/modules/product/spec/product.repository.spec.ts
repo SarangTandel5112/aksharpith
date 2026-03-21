@@ -9,6 +9,7 @@ import { ProductMarketingMedia } from '../entities/product-marketing-media.entit
 import { ProductZone } from '../entities/product-zone.entity';
 import { ProductVendor } from '../entities/product-vendor.entity';
 import { ProductGroupFieldValue } from '../entities/product-group-field-value.entity';
+import { GroupField } from '../../product-group/entities/group-field.entity';
 
 const mockRepo = () => ({
   findAndCount: jest.fn(),
@@ -57,6 +58,9 @@ const mockGroupFieldValueRepo = () => ({
   findOne: jest.fn(),
   upsert: jest.fn(),
 });
+const mockGroupFieldRepo = () => ({
+  find: jest.fn(),
+});
 
 describe('ProductRepository', () => {
   let productRepo: ProductRepository;
@@ -65,6 +69,7 @@ describe('ProductRepository', () => {
   let physRepo: ReturnType<typeof mockPhysRepo>;
   let marketingMediaRepo: ReturnType<typeof mockMarketingMediaRepo>;
   let groupFieldValueRepo: ReturnType<typeof mockGroupFieldValueRepo>;
+  let groupFieldRepo: ReturnType<typeof mockGroupFieldRepo>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
@@ -92,6 +97,10 @@ describe('ProductRepository', () => {
           provide: getRepositoryToken(ProductGroupFieldValue),
           useFactory: mockGroupFieldValueRepo,
         },
+        {
+          provide: getRepositoryToken(GroupField),
+          useFactory: mockGroupFieldRepo,
+        },
       ],
     }).compile();
     productRepo = module.get(ProductRepository);
@@ -102,6 +111,7 @@ describe('ProductRepository', () => {
     groupFieldValueRepo = module.get(
       getRepositoryToken(ProductGroupFieldValue),
     );
+    groupFieldRepo = module.get(getRepositoryToken(GroupField));
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -462,6 +472,24 @@ describe('ProductRepository', () => {
         pages: '$btw:100,500',
       });
       expect(qb.andWhere).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('getFieldIdsByGroupId', () => {
+    it('returns an array of field IDs for the given group', async () => {
+      groupFieldRepo.find.mockResolvedValue([{ id: 'f-1' }, { id: 'f-2' }]);
+      const result = await productRepo.getFieldIdsByGroupId('group-1');
+      expect(result).toEqual(['f-1', 'f-2']);
+      expect(groupFieldRepo.find).toHaveBeenCalledWith({
+        where: { groupId: 'group-1' },
+        select: ['id'],
+      });
+    });
+
+    it('returns empty array when group has no fields', async () => {
+      groupFieldRepo.find.mockResolvedValue([]);
+      const result = await productRepo.getFieldIdsByGroupId('empty-group');
+      expect(result).toEqual([]);
     });
   });
 });

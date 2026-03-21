@@ -7,10 +7,14 @@ import { ProductController } from '../product.controller';
 import { Product } from '../entities/product.entity';
 import { ProductMedia } from '../entities/product-media.entity';
 import { ProductPhysicalAttributes } from '../entities/product-physical-attributes.entity';
-import { ProductMarketingMedia, MarketingMediaType } from '../entities/product-marketing-media.entity';
+import {
+  ProductMarketingMedia,
+  MarketingMediaType,
+} from '../entities/product-marketing-media.entity';
 import { ProductZone } from '../entities/product-zone.entity';
 import { ProductVendor } from '../entities/product-vendor.entity';
 import { ProductGroupFieldValue } from '../entities/product-group-field-value.entity';
+import { GroupField } from '../../product-group/entities/group-field.entity';
 import { CreateMarketingMediaDto } from '../dto/create-marketing-media.dto';
 
 // ─── Mock factory helpers ──────────────────────────────────────────────────
@@ -132,7 +136,11 @@ describe('ProductRepository – marketing media', () => {
         { provide: getRepositoryToken(ProductMedia), useFactory: mockRepo },
         {
           provide: getRepositoryToken(ProductPhysicalAttributes),
-          useFactory: () => ({ findOne: jest.fn(), create: jest.fn(), save: jest.fn() }),
+          useFactory: () => ({
+            findOne: jest.fn(),
+            create: jest.fn(),
+            save: jest.fn(),
+          }),
         },
         {
           provide: getRepositoryToken(ProductMarketingMedia),
@@ -168,6 +176,10 @@ describe('ProductRepository – marketing media', () => {
             delete: jest.fn(),
           }),
         },
+        {
+          provide: getRepositoryToken(GroupField),
+          useFactory: () => ({ find: jest.fn() }),
+        },
       ],
     }).compile();
 
@@ -179,14 +191,19 @@ describe('ProductRepository – marketing media', () => {
 
   describe('addMarketingMedia', () => {
     it('creates and saves marketing media', async () => {
-      const dto: CreateMarketingMediaDto = { mediaUrl: 'https://example.com/photo.jpg' };
+      const dto: CreateMarketingMediaDto = {
+        mediaUrl: 'https://example.com/photo.jpg',
+      };
       marketingMediaRepo.create.mockReturnValue(mockMarketingMedia);
       marketingMediaRepo.save.mockResolvedValue(mockMarketingMedia);
 
       const result = await productRepo.addMarketingMedia('prod-uuid-1', dto);
 
       expect(marketingMediaRepo.create).toHaveBeenCalledWith(
-        expect.objectContaining({ mediaUrl: dto.mediaUrl, productId: 'prod-uuid-1' }),
+        expect.objectContaining({
+          mediaUrl: dto.mediaUrl,
+          productId: 'prod-uuid-1',
+        }),
       );
       expect(marketingMediaRepo.save).toHaveBeenCalledWith(mockMarketingMedia);
       expect(result).toEqual(mockMarketingMedia);
@@ -252,7 +269,9 @@ describe('ProductService – marketing media', () => {
       repo.findById.mockResolvedValue(mockProduct);
       repo.addMarketingMedia.mockResolvedValue(mockMarketingMedia);
 
-      const dto: CreateMarketingMediaDto = { mediaUrl: 'https://example.com/photo.jpg' };
+      const dto: CreateMarketingMediaDto = {
+        mediaUrl: 'https://example.com/photo.jpg',
+      };
       const result = await service.addMarketingMedia('prod-uuid-1', dto);
 
       expect(repo.findById).toHaveBeenCalledWith('prod-uuid-1');
@@ -262,9 +281,13 @@ describe('ProductService – marketing media', () => {
 
     it('throws NotFoundException when product does not exist', async () => {
       repo.findById.mockResolvedValue(null);
-      const dto: CreateMarketingMediaDto = { mediaUrl: 'https://example.com/photo.jpg' };
+      const dto: CreateMarketingMediaDto = {
+        mediaUrl: 'https://example.com/photo.jpg',
+      };
 
-      await expect(service.addMarketingMedia('bad-id', dto)).rejects.toThrow(NotFoundException);
+      await expect(service.addMarketingMedia('bad-id', dto)).rejects.toThrow(
+        NotFoundException,
+      );
       expect(repo.addMarketingMedia).not.toHaveBeenCalled();
     });
   });
@@ -283,7 +306,9 @@ describe('ProductService – marketing media', () => {
 
     it('throws NotFoundException when product missing', async () => {
       repo.findById.mockResolvedValue(null);
-      await expect(service.getMarketingMedia('bad-id')).rejects.toThrow(NotFoundException);
+      await expect(service.getMarketingMedia('bad-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -325,7 +350,9 @@ describe('ProductController – marketing media', () => {
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [ProductController],
-      providers: [{ provide: ProductService, useFactory: mockServiceForController }],
+      providers: [
+        { provide: ProductService, useFactory: mockServiceForController },
+      ],
     }).compile();
 
     controller = module.get(ProductController);
@@ -346,25 +373,36 @@ describe('ProductController – marketing media', () => {
 
     it('propagates NotFoundException from service', async () => {
       service.getMarketingMedia.mockRejectedValue(new NotFoundException());
-      await expect(controller.getMarketingMedia('bad-id')).rejects.toThrow(NotFoundException);
+      await expect(controller.getMarketingMedia('bad-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
   describe('POST :id/marketing-media', () => {
     it('delegates to service.addMarketingMedia and returns created entity', async () => {
-      const dto: CreateMarketingMediaDto = { mediaUrl: 'https://example.com/photo.jpg' };
+      const dto: CreateMarketingMediaDto = {
+        mediaUrl: 'https://example.com/photo.jpg',
+      };
       service.addMarketingMedia.mockResolvedValue(mockMarketingMedia);
 
       const result = await controller.addMarketingMedia('prod-uuid-1', dto);
 
-      expect(service.addMarketingMedia).toHaveBeenCalledWith('prod-uuid-1', dto);
+      expect(service.addMarketingMedia).toHaveBeenCalledWith(
+        'prod-uuid-1',
+        dto,
+      );
       expect(result).toEqual(mockMarketingMedia);
     });
 
     it('propagates NotFoundException when product not found', async () => {
       service.addMarketingMedia.mockRejectedValue(new NotFoundException());
-      const dto: CreateMarketingMediaDto = { mediaUrl: 'https://example.com/photo.jpg' };
-      await expect(controller.addMarketingMedia('bad-id', dto)).rejects.toThrow(NotFoundException);
+      const dto: CreateMarketingMediaDto = {
+        mediaUrl: 'https://example.com/photo.jpg',
+      };
+      await expect(controller.addMarketingMedia('bad-id', dto)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -372,9 +410,15 @@ describe('ProductController – marketing media', () => {
     it('delegates to service.removeMarketingMedia and returns undefined', async () => {
       service.removeMarketingMedia.mockResolvedValue(undefined);
 
-      const result = await controller.removeMarketingMedia('prod-uuid-1', 'mm-uuid-1');
+      const result = await controller.removeMarketingMedia(
+        'prod-uuid-1',
+        'mm-uuid-1',
+      );
 
-      expect(service.removeMarketingMedia).toHaveBeenCalledWith('prod-uuid-1', 'mm-uuid-1');
+      expect(service.removeMarketingMedia).toHaveBeenCalledWith(
+        'prod-uuid-1',
+        'mm-uuid-1',
+      );
       expect(result).toBeUndefined();
     });
 
