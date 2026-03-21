@@ -5,6 +5,10 @@ import { ProductRepository } from '../product.repository';
 import { Product, ProductType } from '../entities/product.entity';
 import { ProductMedia } from '../entities/product-media.entity';
 import { ProductPhysicalAttributes } from '../entities/product-physical-attributes.entity';
+import { ProductMarketingMedia } from '../entities/product-marketing-media.entity';
+import { ProductZone } from '../entities/product-zone.entity';
+import { ProductVendor } from '../entities/product-vendor.entity';
+import { ProductGroupFieldValue } from '../entities/product-group-field-value.entity';
 
 const mockRepo = () => ({
   findAndCount: jest.fn(),
@@ -27,27 +31,70 @@ const mockPhysRepo = () => ({
   create: jest.fn(),
   save: jest.fn(),
 });
+const mockMarketingMediaRepo = () => ({
+  find: jest.fn(),
+  create: jest.fn(),
+  save: jest.fn(),
+  delete: jest.fn(),
+});
+const mockZoneRepo = () => ({
+  find: jest.fn(),
+  create: jest.fn(),
+  save: jest.fn(),
+  delete: jest.fn(),
+});
+const mockVendorRepo = () => ({
+  find: jest.fn(),
+  create: jest.fn(),
+  save: jest.fn(),
+  delete: jest.fn(),
+});
+const mockGroupFieldValueRepo = () => ({
+  find: jest.fn(),
+  create: jest.fn(),
+  save: jest.fn(),
+  delete: jest.fn(),
+  findOne: jest.fn(),
+});
 
 describe('ProductRepository', () => {
   let productRepo: ProductRepository;
   let repo: ReturnType<typeof mockRepo>;
   let mediaRepo: ReturnType<typeof mockMediaRepo>;
+  let marketingMediaRepo: ReturnType<typeof mockMarketingMediaRepo>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProductRepository,
         { provide: getRepositoryToken(Product), useFactory: mockRepo },
-        { provide: getRepositoryToken(ProductMedia), useFactory: mockMediaRepo },
+        {
+          provide: getRepositoryToken(ProductMedia),
+          useFactory: mockMediaRepo,
+        },
         {
           provide: getRepositoryToken(ProductPhysicalAttributes),
           useFactory: mockPhysRepo,
+        },
+        {
+          provide: getRepositoryToken(ProductMarketingMedia),
+          useFactory: mockMarketingMediaRepo,
+        },
+        { provide: getRepositoryToken(ProductZone), useFactory: mockZoneRepo },
+        {
+          provide: getRepositoryToken(ProductVendor),
+          useFactory: mockVendorRepo,
+        },
+        {
+          provide: getRepositoryToken(ProductGroupFieldValue),
+          useFactory: mockGroupFieldValueRepo,
         },
       ],
     }).compile();
     productRepo = module.get(ProductRepository);
     repo = module.get(getRepositoryToken(Product));
     mediaRepo = module.get(getRepositoryToken(ProductMedia));
+    marketingMediaRepo = module.get(getRepositoryToken(ProductMarketingMedia));
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -71,7 +118,12 @@ describe('ProductRepository', () => {
 
     it('applies ILike search on name', async () => {
       repo.findAndCount.mockResolvedValue([[], 0]);
-      await productRepo.findAll({ page: 1, limit: 10, search: 'shoe', order: 'ASC' });
+      await productRepo.findAll({
+        page: 1,
+        limit: 10,
+        search: 'shoe',
+        order: 'ASC',
+      });
       expect(repo.findAndCount).toHaveBeenCalledWith(
         expect.objectContaining({
           where: expect.objectContaining({ name: ILike('%shoe%') }),
@@ -208,7 +260,10 @@ describe('ProductRepository', () => {
   describe('findById', () => {
     it('returns product when found', async () => {
       repo.findOne.mockResolvedValue({ id: 'uuid-1', name: 'Shoe' });
-      expect(await productRepo.findById('uuid-1')).toHaveProperty('name', 'Shoe');
+      expect(await productRepo.findById('uuid-1')).toHaveProperty(
+        'name',
+        'Shoe',
+      );
     });
 
     it('returns null when not found', async () => {

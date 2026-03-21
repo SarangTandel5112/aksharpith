@@ -45,7 +45,9 @@ export class InitSchema1742500000000 implements MigrationInterface {
       ON "users" ("email")
       WHERE "deleted_at" IS NULL
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_users_role_id" ON "users" ("role_id")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_users_role_id" ON "users" ("role_id")`,
+    );
 
     // 3. password_reset_tokens
     await queryRunner.query(`
@@ -60,7 +62,9 @@ export class InitSchema1742500000000 implements MigrationInterface {
         CONSTRAINT "FK_password_reset_tokens_user" FOREIGN KEY ("user_id") REFERENCES "users"("id") ON DELETE CASCADE
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_password_reset_tokens_user_id" ON "password_reset_tokens" ("user_id")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_password_reset_tokens_user_id" ON "password_reset_tokens" ("user_id")`,
+    );
 
     // 4. departments
     await queryRunner.query(`
@@ -117,7 +121,9 @@ export class InitSchema1742500000000 implements MigrationInterface {
       ON "sub_categories" ("name", "category_id")
       WHERE "deleted_at" IS NULL
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_sub_categories_category_id" ON "sub_categories" ("category_id")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_sub_categories_category_id" ON "sub_categories" ("category_id")`,
+    );
 
     // 7. product_groups
     await queryRunner.query(`
@@ -153,7 +159,9 @@ export class InitSchema1742500000000 implements MigrationInterface {
         CONSTRAINT "FK_group_fields_group" FOREIGN KEY ("group_id") REFERENCES "product_groups"("id") ON DELETE CASCADE
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_group_fields_group_id" ON "group_fields" ("group_id")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_group_fields_group_id" ON "group_fields" ("group_id")`,
+    );
 
     // 9. group_field_options
     await queryRunner.query(`
@@ -168,7 +176,9 @@ export class InitSchema1742500000000 implements MigrationInterface {
         CONSTRAINT "FK_group_field_options_field" FOREIGN KEY ("field_id") REFERENCES "group_fields"("id") ON DELETE CASCADE
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_group_field_options_field_id" ON "group_field_options" ("field_id")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_group_field_options_field_id" ON "group_field_options" ("field_id")`,
+    );
 
     // 10. products
     await queryRunner.query(`
@@ -199,10 +209,18 @@ export class InitSchema1742500000000 implements MigrationInterface {
       ON "products" ("sku")
       WHERE "deleted_at" IS NULL
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_products_department_id" ON "products" ("department_id")`);
-    await queryRunner.query(`CREATE INDEX "IDX_products_sub_category_id" ON "products" ("sub_category_id")`);
-    await queryRunner.query(`CREATE INDEX "IDX_products_group_id" ON "products" ("group_id")`);
-    await queryRunner.query(`CREATE INDEX "IDX_products_product_type" ON "products" ("product_type")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_products_department_id" ON "products" ("department_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_products_sub_category_id" ON "products" ("sub_category_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_products_group_id" ON "products" ("group_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_products_product_type" ON "products" ("product_type")`,
+    );
 
     // 11. product_media
     await queryRunner.query(`
@@ -219,23 +237,33 @@ export class InitSchema1742500000000 implements MigrationInterface {
         CONSTRAINT "FK_product_media_product" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_product_media_product_id" ON "product_media" ("product_id")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_product_media_product_id" ON "product_media" ("product_id")`,
+    );
 
     // 12. product_marketing_media
     await queryRunner.query(`
       CREATE TABLE "product_marketing_media" (
         "id" uuid NOT NULL DEFAULT gen_random_uuid(),
         "product_id" uuid NOT NULL,
-        "url" varchar(500) NOT NULL,
-        "media_type" varchar(20) NOT NULL DEFAULT 'image',
-        "sort_order" int NOT NULL DEFAULT 0,
+        "media_url" varchar(500) NOT NULL,
+        "media_type" varchar(20) NOT NULL DEFAULT 'photo',
+        "display_order" int NOT NULL DEFAULT 0,
+        "thumbnail_url" varchar(500),
+        "duration" int,
+        "file_size" int,
         "created_at" TIMESTAMP NOT NULL DEFAULT now(),
-        "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
+        "updated_at" TIMESTAMP,
         CONSTRAINT "PK_product_marketing_media" PRIMARY KEY ("id"),
         CONSTRAINT "FK_product_marketing_media_product" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_product_marketing_media_product_id" ON "product_marketing_media" ("product_id")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_product_marketing_media_product_id" ON "product_marketing_media" ("product_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_product_marketing_media_display_order" ON "product_marketing_media" ("product_id", "display_order")`,
+    );
 
     // 13. product_physical_attributes
     await queryRunner.query(`
@@ -259,31 +287,51 @@ export class InitSchema1742500000000 implements MigrationInterface {
       CREATE TABLE "product_zones" (
         "id" uuid NOT NULL DEFAULT gen_random_uuid(),
         "product_id" uuid NOT NULL,
-        "zone_id" varchar(100) NOT NULL,
-        "zone_name" varchar(150) NOT NULL,
+        "zone_name" varchar(100) NOT NULL,
+        "zone_code" varchar(10),
+        "description" text,
+        "is_active" boolean NOT NULL DEFAULT true,
         "created_at" TIMESTAMP NOT NULL DEFAULT now(),
-        "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
+        "updated_at" TIMESTAMP,
         CONSTRAINT "PK_product_zones" PRIMARY KEY ("id"),
         CONSTRAINT "FK_product_zones_product" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_product_zones_product_id" ON "product_zones" ("product_id")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_product_zones_product_id" ON "product_zones" ("product_id")`,
+    );
+    await queryRunner.query(`
+      CREATE UNIQUE INDEX "UQ_product_zones_product_zone_code"
+      ON "product_zones" ("product_id", "zone_code")
+      WHERE "zone_code" IS NOT NULL
+    `);
 
     // 15. product_vendors
     await queryRunner.query(`
       CREATE TABLE "product_vendors" (
         "id" uuid NOT NULL DEFAULT gen_random_uuid(),
         "product_id" uuid NOT NULL,
-        "vendor_id" varchar(100) NOT NULL,
         "vendor_name" varchar(150) NOT NULL,
-        "cost_price" numeric(12,2) NOT NULL DEFAULT 0,
+        "contact_person" varchar(100),
+        "contact_email" varchar(100),
+        "contact_phone" varchar(20),
+        "gstin" varchar(15),
+        "address" text,
+        "is_primary" boolean NOT NULL DEFAULT false,
+        "notes" text,
+        "is_active" boolean NOT NULL DEFAULT true,
         "created_at" TIMESTAMP NOT NULL DEFAULT now(),
-        "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
+        "updated_at" TIMESTAMP,
         CONSTRAINT "PK_product_vendors" PRIMARY KEY ("id"),
         CONSTRAINT "FK_product_vendors_product" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_product_vendors_product_id" ON "product_vendors" ("product_id")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_product_vendors_product_id" ON "product_vendors" ("product_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_product_vendors_is_primary" ON "product_vendors" ("product_id", "is_primary")`,
+    );
 
     // 16. product_group_field_values
     await queryRunner.query(`
@@ -292,9 +340,12 @@ export class InitSchema1742500000000 implements MigrationInterface {
         "product_id" uuid NOT NULL,
         "field_id" uuid NOT NULL,
         "value_text" text,
+        "value_number" numeric(12,2),
+        "value_boolean" boolean,
         "value_option_id" uuid,
+        "is_active" boolean NOT NULL DEFAULT true,
         "created_at" TIMESTAMP NOT NULL DEFAULT now(),
-        "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
+        "updated_at" TIMESTAMP,
         CONSTRAINT "PK_product_group_field_values" PRIMARY KEY ("id"),
         CONSTRAINT "UQ_product_group_field_values_product_field" UNIQUE ("product_id", "field_id"),
         CONSTRAINT "FK_product_group_field_values_product" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE,
@@ -302,7 +353,9 @@ export class InitSchema1742500000000 implements MigrationInterface {
         CONSTRAINT "FK_product_group_field_values_option" FOREIGN KEY ("value_option_id") REFERENCES "group_field_options"("id") ON DELETE SET NULL
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_product_group_field_values_product_id" ON "product_group_field_values" ("product_id")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_product_group_field_values_product_id" ON "product_group_field_values" ("product_id")`,
+    );
 
     // 17. product_attributes
     await queryRunner.query(`
@@ -342,7 +395,9 @@ export class InitSchema1742500000000 implements MigrationInterface {
       ON "product_attribute_values" ("attribute_id", "value")
       WHERE "deleted_at" IS NULL
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_product_attribute_values_attribute_id" ON "product_attribute_values" ("attribute_id")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_product_attribute_values_attribute_id" ON "product_attribute_values" ("attribute_id")`,
+    );
 
     // 19. product_variants
     await queryRunner.query(`
@@ -363,8 +418,12 @@ export class InitSchema1742500000000 implements MigrationInterface {
         CONSTRAINT "FK_product_variants_product" FOREIGN KEY ("product_id") REFERENCES "products"("id") ON DELETE CASCADE
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_product_variants_product_id" ON "product_variants" ("product_id")`);
-    await queryRunner.query(`CREATE INDEX "IDX_product_variants_combination_hash" ON "product_variants" ("combination_hash")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_product_variants_product_id" ON "product_variants" ("product_id")`,
+    );
+    await queryRunner.query(
+      `CREATE INDEX "IDX_product_variants_combination_hash" ON "product_variants" ("combination_hash")`,
+    );
 
     // 20. product_variant_attributes
     await queryRunner.query(`
@@ -378,7 +437,9 @@ export class InitSchema1742500000000 implements MigrationInterface {
         CONSTRAINT "FK_product_variant_attributes_value" FOREIGN KEY ("attribute_value_id") REFERENCES "product_attribute_values"("id") ON DELETE RESTRICT
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_product_variant_attributes_variant_id" ON "product_variant_attributes" ("variant_id")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_product_variant_attributes_variant_id" ON "product_variant_attributes" ("variant_id")`,
+    );
 
     // 21. product_variant_media
     await queryRunner.query(`
@@ -395,30 +456,52 @@ export class InitSchema1742500000000 implements MigrationInterface {
         CONSTRAINT "FK_product_variant_media_variant" FOREIGN KEY ("variant_id") REFERENCES "product_variants"("id") ON DELETE CASCADE
       )
     `);
-    await queryRunner.query(`CREATE INDEX "IDX_product_variant_media_variant_id" ON "product_variant_media" ("variant_id")`);
+    await queryRunner.query(
+      `CREATE INDEX "IDX_product_variant_media_variant_id" ON "product_variant_media" ("variant_id")`,
+    );
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     // Drop in reverse FK order
-    await queryRunner.query(`DROP TABLE IF EXISTS "product_variant_media" CASCADE`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "product_variant_attributes" CASCADE`);
+    await queryRunner.query(
+      `DROP TABLE IF EXISTS "product_variant_media" CASCADE`,
+    );
+    await queryRunner.query(
+      `DROP TABLE IF EXISTS "product_variant_attributes" CASCADE`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "product_variants" CASCADE`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "product_attribute_values" CASCADE`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "product_attributes" CASCADE`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "product_group_field_values" CASCADE`);
+    await queryRunner.query(
+      `DROP TABLE IF EXISTS "product_attribute_values" CASCADE`,
+    );
+    await queryRunner.query(
+      `DROP TABLE IF EXISTS "product_attributes" CASCADE`,
+    );
+    await queryRunner.query(
+      `DROP TABLE IF EXISTS "product_group_field_values" CASCADE`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "product_vendors" CASCADE`);
     await queryRunner.query(`DROP TABLE IF EXISTS "product_zones" CASCADE`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "product_physical_attributes" CASCADE`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "product_marketing_media" CASCADE`);
+    await queryRunner.query(
+      `DROP TABLE IF EXISTS "product_physical_attributes" CASCADE`,
+    );
+    await queryRunner.query(
+      `DROP TABLE IF EXISTS "product_marketing_media" CASCADE`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "product_media" CASCADE`);
     await queryRunner.query(`DROP TABLE IF EXISTS "products" CASCADE`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "group_field_options" CASCADE`);
+    await queryRunner.query(
+      `DROP TABLE IF EXISTS "group_field_options" CASCADE`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "group_fields" CASCADE`);
     await queryRunner.query(`DROP TABLE IF EXISTS "product_groups" CASCADE`);
     await queryRunner.query(`DROP TABLE IF EXISTS "sub_categories" CASCADE`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "product_categories" CASCADE`);
+    await queryRunner.query(
+      `DROP TABLE IF EXISTS "product_categories" CASCADE`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "departments" CASCADE`);
-    await queryRunner.query(`DROP TABLE IF EXISTS "password_reset_tokens" CASCADE`);
+    await queryRunner.query(
+      `DROP TABLE IF EXISTS "password_reset_tokens" CASCADE`,
+    );
     await queryRunner.query(`DROP TABLE IF EXISTS "users" CASCADE`);
     await queryRunner.query(`DROP TABLE IF EXISTS "user_roles" CASCADE`);
   }

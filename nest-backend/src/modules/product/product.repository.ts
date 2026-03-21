@@ -10,11 +10,19 @@ import {
 import { Product } from './entities/product.entity';
 import { ProductMedia } from './entities/product-media.entity';
 import { ProductPhysicalAttributes } from './entities/product-physical-attributes.entity';
+import { ProductMarketingMedia } from './entities/product-marketing-media.entity';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { QueryProductDto } from './dto/query-product.dto';
 import { CreateProductMediaDto } from './dto/create-product-media.dto';
 import { UpsertPhysicalAttributesDto } from './dto/upsert-physical-attributes.dto';
+import { CreateMarketingMediaDto } from './dto/create-marketing-media.dto';
+import { ProductZone } from './entities/product-zone.entity';
+import { CreateProductZoneDto } from './dto/create-product-zone.dto';
+import { ProductVendor } from './entities/product-vendor.entity';
+import { CreateProductVendorDto } from './dto/create-product-vendor.dto';
+import { ProductGroupFieldValue } from './entities/product-group-field-value.entity';
+import { UpsertGroupFieldValueDto } from './dto/upsert-group-field-value.dto';
 
 @Injectable()
 export class ProductRepository {
@@ -25,6 +33,14 @@ export class ProductRepository {
     private readonly mediaRepo: Repository<ProductMedia>,
     @InjectRepository(ProductPhysicalAttributes)
     private readonly physRepo: Repository<ProductPhysicalAttributes>,
+    @InjectRepository(ProductMarketingMedia)
+    private readonly marketingMediaRepo: Repository<ProductMarketingMedia>,
+    @InjectRepository(ProductZone)
+    private readonly zoneRepo: Repository<ProductZone>,
+    @InjectRepository(ProductVendor)
+    private readonly vendorRepo: Repository<ProductVendor>,
+    @InjectRepository(ProductGroupFieldValue)
+    private readonly groupFieldValueRepo: Repository<ProductGroupFieldValue>,
   ) {}
 
   async findAll(query: QueryProductDto): Promise<[Product[], number]> {
@@ -147,5 +163,124 @@ export class ProductRepository {
     productId: string,
   ): Promise<ProductPhysicalAttributes | null> {
     return this.physRepo.findOne({ where: { productId } });
+  }
+
+  // Marketing media sub-resource
+  async addMarketingMedia(
+    productId: string,
+    dto: CreateMarketingMediaDto,
+  ): Promise<ProductMarketingMedia> {
+    const media = this.marketingMediaRepo.create({ ...dto, productId });
+    return this.marketingMediaRepo.save(media);
+  }
+
+  async getMarketingMedia(productId: string): Promise<ProductMarketingMedia[]> {
+    return this.marketingMediaRepo.find({
+      where: { productId },
+      order: { displayOrder: 'ASC' },
+    });
+  }
+
+  async removeMarketingMedia(mediaId: string): Promise<boolean> {
+    const result = await this.marketingMediaRepo.delete(mediaId);
+    return (result.affected ?? 0) > 0;
+  }
+
+  // Zone sub-resource
+  async addZone(
+    productId: string,
+    dto: CreateProductZoneDto,
+  ): Promise<ProductZone> {
+    const zone = this.zoneRepo.create({ ...dto, productId });
+    return this.zoneRepo.save(zone);
+  }
+
+  async getZones(productId: string): Promise<ProductZone[]> {
+    return this.zoneRepo.find({ where: { productId } });
+  }
+
+  async updateZone(
+    zoneId: string,
+    dto: Partial<CreateProductZoneDto>,
+  ): Promise<void> {
+    await this.zoneRepo.update(zoneId, dto);
+  }
+
+  async removeZone(zoneId: string): Promise<boolean> {
+    const result = await this.zoneRepo.delete(zoneId);
+    return (result.affected ?? 0) > 0;
+  }
+
+  // Group field values sub-resource
+  async upsertGroupFieldValue(
+    productId: string,
+    dto: UpsertGroupFieldValueDto,
+  ): Promise<ProductGroupFieldValue> {
+    let value = await this.groupFieldValueRepo.findOne({
+      where: { productId, fieldId: dto.fieldId },
+    });
+    if (value) {
+      Object.assign(value, {
+        valueText: dto.valueText ?? null,
+        valueNumber: dto.valueNumber ?? null,
+        valueBoolean: dto.valueBoolean ?? null,
+        valueOptionId: dto.valueOptionId ?? null,
+      });
+    } else {
+      value = this.groupFieldValueRepo.create({
+        productId,
+        fieldId: dto.fieldId,
+        valueText: dto.valueText ?? null,
+        valueNumber: dto.valueNumber ?? null,
+        valueBoolean: dto.valueBoolean ?? null,
+        valueOptionId: dto.valueOptionId ?? null,
+      });
+    }
+    return this.groupFieldValueRepo.save(value);
+  }
+
+  async getGroupFieldValues(
+    productId: string,
+  ): Promise<ProductGroupFieldValue[]> {
+    return this.groupFieldValueRepo.find({
+      where: { productId },
+      relations: ['field', 'valueOption'],
+    });
+  }
+
+  async removeGroupFieldValue(
+    productId: string,
+    fieldId: string,
+  ): Promise<boolean> {
+    const result = await this.groupFieldValueRepo.delete({
+      productId,
+      fieldId,
+    });
+    return (result.affected ?? 0) > 0;
+  }
+
+  // Vendor sub-resource
+  async addVendor(
+    productId: string,
+    dto: CreateProductVendorDto,
+  ): Promise<ProductVendor> {
+    const vendor = this.vendorRepo.create({ ...dto, productId });
+    return this.vendorRepo.save(vendor);
+  }
+
+  async getVendors(productId: string): Promise<ProductVendor[]> {
+    return this.vendorRepo.find({ where: { productId } });
+  }
+
+  async updateVendor(
+    vendorId: string,
+    dto: Partial<CreateProductVendorDto>,
+  ): Promise<void> {
+    await this.vendorRepo.update(vendorId, dto);
+  }
+
+  async removeVendor(vendorId: string): Promise<boolean> {
+    const result = await this.vendorRepo.delete(vendorId);
+    return (result.affected ?? 0) > 0;
   }
 }
