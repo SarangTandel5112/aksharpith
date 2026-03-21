@@ -3,6 +3,8 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { ILike } from 'typeorm';
 import { ProductGroupRepository } from '../product-group.repository';
 import { ProductGroup } from '../entities/product-group.entity';
+import { GroupField, FieldType } from '../entities/group-field.entity';
+import { ProductGroupFieldValue } from '../../product/entities/product-group-field-value.entity';
 
 const mockRepo = () => ({
   findAndCount: jest.fn(),
@@ -13,19 +15,35 @@ const mockRepo = () => ({
   softDelete: jest.fn(),
 });
 
+const mockFieldRepo = () => ({
+  create: jest.fn(),
+  save: jest.fn(),
+  update: jest.fn(),
+  findOne: jest.fn(),
+  softDelete: jest.fn(),
+});
+
+const mockGroupFieldValueRepo = () => ({ count: jest.fn() });
+
 describe('ProductGroupRepository', () => {
   let groupRepo: ProductGroupRepository;
   let repo: ReturnType<typeof mockRepo>;
+  let fieldRepo: ReturnType<typeof mockFieldRepo>;
+  let groupFieldValueRepo: ReturnType<typeof mockGroupFieldValueRepo>;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         ProductGroupRepository,
         { provide: getRepositoryToken(ProductGroup), useFactory: mockRepo },
+        { provide: getRepositoryToken(GroupField), useFactory: mockFieldRepo },
+        { provide: getRepositoryToken(ProductGroupFieldValue), useFactory: mockGroupFieldValueRepo },
       ],
     }).compile();
     groupRepo = module.get(ProductGroupRepository);
     repo = module.get(getRepositoryToken(ProductGroup));
+    fieldRepo = module.get(getRepositoryToken(GroupField));
+    groupFieldValueRepo = module.get(getRepositoryToken(ProductGroupFieldValue));
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -122,6 +140,69 @@ describe('ProductGroupRepository', () => {
     it('returns false when not found', async () => {
       repo.softDelete.mockResolvedValue({ affected: 0 });
       expect(await groupRepo.softDelete('bad')).toBe(false);
+    });
+  });
+
+  describe('addField', () => {
+    it('slugifies field name to generate field_key', async () => {
+      const dto = { fieldName: 'Burning Time', fieldType: FieldType.NUMBER, isRequired: false, sortOrder: 0 };
+      const saved = { id: 'f-1', groupId: 'g-1', fieldKey: 'burning_time', ...dto };
+      fieldRepo.create.mockReturnValue(saved);
+      fieldRepo.save.mockResolvedValue(saved);
+      const result = await groupRepo.addField('g-1', dto);
+      expect(result.fieldKey).toBe('burning_time');
+    });
+
+    it('uses custom field_key when provided', async () => {
+      const dto = { fieldName: 'ISBN Number', fieldKey: 'isbn', fieldType: FieldType.TEXT };
+      const saved = { id: 'f-2', groupId: 'g-1', fieldKey: 'isbn', fieldName: 'ISBN Number' };
+      fieldRepo.create.mockReturnValue(saved);
+      fieldRepo.save.mockResolvedValue(saved);
+      const result = await groupRepo.addField('g-1', dto);
+      expect(result.fieldKey).toBe('isbn');
+    });
+  });
+
+  describe('updateField', () => {
+    it('updates allowed fields (name, required, filterable, sortOrder)', async () => {
+      fieldRepo.update.mockResolvedValue({ affected: 1 });
+      fieldRepo.findOne.mockResolvedValue({ id: 'f-1', fieldName: 'Updated', isFilterable: true });
+      const result = await groupRepo.updateField('f-1', { fieldName: 'Updated', isFilterable: true });
+      expect(result).toHaveProperty('fieldName', 'Updated');
+      expect(fieldRepo.update).toHaveBeenCalledWith('f-1', expect.not.objectContaining({ fieldKey: expect.anything() }));
+    });
+  });
+
+  describe('deleteField', () => {
+    it('soft-deletes field', async () => {
+      fieldRepo.softDelete.mockResolvedValue({ affected: 1 });
+      expect(await groupRepo.deleteField('f-1')).toBe(true);
+    });
+
+    it('returns false when field not found', async () => {
+      fieldRepo.softDelete.mockResolvedValue({ affected: 0 });
+      expect(await groupRepo.deleteField('bad')).toBe(false);
+    });
+  });
+
+  describe('countFieldValues', () => {
+    it('returns count of products with values for field', async () => {
+      groupFieldValueRepo.count.mockResolvedValue(23);
+      expect(await groupRepo.countFieldValues('f-1')).toBe(23);
+    });
+  });
+
+  describe('findFieldById', () => {
+    it('returns field when found', async () => {
+      fieldRepo.findOne.mockResolvedValue({ id: 'f-1', fieldName: 'Author' });
+      const result = await groupRepo.findFieldById('f-1');
+      expect(result).toHaveProperty('id', 'f-1');
+    });
+
+    it('returns null when not found', async () => {
+      fieldRepo.findOne.mockResolvedValue(null);
+      const result = await groupRepo.findFieldById('bad');
+      expect(result).toBeNull();
     });
   });
 });
