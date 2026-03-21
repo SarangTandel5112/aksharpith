@@ -10,6 +10,9 @@ const mockService = () => ({
   create: jest.fn(),
   update: jest.fn(),
   remove: jest.fn(),
+  addField: jest.fn(),
+  updateField: jest.fn(),
+  removeField: jest.fn(),
 });
 
 describe('ProductGroupController', () => {
@@ -28,8 +31,16 @@ describe('ProductGroupController', () => {
   afterEach(() => jest.clearAllMocks());
 
   it('findAll returns paginated result', async () => {
-    service.findAll.mockResolvedValue({ items: [], total: 0, page: 1, limit: 10, totalPages: 0 });
-    expect(await controller.findAll({ page: 1, limit: 10, order: 'ASC' })).toHaveProperty('items');
+    service.findAll.mockResolvedValue({
+      items: [],
+      total: 0,
+      page: 1,
+      limit: 10,
+      totalPages: 0,
+    });
+    expect(
+      await controller.findAll({ page: 1, limit: 10, order: 'ASC' }),
+    ).toHaveProperty('items');
   });
 
   it('findOne returns group', async () => {
@@ -49,7 +60,9 @@ describe('ProductGroupController', () => {
 
   it('findWithFields propagates NotFoundException', async () => {
     service.findWithFields.mockRejectedValue(new NotFoundException());
-    await expect(controller.findWithFields('bad')).rejects.toThrow(NotFoundException);
+    await expect(controller.findWithFields('bad')).rejects.toThrow(
+      NotFoundException,
+    );
   });
 
   it('create returns new group', async () => {
@@ -59,16 +72,71 @@ describe('ProductGroupController', () => {
 
   it('create propagates ConflictException', async () => {
     service.create.mockRejectedValue(new ConflictException());
-    await expect(controller.create({ name: 'Dup' })).rejects.toThrow(ConflictException);
+    await expect(controller.create({ name: 'Dup' })).rejects.toThrow(
+      ConflictException,
+    );
   });
 
   it('update delegates to service', async () => {
     service.update.mockResolvedValue({ id: 'uuid-1', name: 'Updated' });
-    expect(await controller.update('uuid-1', { name: 'Updated' })).toHaveProperty('name');
+    expect(
+      await controller.update('uuid-1', { name: 'Updated' }),
+    ).toHaveProperty('name');
   });
 
   it('remove returns undefined', async () => {
     service.remove.mockResolvedValue(undefined);
     expect(await controller.remove('uuid-1')).toBeUndefined();
+  });
+
+  describe('addField', () => {
+    it('delegates to service', async () => {
+      service.addField.mockResolvedValue({ id: 'f-1', fieldKey: 'author' });
+      const result = await controller.addField('g-1', { fieldName: 'Author' });
+      expect(result).toHaveProperty('fieldKey', 'author');
+      expect(service.addField).toHaveBeenCalledWith('g-1', {
+        fieldName: 'Author',
+      });
+    });
+
+    it('propagates 404', async () => {
+      service.addField.mockRejectedValue(new NotFoundException());
+      await expect(
+        controller.addField('bad', { fieldName: 'X' }),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('updateField', () => {
+    it('delegates to service', async () => {
+      service.updateField.mockResolvedValue({ id: 'f-1', isFilterable: true });
+      const result = await controller.updateField('g-1', 'f-1', {
+        isFilterable: true,
+      });
+      expect(result).toHaveProperty('isFilterable', true);
+    });
+
+    it('propagates 409 when type change blocked', async () => {
+      service.updateField.mockRejectedValue(new ConflictException());
+      await expect(controller.updateField('g-1', 'f-1', {})).rejects.toThrow(
+        ConflictException,
+      );
+    });
+  });
+
+  describe('removeField', () => {
+    it('delegates to service', async () => {
+      service.removeField.mockResolvedValue(undefined);
+      await expect(
+        controller.removeField('g-1', 'f-1'),
+      ).resolves.toBeUndefined();
+    });
+
+    it('propagates 409 when values exist', async () => {
+      service.removeField.mockRejectedValue(new ConflictException());
+      await expect(controller.removeField('g-1', 'f-1')).rejects.toThrow(
+        ConflictException,
+      );
+    });
   });
 });

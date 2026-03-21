@@ -7,6 +7,8 @@ import { ProductGroupFieldValue } from '../product/entities/product-group-field-
 import { CreateProductGroupDto } from './dto/create-product-group.dto';
 import { UpdateProductGroupDto } from './dto/update-product-group.dto';
 import { QueryProductGroupDto } from './dto/query-product-group.dto';
+import { AddGroupFieldDto } from './dto/add-group-field.dto';
+import { UpdateGroupFieldDto } from './dto/update-group-field.dto';
 
 @Injectable()
 export class ProductGroupRepository {
@@ -97,7 +99,7 @@ export class ProductGroupRepository {
     return slug;
   }
 
-  async addField(groupId: string, dto: any): Promise<GroupField> {
+  async addField(groupId: string, dto: AddGroupFieldDto): Promise<GroupField> {
     const fieldKey = dto.fieldKey ?? this.slugify(dto.fieldName);
     const { fieldKey: _fk, ...rest } = dto as any;
     const field = this.fieldRepo.create({ ...rest, groupId, fieldKey });
@@ -108,7 +110,10 @@ export class ProductGroupRepository {
     return this.fieldRepo.findOne({ where: { id: fieldId } });
   }
 
-  async updateField(fieldId: string, dto: any): Promise<GroupField | null> {
+  async updateField(
+    fieldId: string,
+    dto: UpdateGroupFieldDto,
+  ): Promise<GroupField | null> {
     // never update fieldKey — explicitly exclude it
     const { fieldKey: _ignored, ...safeDto } = dto as any;
     await this.fieldRepo.update(fieldId, safeDto);

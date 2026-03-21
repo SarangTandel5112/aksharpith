@@ -11,6 +11,11 @@ const mockGroupRepo = () => ({
   create: jest.fn(),
   update: jest.fn(),
   softDelete: jest.fn(),
+  addField: jest.fn(),
+  findFieldById: jest.fn(),
+  updateField: jest.fn(),
+  deleteField: jest.fn(),
+  countFieldValues: jest.fn(),
 });
 
 const mockGroup = {
@@ -42,7 +47,11 @@ describe('ProductGroupService', () => {
   describe('findAll', () => {
     it('returns paginated response', async () => {
       repo.findAll.mockResolvedValue([[mockGroup], 1]);
-      const result = await service.findAll({ page: 1, limit: 10, order: 'ASC' });
+      const result = await service.findAll({
+        page: 1,
+        limit: 10,
+        order: 'ASC',
+      });
       expect(result.total).toBe(1);
       expect(result.items).toHaveLength(1);
     });
@@ -76,7 +85,9 @@ describe('ProductGroupService', () => {
 
     it('throws NotFoundException when not found', async () => {
       repo.findWithFields.mockResolvedValue(null);
-      await expect(service.findWithFields('bad')).rejects.toThrow(NotFoundException);
+      await expect(service.findWithFields('bad')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 
@@ -90,7 +101,9 @@ describe('ProductGroupService', () => {
 
     it('throws ConflictException on duplicate name', async () => {
       repo.findByName.mockResolvedValue(mockGroup);
-      await expect(service.create({ name: 'Apparel' })).rejects.toThrow(ConflictException);
+      await expect(service.create({ name: 'Apparel' })).rejects.toThrow(
+        ConflictException,
+      );
     });
   });
 
@@ -105,13 +118,17 @@ describe('ProductGroupService', () => {
 
     it('throws NotFoundException', async () => {
       repo.findById.mockResolvedValue(null);
-      await expect(service.update('bad', { name: 'X' })).rejects.toThrow(NotFoundException);
+      await expect(service.update('bad', { name: 'X' })).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
     it('throws ConflictException when name taken by other group', async () => {
       repo.findById.mockResolvedValue(mockGroup);
       repo.findByName.mockResolvedValue({ ...mockGroup, id: 'uuid-2' });
-      await expect(service.update('uuid-1', { name: 'Conflict' })).rejects.toThrow(ConflictException);
+      await expect(
+        service.update('uuid-1', { name: 'Conflict' }),
+      ).rejects.toThrow(ConflictException);
     });
   });
 
@@ -125,6 +142,94 @@ describe('ProductGroupService', () => {
     it('throws NotFoundException', async () => {
       repo.findById.mockResolvedValue(null);
       await expect(service.remove('bad')).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('addField', () => {
+    it('adds field to existing group', async () => {
+      repo.findById.mockResolvedValue({ id: 'g-1', name: 'Books' });
+      repo.addField.mockResolvedValue({ id: 'f-1', fieldKey: 'author' });
+      const result = await service.addField('g-1', { fieldName: 'Author' });
+      expect(result).toHaveProperty('fieldKey', 'author');
+    });
+
+    it('throws 404 if group not found', async () => {
+      repo.findById.mockResolvedValue(null);
+      await expect(service.addField('bad', { fieldName: 'X' })).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('updateField', () => {
+    it('blocks field_type change if values exist', async () => {
+      repo.findById.mockResolvedValue({ id: 'g-1' });
+      repo.findFieldById.mockResolvedValue({
+        id: 'f-1',
+        fieldType: 'text',
+        groupId: 'g-1',
+      });
+      repo.countFieldValues.mockResolvedValue(5);
+      await expect(
+        service.updateField('g-1', 'f-1', { fieldType: 'number' } as any),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('allows field_type change if no values exist', async () => {
+      repo.findById.mockResolvedValue({ id: 'g-1' });
+      repo.findFieldById.mockResolvedValue({
+        id: 'f-1',
+        fieldType: 'text',
+        groupId: 'g-1',
+      });
+      repo.countFieldValues.mockResolvedValue(0);
+      repo.updateField.mockResolvedValue({ id: 'f-1', fieldType: 'number' });
+      const result = await service.updateField('g-1', 'f-1', {
+        fieldType: 'number',
+      } as any);
+      expect(result).toHaveProperty('fieldType', 'number');
+    });
+
+    it('throws 404 if field not found', async () => {
+      repo.findById.mockResolvedValue({ id: 'g-1' });
+      repo.findFieldById.mockResolvedValue(null);
+      await expect(service.updateField('g-1', 'f-1', {})).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+  });
+
+  describe('removeField', () => {
+    it('blocks deletion if values exist', async () => {
+      repo.findById.mockResolvedValue({ id: 'g-1' });
+      repo.findFieldById.mockResolvedValue({ id: 'f-1', groupId: 'g-1' });
+      repo.countFieldValues.mockResolvedValue(3);
+      await expect(service.removeField('g-1', 'f-1')).rejects.toThrow(
+        ConflictException,
+      );
+    });
+
+    it('deletes field when no values exist', async () => {
+      repo.findById.mockResolvedValue({ id: 'g-1' });
+      repo.findFieldById.mockResolvedValue({ id: 'f-1', groupId: 'g-1' });
+      repo.countFieldValues.mockResolvedValue(0);
+      repo.deleteField.mockResolvedValue(true);
+      await expect(service.removeField('g-1', 'f-1')).resolves.toBeUndefined();
+    });
+
+    it('throws 404 if field not found', async () => {
+      repo.findById.mockResolvedValue({ id: 'g-1' });
+      repo.findFieldById.mockResolvedValue(null);
+      await expect(service.removeField('g-1', 'f-1')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('throws 404 if group not found', async () => {
+      repo.findById.mockResolvedValue(null);
+      await expect(service.removeField('bad', 'f-1')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

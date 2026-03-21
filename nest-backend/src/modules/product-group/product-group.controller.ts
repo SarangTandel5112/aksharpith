@@ -21,6 +21,8 @@ import { ProductGroupService } from './product-group.service';
 import { CreateProductGroupDto } from './dto/create-product-group.dto';
 import { UpdateProductGroupDto } from './dto/update-product-group.dto';
 import { QueryProductGroupDto } from './dto/query-product-group.dto';
+import { AddGroupFieldDto } from './dto/add-group-field.dto';
+import { UpdateGroupFieldDto } from './dto/update-group-field.dto';
 
 @ApiTags('product-groups')
 @ApiBearerAuth()
@@ -55,7 +57,10 @@ export class ProductGroupController {
 
   @Patch(':id')
   @Roles([ROLE.ADMIN])
-  update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateProductGroupDto) {
+  update(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateProductGroupDto,
+  ) {
     return this.service.update(id, dto);
   }
 
@@ -64,5 +69,34 @@ export class ProductGroupController {
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id', ParseUUIDPipe) id: string) {
     return this.service.remove(id);
+  }
+
+  @Post(':id/fields')
+  @Roles([ROLE.ADMIN])
+  addField(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: AddGroupFieldDto,
+  ) {
+    return this.service.addField(id, dto);
+  }
+
+  @Patch(':id/fields/:fieldId')
+  @Roles([ROLE.ADMIN])
+  updateField(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('fieldId', ParseUUIDPipe) fieldId: string,
+    @Body() dto: UpdateGroupFieldDto,
+  ) {
+    return this.service.updateField(id, fieldId, dto);
+  }
+
+  @Delete(':id/fields/:fieldId')
+  @Roles([ROLE.ADMIN])
+  @HttpCode(HttpStatus.NO_CONTENT)
+  removeField(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('fieldId', ParseUUIDPipe) fieldId: string,
+  ) {
+    return this.service.removeField(id, fieldId);
   }
 }
