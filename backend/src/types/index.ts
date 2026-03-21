@@ -1,11 +1,13 @@
 export interface JwtPayload {
-  userId: string;
+  userId: number;
   email: string;
+  username?: string;
+  roleId?: number;
 }
 
 export interface AuthenticatedRequest extends Express.Request {
   user?: {
-    id: string;
+    id: number;
     email: string;
   };
 }
@@ -16,4 +18,3 @@ export interface ApiResponse<T = unknown> {
   data?: T;
   errors?: Record<string, string[]>;
 }
-

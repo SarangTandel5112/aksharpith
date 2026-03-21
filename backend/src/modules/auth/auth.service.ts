@@ -1,16 +1,13 @@
-import { UserRepository } from '@modules/user/user.repository';
+import { IUserRepository } from '@modules/user/interfaces/user.repository.interface';
 import { LoginDto, RegisterDto, RefreshTokenDto } from './dtos';
 import { User } from '@entities';
 import { BcryptHelper } from '@helpers/bcrypt.helper';
 import { TokenHelper } from '@helpers/token.helper';
-import { removePasswordHash, validateEntityExists } from '@helpers/entity.helper';
-import logger from '@setup/logger';
-
-interface AuthResponse {
-  user: Omit<User, 'passwordHash'>;
-  token: string;
-  refreshToken: string;
-}
+import {
+  removePasswordHash,
+  validateEntityExists,
+} from '@helpers/entity.helper';
+import { AuthResponse } from './interfaces/auth.service.interface';
 
 /**
  * Auth Service
@@ -18,10 +15,12 @@ interface AuthResponse {
  * Implements authentication and authorization logic
  */
 export class AuthService {
-  constructor(private userRepository: UserRepository) {}
+  constructor(private userRepository: IUserRepository) {}
 
   async register(registerDto: RegisterDto): Promise<AuthResponse> {
-    const existingUser = await this.userRepository.findByEmail(registerDto.email);
+    const existingUser = await this.userRepository.findByEmail(
+      registerDto.email
+    );
     if (existingUser) {
       throw new Error('User with this email already exists');
     }
@@ -48,8 +47,6 @@ export class AuthService {
       userId: user.id,
       email: user.email,
     });
-
-    logger.info(`User registered successfully: ${user.email}`);
 
     return {
       user: removePasswordHash(user),
@@ -84,8 +81,6 @@ export class AuthService {
       email: user.email,
     });
 
-    logger.info(`User logged in successfully: ${user.email}`);
-
     return {
       user: removePasswordHash(user),
       token,
@@ -97,7 +92,9 @@ export class AuthService {
     refreshTokenDto: RefreshTokenDto
   ): Promise<{ token: string; refreshToken: string }> {
     try {
-      const payload = TokenHelper.verifyRefreshToken(refreshTokenDto.refreshToken);
+      const payload = TokenHelper.verifyRefreshToken(
+        refreshTokenDto.refreshToken
+      );
 
       const user = await this.userRepository.findById(payload.userId);
       validateEntityExists(user, 'User');
@@ -113,8 +110,6 @@ export class AuthService {
         userId: user.id,
         email: user.email,
       });
-
-      logger.info(`Token refreshed for user: ${user.email}`);
 
       return {
         token,
