@@ -22,6 +22,8 @@ const mockProductRepo = () => ({
   getPhysicalAttributes: jest.fn(),
   bulkUpsertGroupFieldValues: jest.fn(),
   getGroupFieldValues: jest.fn(),
+  countGroupFieldValues: jest.fn(),
+  deleteGroupFieldValues: jest.fn(),
 });
 
 const mockProduct = {
@@ -278,6 +280,52 @@ describe('ProductService', () => {
       await expect(service.getGroupFieldValuesBulk('bad')).rejects.toThrow(
         NotFoundException,
       );
+    });
+  });
+
+  describe('update with groupId change', () => {
+    it('allows group change when no field values exist', async () => {
+      repo.findById.mockResolvedValue({ ...mockProduct, groupId: 'old-group' });
+      repo.findBySku.mockResolvedValue(null);
+      repo.countGroupFieldValues.mockResolvedValue(0);
+      repo.update.mockResolvedValue({ ...mockProduct, groupId: 'new-group' });
+      const result = await service.update('uuid-1', { groupId: 'new-group' });
+      expect(result.groupId).toBe('new-group');
+    });
+
+    it('throws 409 when group changes and values exist without clearFieldValues flag', async () => {
+      repo.findById.mockResolvedValue({ ...mockProduct, groupId: 'old-group' });
+      repo.findBySku.mockResolvedValue(null);
+      repo.countGroupFieldValues.mockResolvedValue(5);
+      await expect(
+        service.update('uuid-1', { groupId: 'new-group' }),
+      ).rejects.toThrow(ConflictException);
+    });
+
+    it('deletes orphan values and changes group when clearFieldValues=true', async () => {
+      repo.findById.mockResolvedValue({ ...mockProduct, groupId: 'old-group' });
+      repo.findBySku.mockResolvedValue(null);
+      repo.countGroupFieldValues.mockResolvedValue(5);
+      repo.deleteGroupFieldValues.mockResolvedValue(undefined);
+      repo.update.mockResolvedValue({ ...mockProduct, groupId: 'new-group' });
+      const result = await service.update('uuid-1', {
+        groupId: 'new-group',
+        clearFieldValues: true,
+      } as any);
+      expect(repo.deleteGroupFieldValues).toHaveBeenCalledWith('uuid-1');
+      expect(result.groupId).toBe('new-group');
+    });
+
+    it('skips group change guard when groupId is not being changed', async () => {
+      repo.findById.mockResolvedValue({
+        ...mockProduct,
+        groupId: 'same-group',
+      });
+      repo.findBySku.mockResolvedValue(null);
+      repo.update.mockResolvedValue({ ...mockProduct, name: 'Updated' });
+      const result = await service.update('uuid-1', { name: 'Updated' });
+      expect(repo.countGroupFieldValues).not.toHaveBeenCalled();
+      expect(result.name).toBe('Updated');
     });
   });
 });

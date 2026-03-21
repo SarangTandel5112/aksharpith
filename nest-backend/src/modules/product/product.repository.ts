@@ -272,6 +272,14 @@ export class ProductRepository {
     return (result.affected ?? 0) > 0;
   }
 
+  async countGroupFieldValues(productId: string): Promise<number> {
+    return this.groupFieldValueRepo.count({ where: { productId } });
+  }
+
+  async deleteGroupFieldValues(productId: string): Promise<void> {
+    await this.groupFieldValueRepo.delete({ productId });
+  }
+
   // Vendor sub-resource
   async addVendor(
     productId: string,

@@ -66,11 +66,24 @@ export class ProductService {
   }
 
   async update(id: string, dto: UpdateProductDto): Promise<ProductResponseDto> {
-    await this.findOne(id);
+    const existing = await this.productRepo.findById(id);
+    if (!existing) throw new NotFoundException(`Product ${id} not found`);
     if (dto.sku) {
-      const existing = await this.productRepo.findBySku(dto.sku);
-      if (existing && existing.id !== id) {
+      const skuConflict = await this.productRepo.findBySku(dto.sku);
+      if (skuConflict && skuConflict.id !== id) {
         throw new ConflictException(`SKU '${dto.sku}' already exists`);
+      }
+    }
+    // Group change protection
+    if (dto.groupId && dto.groupId !== existing.groupId) {
+      const valueCount = await this.productRepo.countGroupFieldValues(id);
+      if (valueCount > 0) {
+        if (!(dto as any).clearFieldValues) {
+          throw new ConflictException(
+            `Cannot change group: ${valueCount} field values exist. Pass clearFieldValues: true to delete them.`,
+          );
+        }
+        await this.productRepo.deleteGroupFieldValues(id);
       }
     }
     const product = await this.productRepo.update(id, dto);
