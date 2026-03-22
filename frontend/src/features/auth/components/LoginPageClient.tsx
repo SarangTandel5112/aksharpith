@@ -2,7 +2,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
 import { useState } from "react";
 import type { LoginFormValues } from "../validations/login.schema";
 import { LoginForm } from "./LoginForm";
@@ -31,7 +31,14 @@ export function LoginPageClient(): React.JSX.Element {
       return;
     }
 
-    router.push("/products");
+    const session = await getSession();
+    const roleName = session?.user?.role?.roleName;
+
+    if (roleName === "Admin" || roleName === "Staff") {
+      router.push("/admin");
+    } else {
+      router.push("/products");
+    }
   }
 
   return (
