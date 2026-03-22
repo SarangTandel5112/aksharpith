@@ -52,3 +52,11 @@ next-env.d.ts
 
 # Superpowers
 .superpowers/
+
+# AI planning artifacts (superpowers plans/specs - not tracked)
+docs/superpowers/plans/
+docs/superpowers/specs/
+
+# IDE
+.cursor/
+.vscode/
