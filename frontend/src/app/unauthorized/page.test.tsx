@@ -1,25 +1,29 @@
-// @vitest-environment happy-dom
-import { vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock('next/link', () => ({
-  default: ({ href, children }: { href: string; children: React.ReactNode }) =>
-    <a href={href}>{children}</a>,
-}))
+type LinkProps = { href: string; children: React.ReactNode };
+vi.mock("next/link", () => ({
+  default: (props: LinkProps) => <a href={props.href}>{props.children}</a>,
+}));
 
-import { render, screen } from '@testing-library/react'
-import { describe, it, expect } from 'vitest'
-import UnauthorizedPage from './page'
+import { render, screen } from "@testing-library/react";
+import UnauthorizedPage from "./page";
 
-describe('UnauthorizedPage', () => {
-  it('renders the access denied heading', () => {
-    render(<UnauthorizedPage />)
-    expect(screen.getByRole('heading', { name: /access denied/i })).toBeInTheDocument()
-  })
+beforeEach(() => {
+  vi.clearAllMocks();
+});
 
-  it('renders a link back to the catalog', () => {
-    render(<UnauthorizedPage />)
-    const link = screen.getByRole('link', { name: /back to catalog/i })
-    expect(link).toBeInTheDocument()
-    expect(link).toHaveAttribute('href', '/products')
-  })
-})
+describe("UnauthorizedPage", () => {
+  it("renders the access denied heading", () => {
+    render(<UnauthorizedPage />);
+    expect(
+      screen.getByRole("heading", { name: /access denied/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("renders a link back to the catalog", () => {
+    render(<UnauthorizedPage />);
+    const link = screen.getByRole("link", { name: /back to catalog/i });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute("href", "/products");
+  });
+});

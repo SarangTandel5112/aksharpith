@@ -1,72 +1,72 @@
-import { renderHook } from '@testing-library/react'
-import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { useSession } from './useSession'
+import { renderHook } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { useSession } from "./useSession";
 
-vi.mock('next-auth/react', () => ({
+vi.mock("next-auth/react", () => ({
   useSession: vi.fn(),
-}))
+}));
 
-import { useSession as useNextAuthSession } from 'next-auth/react'
-const mockUseNextAuthSession = vi.mocked(useNextAuthSession)
+import { useSession as useNextAuthSession } from "next-auth/react";
+
+const mockUseNextAuthSession = vi.mocked(useNextAuthSession);
 
 const fakeUser = {
-  id:        'user-1',
-  email:     'test@test.com',
-  firstName: 'Test',
-  lastName:  'User',
-  role:      { id: 'role-1', roleName: 'Admin' },
-}
+  id: "user-1",
+  email: "test@test.com",
+  firstName: "Test",
+  lastName: "User",
+  role: { id: "role-1", roleName: "Admin" },
+};
 
-beforeEach(() => {
-  vi.clearAllMocks()
-})
-
-describe('useSession', () => {
-  it('returns loading when next-auth is loading', () => {
+describe("useSession", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+  it("returns loading when next-auth is loading", () => {
     mockUseNextAuthSession.mockReturnValue({
-      data:   null,
-      status: 'loading',
+      data: null,
+      status: "loading",
       update: vi.fn(),
-    })
+    });
 
-    const { result } = renderHook(() => useSession())
+    const { result } = renderHook(() => useSession());
 
-    expect(result.current.status).toBe('loading')
-    expect(result.current.user).toBeNull()
-    expect(result.current.accessToken).toBeNull()
-  })
+    expect(result.current.status).toBe("loading");
+    expect(result.current.user).toBeNull();
+    expect(result.current.accessToken).toBeNull();
+  });
 
-  it('returns unauthenticated when there is no session', () => {
+  it("returns unauthenticated when there is no session", () => {
     mockUseNextAuthSession.mockReturnValue({
-      data:   null,
-      status: 'unauthenticated',
+      data: null,
+      status: "unauthenticated",
       update: vi.fn(),
-    })
+    });
 
-    const { result } = renderHook(() => useSession())
+    const { result } = renderHook(() => useSession());
 
-    expect(result.current.status).toBe('unauthenticated')
-    expect(result.current.user).toBeNull()
-    expect(result.current.accessToken).toBeNull()
-  })
+    expect(result.current.status).toBe("unauthenticated");
+    expect(result.current.user).toBeNull();
+    expect(result.current.accessToken).toBeNull();
+  });
 
-  it('returns authenticated with user and accessToken', () => {
+  it("returns authenticated with user and accessToken", () => {
     mockUseNextAuthSession.mockReturnValue({
       data: {
-        user:        fakeUser,
-        accessToken: 'token-abc',
-        expires:     '2099-01-01',
+        user: fakeUser,
+        accessToken: "token-abc",
+        expires: "2099-01-01",
       },
-      status: 'authenticated',
+      status: "authenticated",
       update: vi.fn(),
-    })
+    });
 
-    const { result } = renderHook(() => useSession())
+    const { result } = renderHook(() => useSession());
 
-    expect(result.current.status).toBe('authenticated')
-    if (result.current.status === 'authenticated') {
-      expect(result.current.user.email).toBe('test@test.com')
-      expect(result.current.accessToken).toBe('token-abc')
+    expect(result.current.status).toBe("authenticated");
+    if (result.current.status === "authenticated") {
+      expect(result.current.user.email).toBe("test@test.com");
+      expect(result.current.accessToken).toBe("token-abc");
     }
-  })
-})
+  });
+});
