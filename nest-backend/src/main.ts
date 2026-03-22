@@ -42,18 +42,31 @@ async function bootstrap() {
 
   app.setGlobalPrefix('api');
 
-  // Swagger configuration
-  const config = new DocumentBuilder()
-    .setTitle('Nest API')
-    .setDescription('API documentation for Nest system')
-    .addBearerAuth()
-    .setVersion('1.0')
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api-docs', app, document);
-  app.getHttpAdapter().get('/swagger.json', (_, res: Response) => {
-    res.json(document);
-  });
+  // Swagger — development only
+  if (process.env.NODE_ENV !== 'production') {
+    const config = new DocumentBuilder()
+      .setTitle('Nest API')
+      .setDescription('API documentation for Nest system')
+      .addBearerAuth()
+      .setVersion('1.0')
+      .build();
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api-docs', app, document);
+    app.getHttpAdapter().get('/swagger.json', (_, res: Response) => {
+      res.json(document);
+    });
+  }
+  // HSTS — production only
+  if (process.env.NODE_ENV === 'production') {
+    app.use((_req: unknown, res: Response, next: () => void) => {
+      res.setHeader(
+        'Strict-Transport-Security',
+        'max-age=63072000; includeSubDomains',
+      );
+      next();
+    });
+  }
+
   app.useGlobalPipes(
     new ValidationPipe({
       transform: true, // Automatically transform request data to DTO instances

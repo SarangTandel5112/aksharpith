@@ -78,7 +78,7 @@ export class AuthService {
   async validateUser(email: string, password: string): Promise<User | null> {
     try {
       const user = await this.userRepository.findByEmail(email);
-      if (user && bcrypt.compareSync(password, user.password)) {
+      if (user && (await bcrypt.compare(password, user.password))) {
         if (!user.isActive) return null;
         return user;
       }

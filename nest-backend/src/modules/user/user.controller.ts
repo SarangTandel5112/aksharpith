@@ -11,6 +11,7 @@ import {
   HttpCode,
   HttpStatus,
   ParseUUIDPipe,
+  Request,
 } from '@nestjs/common';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../security/jwt-auth.guard';
@@ -28,6 +29,12 @@ import { QueryUserDto } from './dto/query-user.dto';
 @Controller('users')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  @Get('me')
+  @ApiOperation({ summary: 'Get current authenticated user' })
+  getMe(@Request() req: { user: { id: string } }) {
+    return this.userService.findOne(req.user.id);
+  }
 
   @Get()
   @UseGuards(RolesGuard)
