@@ -1,16 +1,14 @@
-'use client'
+"use client";
 
-import type React from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Button } from '@shared/components/ui/button'
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@shared/components/ui/button";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@shared/components/ui/dialog'
+} from "@shared/components/ui/dialog";
 import {
   Form,
   FormControl,
@@ -18,40 +16,49 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@shared/components/ui/form'
-import { Input } from '@shared/components/ui/input'
-import { Textarea } from '@shared/components/ui/textarea'
+} from "@shared/components/ui/form";
+import { Input } from "@shared/components/ui/input";
+import { Textarea } from "@shared/components/ui/textarea";
+import type React from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
+import type { Department } from "../types/departments.types";
 import {
   DepartmentFormSchema,
   type DepartmentFormValues,
-} from '../validations/department-form.schema'
-import type { Department } from '../types/departments.types'
+} from "../validations/department-form.schema";
 
 type DepartmentFormDialogProps = {
-  open: boolean
-  onClose: () => void
-  onSubmit: (values: DepartmentFormValues) => void
-  isSubmitting: boolean
-  department?: Department
-}
+  open: boolean;
+  onClose: () => void;
+  onSubmit: (values: DepartmentFormValues) => void;
+  isSubmitting: boolean;
+  department?: Department;
+};
 
-export function DepartmentFormDialog(props: DepartmentFormDialogProps): React.JSX.Element {
-  const form = useForm<DepartmentFormValues>({
+export function DepartmentFormDialog(
+  props: DepartmentFormDialogProps,
+): React.JSX.Element {
+  const form = useForm<
+    z.input<typeof DepartmentFormSchema>,
+    unknown,
+    DepartmentFormValues
+  >({
     resolver: zodResolver(DepartmentFormSchema),
     defaultValues: {
-      name: props.department?.name ?? '',
-      description: props.department?.description ?? '',
+      name: props.department?.name ?? "",
+      description: props.department?.description ?? "",
     },
-  })
+  });
 
-  const title = props.department ? 'Edit Department' : 'Add Department'
+  const title = props.department ? "Edit Department" : "Add Department";
 
   function handleSubmit(values: DepartmentFormValues): void {
-    props.onSubmit(values)
+    props.onSubmit(values);
   }
 
   function handleOpenChange(open: boolean): void {
-    if (!open) props.onClose()
+    if (!open) props.onClose();
   }
 
   return (
@@ -61,7 +68,10 @@ export function DepartmentFormDialog(props: DepartmentFormDialogProps): React.JS
           <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(handleSubmit)}
+            className="space-y-4"
+          >
             <FormField
               control={form.control}
               name="name"
@@ -98,12 +108,12 @@ export function DepartmentFormDialog(props: DepartmentFormDialogProps): React.JS
                 Cancel
               </Button>
               <Button type="submit" disabled={props.isSubmitting}>
-                {props.isSubmitting ? 'Saving\u2026' : 'Save'}
+                {props.isSubmitting ? "Saving\u2026" : "Save"}
               </Button>
             </DialogFooter>
           </form>
         </Form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
