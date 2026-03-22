@@ -29,7 +29,8 @@
       "@features/*": ["./src/features/*"],
       "@shared/*": ["./src/shared/*"],
       "@config/*": ["./src/config/*"],
-      "@test/*": ["./src/__tests__/*"]
+      "@test/*": ["./src/__tests__/*"],
+      "@app/*": ["./src/app/*"]
     }
   },
   "include": [
