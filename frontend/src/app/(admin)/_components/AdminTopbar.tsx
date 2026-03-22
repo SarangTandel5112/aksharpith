@@ -1,14 +1,34 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+import type { Session } from "next-auth";
 import type React from "react";
 
-export function AdminTopbar(): React.JSX.Element {
+type AdminTopbarProps = {
+	session: Session;
+};
+
+export function AdminTopbar(props: AdminTopbarProps): React.JSX.Element {
+	const pathname = usePathname();
+
+	const segments = pathname.split("/").filter(Boolean);
+	const lastSegment = segments[segments.length - 1] ?? "dashboard";
+	const pageTitle =
+		lastSegment.charAt(0).toUpperCase() + lastSegment.slice(1);
+
+	const firstName = props.session.user.firstName;
+	const initials = (
+		props.session.user.firstName.charAt(0) +
+		props.session.user.lastName.charAt(0)
+	).toUpperCase();
+
 	return (
-		<header className="flex h-14 items-center justify-between border-b bg-background px-6">
-			<div className="flex items-center gap-2">
-				<span className="text-sm font-medium text-muted-foreground">Admin</span>
-			</div>
+		<header className="flex h-14 items-center justify-between border-b border-zinc-200 bg-white px-6">
+			<h1 className="text-sm font-semibold text-zinc-900">{pageTitle}</h1>
 			<div className="flex items-center gap-3">
-				<div className="flex h-8 w-8 items-center justify-center rounded-full bg-muted text-xs font-medium">
-					AD
+				<span className="text-sm text-zinc-600">{firstName}</span>
+				<div className="flex h-8 w-8 items-center justify-center rounded-full bg-zinc-900 text-xs font-medium text-white">
+					{initials}
 				</div>
 			</div>
 		</header>
