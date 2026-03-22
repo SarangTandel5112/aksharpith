@@ -1,6 +1,6 @@
 // src/features/departments/api/departments.api.ts
-// Calls NestJS directly (not the Next.js BFF). Auth is JWT-based on the server.
-// NestJS responses are wrapped in { statusCode, message, data }.
+// Calls the Next.js BFF at /api/departments (not NestJS directly).
+// The BFF handles JWT auth via the session cookie.
 
 import type {
   CreateDepartmentInput,
@@ -8,8 +8,6 @@ import type {
   PaginatedDepartments,
   UpdateDepartmentInput,
 } from "../types/departments.types";
-
-const NEST_API = process.env["NEST_API"] ?? "http://localhost:3001";
 
 async function throwIfNotOk(res: Response): Promise<void> {
   if (!res.ok) {
@@ -19,7 +17,7 @@ async function throwIfNotOk(res: Response): Promise<void> {
 }
 
 export async function fetchDepartments(): Promise<PaginatedDepartments> {
-  const res = await fetch(`${NEST_API}/api/departments`);
+  const res = await fetch("/api/departments");
   await throwIfNotOk(res);
   const json = (await res.json()) as {
     statusCode: number;
@@ -32,7 +30,7 @@ export async function fetchDepartments(): Promise<PaginatedDepartments> {
 export async function createDepartment(
   input: CreateDepartmentInput,
 ): Promise<Department> {
-  const res = await fetch(`${NEST_API}/api/departments`, {
+  const res = await fetch("/api/departments", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
@@ -50,7 +48,7 @@ export async function updateDepartment(
   id: string,
   input: UpdateDepartmentInput,
 ): Promise<Department> {
-  const res = await fetch(`${NEST_API}/api/departments/${id}`, {
+  const res = await fetch(`/api/departments/${id}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(input),
@@ -65,9 +63,7 @@ export async function updateDepartment(
 }
 
 export async function deleteDepartment(id: string): Promise<void> {
-  const res = await fetch(`${NEST_API}/api/departments/${id}`, {
-    method: "DELETE",
-  });
+  const res = await fetch(`/api/departments/${id}`, { method: "DELETE" });
   if (res.status === 204) return;
   await throwIfNotOk(res);
 }
