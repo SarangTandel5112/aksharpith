@@ -32,7 +32,16 @@ export function LoginPageClient(): React.JSX.Element {
     }
 
     const session = await getSession();
-    const roleName = session?.user?.role?.roleName;
+
+    if (session === null) {
+      setErrorMessage(
+        "Sign in succeeded but session could not be loaded. Please try again.",
+      );
+      setIsLoading(false);
+      return;
+    }
+
+    const roleName = session.user?.role?.roleName;
 
     if (roleName === "Admin" || roleName === "Staff") {
       router.push("/admin");

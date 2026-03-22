@@ -167,13 +167,13 @@ function ProductForm(props: ProductFormProps): React.JSX.Element {
   const [sku, setSku] = useState(props.initial?.sku ?? "");
   const [price, setPrice] = useState<number>(props.initial?.basePrice ?? 0);
   const [departmentId, setDepartmentId] = useState(
-    props.initial?.department.id ?? "",
+    props.initial?.department?.id ?? "",
   );
   const [categoryId, setCategoryId] = useState(
-    props.initial?.category.id ?? "",
+    props.initial?.category?.id ?? "",
   );
   const [subCategoryId, setSubCategoryId] = useState(
-    props.initial?.subCategory.id ?? "",
+    props.initial?.subCategory?.id ?? "",
   );
 
   return (
