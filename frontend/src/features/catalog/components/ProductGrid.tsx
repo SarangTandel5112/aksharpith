@@ -1,12 +1,12 @@
-'use client'
+"use client";
 
-import { ProductCard } from './ProductCard'
-import type { CatalogProduct } from '../types/catalog.types'
+import type { CatalogProduct } from "../types/catalog.types";
+import { ProductCard } from "./ProductCard";
 
 type ProductGridProps = {
-  products:  CatalogProduct[]
-  isLoading: boolean
-}
+  products: CatalogProduct[];
+  isLoading: boolean;
+};
 
 export function ProductGrid(props: ProductGridProps): React.JSX.Element {
   if (props.isLoading) {
@@ -15,15 +15,14 @@ export function ProductGrid(props: ProductGridProps): React.JSX.Element {
         data-testid="product-grid-skeleton"
         className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
       >
-        {Array.from({ length: 8 }).map((_, i) => (
-          // Safe: skeleton placeholders with no identity — index as key is fine for static lists
+        {Array.from({ length: 8 }, (_, i) => `skeleton-${i}`).map((key) => (
           <div
-            key={i}
+            key={key}
             className="h-52 rounded-xl bg-[var(--surface-subtle)] animate-pulse"
           />
         ))}
       </div>
-    )
+    );
   }
 
   if (props.products.length === 0) {
@@ -36,7 +35,7 @@ export function ProductGrid(props: ProductGridProps): React.JSX.Element {
           Try adjusting your filters or search term.
         </p>
       </div>
-    )
+    );
   }
 
   return (
@@ -45,5 +44,5 @@ export function ProductGrid(props: ProductGridProps): React.JSX.Element {
         <ProductCard key={product.id} product={product} />
       ))}
     </div>
-  )
+  );
 }
