@@ -1,50 +1,62 @@
-import { faker } from "@faker-js/faker";
-import { HttpResponse, http } from "msw";
+// src/__tests__/msw/handlers/auth.handlers.ts
+import { faker } from '@faker-js/faker'
+import { HttpResponse, http } from 'msw'
 
-const BASE = "http://localhost:8000";
+const BASE = 'http://localhost:3001'
 
+type FakeRole = { id: string; roleName: string }
 type FakeUser = {
-  id: string;
-  name: string;
-  email: string;
-  organizationId: string;
-  storeId: string;
-  terminalId: string;
-  role: string;
-};
-
-function fakeUser(): FakeUser {
-  return {
-    id: faker.string.uuid(),
-    name: faker.person.fullName(),
-    email: faker.internet.email(),
-    organizationId: faker.string.uuid(),
-    storeId: faker.string.uuid(),
-    terminalId: `terminal-${faker.number.int({ min: 1, max: 10 })}`,
-    role: faker.helpers.arrayElement(["cashier", "manager", "admin"]),
-  };
+  id: string
+  email: string
+  firstName: string
+  lastName: string
+  role: FakeRole
 }
 
-// Shared user so GET /auth/me returns the same user as POST /auth/login
-let currentUser = fakeUser();
+function fakeRole(roleName = 'Viewer'): FakeRole {
+  return { id: faker.string.uuid(), roleName }
+}
+
+function fakeUser(role?: FakeRole): FakeUser {
+  return {
+    id:        faker.string.uuid(),
+    email:     faker.internet.email(),
+    firstName: faker.person.firstName(),
+    lastName:  faker.person.lastName(),
+    role:      role ?? fakeRole(),
+  }
+}
+
+// Shared user so GET /api/users/me returns same user as POST /api/auth/login
+let currentUser = fakeUser()
 
 export const authHandlers = [
-  // POST /auth/login
-  http.post(`${BASE}/auth/login`, () => {
-    currentUser = fakeUser();
+  // POST /api/auth/login → NestJS returns { message } + Set-Cookie header
+  http.post(`${BASE}/api/auth/login`, () => {
+    currentUser = fakeUser()
+    return new HttpResponse(
+      JSON.stringify({ statusCode: 200, message: 'Login successful', data: null }),
+      {
+        status: 200,
+        headers: {
+          'Content-Type': 'application/json',
+          'Set-Cookie':   `access_token=fake-jwt-token; HttpOnly; SameSite=Strict`,
+        },
+      },
+    )
+  }),
+
+  // POST /api/auth/logout
+  http.post(`${BASE}/api/auth/logout`, () => {
+    return HttpResponse.json({ statusCode: 200, message: 'Logout successful', data: null })
+  }),
+
+  // GET /api/users/me → called by next-auth authorize() after login
+  http.get(`${BASE}/api/users/me`, () => {
     return HttpResponse.json({
-      accessToken: faker.string.alphanumeric(64),
-      user: currentUser,
-    });
+      statusCode: 200,
+      message:    'OK',
+      data:       currentUser,
+    })
   }),
-
-  // POST /auth/logout
-  http.post(`${BASE}/auth/logout`, () => {
-    return HttpResponse.json({ ok: true });
-  }),
-
-  // GET /auth/me
-  http.get(`${BASE}/auth/me`, () => {
-    return HttpResponse.json(currentUser);
-  }),
-];
+]
