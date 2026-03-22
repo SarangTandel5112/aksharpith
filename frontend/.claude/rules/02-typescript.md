@@ -107,6 +107,8 @@ export type { CartStatus }
 
 ## Core Types (already in project — use these, never redefine)
 
+These are shared across frontend and NestJS backend.
+
 ```ts
 // src/shared/types/core.ts
 
@@ -122,12 +124,13 @@ type Money = {
   currency: string   // ← 'INR'
 }
 
+// NestJS pagination shape — matches PaginatedResponseDto in nest-backend
 type PaginatedResponse<T> = {
-  data:     T[]
-  total:    number
-  page:     number
-  pageSize: number
-  hasMore:  boolean
+  items:      T[]
+  total:      number
+  page:       number
+  limit:      number
+  totalPages: number
 }
 
 type Result<T, E = Error> =
