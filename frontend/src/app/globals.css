@@ -11,16 +11,16 @@
    anywhere else.
    ═══════════════════════════════════════════════════════════════════════════ */
 :root {
-  /* ── Primary Brand Color (Burgundy / Maroon) ───────────────────────────── */
-  --primary-100: #ddd3d8;
-  --primary-200: #9a7c89;
-  --primary-300: #aa8695;
-  --primary-400: #795062;
-  --primary-500: #57243b; /* ← Main brand color */
-  --primary-600: #4e2035;
-  --primary-700: #4a1f32;
-  --primary-800: #461d2f;
-  --primary-900: #411b2c;
+  /* ── Primary Brand Color (Premium Blue) ────────────────────────────────── */
+  --primary-100: #dbeafe;
+  --primary-200: #bfdbfe;
+  --primary-300: #93c5fd;
+  --primary-400: #60a5fa;
+  --primary-500: #3b82f6; /* ← Main brand color — blue-500 */
+  --primary-600: #2563eb;
+  --primary-700: #1d4ed8;
+  --primary-800: #1e40af;
+  --primary-900: #1e3a8a;
 
   /* ── Secondary Color (Neutral Gray) ────────────────────────────────────── */
   --secondary-100: #eeeeef;
@@ -462,6 +462,15 @@
 
   /* ── Typography Fonts ───────────────────────────────────────────────────── */
   --font-sans: var(--font-dm-sans); /* ← default font for entire app */
+
+  /* ── Accent Color (Cyan) ─────────────────────────────────────────────────── */
+  --accent-500: #06b6d4;
+  --accent-600: #0891b2;
+
+  /* ── Dark mode base backgrounds ─────────────────────────────────────────── */
+  --bg-dark:    #030712;
+  --bg-dark-2:  #111827;
+  --bg-dark-3:  #1f2937;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -886,4 +895,14 @@
     font-weight: 400;
     line-height: var(--body-smallest-leading);
   }
+}
+
+/* ── Dark theme ──────────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+  --surface-page:   var(--bg-dark);
+  --surface-subtle: var(--bg-dark-2);
+  --surface-border: var(--bg-dark-3);
+  --text-heading:   #f1f5f9;
+  --text-body:      #cbd5e1;
+  --text-muted:     #94a3b8;
 }
