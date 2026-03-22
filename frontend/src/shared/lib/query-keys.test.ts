@@ -1,8 +1,32 @@
-import { describe, expect, it } from "vitest";
-import { queryKeys } from "./query-keys";
+// src/shared/lib/query-keys.test.ts
+import { describe, expect, it } from 'vitest'
+import { queryKeys } from './query-keys'
 
-describe("queryKeys", () => {
-  it("is a const object", () => {
-    expect(typeof queryKeys).toBe("object");
-  });
-});
+describe('queryKeys', () => {
+  describe('products', () => {
+    it('all() returns ["products"]', () => {
+      expect(queryKeys.products.all()).toEqual(['products'])
+    })
+    it('list() includes filters', () => {
+      const key = queryKeys.products.list({ page: 1 })
+      expect(key[0]).toBe('products')
+      expect(key).toContain('list')
+    })
+    it('detail() includes id', () => {
+      const key = queryKeys.products.detail('prod-1')
+      expect(key).toContain('prod-1')
+    })
+  })
+
+  describe('categories', () => {
+    it('all() returns ["categories"]', () => {
+      expect(queryKeys.categories.all()).toEqual(['categories'])
+    })
+  })
+
+  describe('roles', () => {
+    it('all() returns ["roles"]', () => {
+      expect(queryKeys.roles.all()).toEqual(['roles'])
+    })
+  })
+})
