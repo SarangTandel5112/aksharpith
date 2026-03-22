@@ -42,7 +42,7 @@ export function proxy(request: NextRequest): NextResponse {
     `script-src 'self' 'nonce-${nonce}'`,
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob:",
-    `connect-src 'self' ${process.env.DJANGO_API ?? ""} https://app.posthog.com`,
+    `connect-src 'self' ${process.env.NEST_API ?? ""} https://app.posthog.com`,
     "font-src 'self'",
     "frame-ancestors 'none'",
     "base-uri 'self'",
