@@ -1,8 +1,9 @@
-// src/__tests__/msw/handlers/index.ts
-import { adminHandlers } from './admin.handlers'
-import { authHandlers }  from './auth.handlers'
+import { adminHandlers }   from './admin.handlers'
+import { authHandlers }    from './auth.handlers'
+import { catalogHandlers } from './catalog.handlers'
 
 export const handlers = [
   ...authHandlers,
   ...adminHandlers,
+  ...catalogHandlers,
 ]
