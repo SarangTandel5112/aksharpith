@@ -1,35 +1,37 @@
 // src/features/auth/components/LoginPageClient.tsx
-'use client'
+"use client";
 
-import { LoginForm }            from './LoginForm'
-import type { LoginFormValues } from '../schemas/login.schema'
-import { signIn }               from 'next-auth/react'
-import { useRouter }            from 'next/navigation'
-import { useState }             from 'react'
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { useState } from "react";
+import type { LoginFormValues } from "../validations/login.schema";
+import { LoginForm } from "./LoginForm";
 
 export function LoginPageClient(): React.JSX.Element {
-  const router = useRouter()
-  const [isLoading,    setIsLoading]    = useState(false)
-  const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | undefined>(
+    undefined,
+  );
 
   async function handleLogin(values: LoginFormValues): Promise<void> {
-    setIsLoading(true)
-    setErrorMessage(undefined)
+    setIsLoading(true);
+    setErrorMessage(undefined);
 
-    const result = await signIn('credentials', {
-      email:    values.email,
+    const result = await signIn("credentials", {
+      email: values.email,
       password: values.password,
       redirect: false,
-    })
+    });
 
-    setIsLoading(false)
+    setIsLoading(false);
 
     if (result?.error !== null && result?.error !== undefined) {
-      setErrorMessage('Invalid email or password')
-      return
+      setErrorMessage("Invalid email or password");
+      return;
     }
 
-    router.push('/products')
+    router.push("/products");
   }
 
   return (
@@ -49,5 +51,5 @@ export function LoginPageClient(): React.JSX.Element {
         errorMessage={errorMessage}
       />
     </div>
-  )
+  );
 }

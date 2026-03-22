@@ -1,9 +1,12 @@
 // src/features/auth/components/LoginForm.tsx
-"use client";
+'use client'
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { LoginFormSchema, type LoginFormValues } from "../schemas/login.schema";
+import {
+  LoginFormSchema,
+  type LoginFormValues,
+} from "../validations/login.schema";
 
 type LoginFormProps = {
   onSubmit: (values: LoginFormValues) => void | Promise<void>;
