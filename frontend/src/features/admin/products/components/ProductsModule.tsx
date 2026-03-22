@@ -2,10 +2,9 @@
 
 import { useCategoriesList } from "@features/admin/categories/hooks/useCategories";
 import type { Category } from "@features/admin/categories/types/categories.types";
-import { useDepartmentsList } from "@features/admin/departments/hooks/useDepartments";
-import type { Department } from "@features/admin/departments/types/departments.types";
 import { useSubCategoriesList } from "@features/admin/sub-categories/hooks/useSubCategories";
 import type { SubCategory } from "@features/admin/sub-categories/types/sub-categories.types";
+import { useDepartments } from "@features/departments/hooks/useDepartments";
 import { useState } from "react";
 import { useProductMutations, useProductsList } from "../hooks/useProducts";
 import type { CreateProductInput } from "../schemas/products.schema";
@@ -88,10 +87,10 @@ export function ProductsModule(): React.JSX.Element {
                     {item.sku}
                   </td>
                   <td className="px-4 py-3 text-[var(--text-body)]">
-                    {(item.price / 100).toFixed(2)}
+                    {item.basePrice?.toLocaleString("en-IN") ?? "—"}
                   </td>
                   <td className="px-4 py-3 text-[var(--text-body)]">
-                    {item.category.name}
+                    {item.category?.name ?? "—"}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <div className="flex justify-end gap-2">
@@ -154,10 +153,9 @@ type ProductFormProps = {
 };
 
 function ProductForm(props: ProductFormProps): React.JSX.Element {
-  const { data: deptData } = useDepartmentsList();
+  const { departments: depts } = useDepartments();
   const { data: catData } = useCategoriesList();
   const { data: subCatData } = useSubCategoriesList();
-  const depts: Department[] = (deptData?.data?.items ?? []) as Department[];
   const cats: Category[] = (catData?.data?.items ?? []) as Category[];
   const subCats: SubCategory[] = (subCatData?.data?.items ??
     []) as SubCategory[];
@@ -167,7 +165,7 @@ function ProductForm(props: ProductFormProps): React.JSX.Element {
     props.initial?.description ?? "",
   );
   const [sku, setSku] = useState(props.initial?.sku ?? "");
-  const [price, setPrice] = useState<number>(props.initial?.price ?? 0);
+  const [price, setPrice] = useState<number>(props.initial?.basePrice ?? 0);
   const [departmentId, setDepartmentId] = useState(
     props.initial?.department.id ?? "",
   );
@@ -191,7 +189,7 @@ function ProductForm(props: ProductFormProps): React.JSX.Element {
               name,
               description,
               sku,
-              price,
+              basePrice: price,
               departmentId,
               categoryId,
               subCategoryId,

@@ -1,7 +1,6 @@
 "use client";
 
-import { useDepartmentsList } from "@features/admin/departments/hooks/useDepartments";
-import type { Department } from "@features/admin/departments/types/departments.types";
+import { useDepartments } from "@features/departments/hooks/useDepartments";
 import { useState } from "react";
 import {
   useCategoriesList,
@@ -141,8 +140,7 @@ type CategoryFormProps = {
 };
 
 function CategoryForm(props: CategoryFormProps): React.JSX.Element {
-  const { data: deptData } = useDepartmentsList();
-  const depts: Department[] = (deptData?.data?.items ?? []) as Department[];
+  const { departments: depts } = useDepartments();
   const [name, setName] = useState(props.initial?.name ?? "");
   const [description, setDescription] = useState(
     props.initial?.description ?? "",
