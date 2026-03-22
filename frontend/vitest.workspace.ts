@@ -34,6 +34,7 @@ export default defineWorkspace([
         "src/features/**/*.test.ts",
         "src/features/**/*.test.tsx",
         "src/shared/hooks/**/*.test.ts",
+        "src/shared/components/**/*.test.tsx",
         "src/app/**/*.test.tsx",
       ],
       environment: "happy-dom",
