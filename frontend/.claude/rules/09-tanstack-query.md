@@ -18,6 +18,10 @@ queryKey: ['orders']
 queryKey: ['catalog', searchTerm]
 ```
 
+> **NestJS projects:** If the backend is NestJS (not Django multi-tenant), tenant scoping is
+> handled server-side via JWT. In that case, omit `organizationId`/`storeId` from query keys.
+> See `src/shared/lib/query-keys.ts` for the project-level decision.
+
 ---
 
 ## Query Keys File
