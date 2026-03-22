@@ -9,9 +9,10 @@ import {
 } from "@shared/components/ui/table";
 
 type Column<T> = {
-  key: keyof T;
+  key: keyof T | string;
   label: string;
   className?: string;
+  render?: (row: T) => React.ReactNode;
 };
 
 type DataTableProps<T extends { id: string }> = {
@@ -30,20 +31,20 @@ export function DataTable<T extends { id: string }>(
   const colSpan = props.columns.length + (props.renderActions ? 1 : 0);
 
   return (
-    <div className="rounded-lg border bg-card overflow-hidden">
+    <div className="overflow-hidden rounded-lg border bg-white shadow-sm">
       <Table>
         <TableHeader>
-          <TableRow className="hover:bg-transparent">
+          <TableRow className="hover:bg-transparent bg-zinc-50 border-b">
             {props.columns.map((col) => (
               <TableHead
                 key={String(col.key)}
-                className="font-semibold text-muted-foreground"
+                className="text-xs font-semibold uppercase tracking-wide text-zinc-500 py-3"
               >
                 {col.label}
               </TableHead>
             ))}
             {props.renderActions && (
-              <TableHead className="text-right font-semibold text-muted-foreground">
+              <TableHead className="text-right text-xs font-semibold uppercase tracking-wide text-zinc-500 py-3">
                 Actions
               </TableHead>
             )}
@@ -82,7 +83,9 @@ export function DataTable<T extends { id: string }>(
               <TableRow key={row.id}>
                 {props.columns.map((col) => (
                   <TableCell key={String(col.key)} className={col.className}>
-                    {String(row[col.key] ?? "—")}
+                    {col.render
+                      ? col.render(row)
+                      : String(row[col.key as keyof T] ?? "—")}
                   </TableCell>
                 ))}
                 {props.renderActions && (
