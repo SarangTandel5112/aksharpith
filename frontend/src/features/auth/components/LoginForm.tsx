@@ -8,7 +8,7 @@ import { LoginFormSchema, type LoginFormValues } from "../schemas/login.schema";
 type LoginFormProps = {
   onSubmit: (values: LoginFormValues) => void | Promise<void>;
   isLoading?: boolean;
-  errorMessage?: string;
+  errorMessage?: string | undefined;
 };
 
 export function LoginForm(props: LoginFormProps): React.JSX.Element {

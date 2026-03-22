@@ -1,0 +1,53 @@
+// src/features/auth/components/LoginPageClient.tsx
+'use client'
+
+import { LoginForm }            from './LoginForm'
+import type { LoginFormValues } from '../schemas/login.schema'
+import { signIn }               from 'next-auth/react'
+import { useRouter }            from 'next/navigation'
+import { useState }             from 'react'
+
+export function LoginPageClient(): React.JSX.Element {
+  const router = useRouter()
+  const [isLoading,    setIsLoading]    = useState(false)
+  const [errorMessage, setErrorMessage] = useState<string | undefined>(undefined)
+
+  async function handleLogin(values: LoginFormValues): Promise<void> {
+    setIsLoading(true)
+    setErrorMessage(undefined)
+
+    const result = await signIn('credentials', {
+      email:    values.email,
+      password: values.password,
+      redirect: false,
+    })
+
+    setIsLoading(false)
+
+    if (result?.error !== null && result?.error !== undefined) {
+      setErrorMessage('Invalid email or password')
+      return
+    }
+
+    router.push('/products')
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-8 w-full max-w-sm px-6">
+      <div className="text-center">
+        <h1 className="text-2xl font-bold text-[var(--text-heading)]">
+          Aksharpith Catalog
+        </h1>
+        <p className="mt-1 text-sm text-[var(--text-muted)]">
+          Sign in to your account
+        </p>
+      </div>
+
+      <LoginForm
+        onSubmit={handleLogin}
+        isLoading={isLoading}
+        errorMessage={errorMessage}
+      />
+    </div>
+  )
+}
