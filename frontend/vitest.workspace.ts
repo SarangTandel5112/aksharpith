@@ -16,6 +16,7 @@ export default defineWorkspace([
         "src/core/**/*.test.ts",
         "src/shared/lib/**/*.test.ts",
         "src/app/**/*.test.ts",
+        "src/app/**/*.test.tsx",
         "src/proxy.test.ts",
       ],
       environment: "node",
