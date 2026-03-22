@@ -1,67 +1,55 @@
-import { env } from "@config/env";
+// src/shared/lib/api-fetch.ts
+import { env } from '@config/env'
 
-export const TRACE_ID_HEADER = "x-trace-id";
-
-// Local tenant context shape — used to attach tenant headers to every request
-type TenantContext = {
-  organizationId: string;
-  storeId: string;
-  terminalId: string;
-  userId: string;
-};
+export const TRACE_ID_HEADER = 'x-trace-id'
 
 export type ApiFetchOptions = {
-  method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
-  body?: string;
-  headers?: Record<string, string>;
-  ctx: TenantContext & { accessToken: string };
-  traceId?: string;
-};
+  method?:      'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
+  body?:        string
+  headers?:     Record<string, string>
+  accessToken:  string
+  traceId?:     string
+}
 
 export type ApiFetchError = {
-  code: string;
-  message: string;
-  status: number;
-  errors?: Record<string, string[]>;
-};
+  code:     string
+  message:  string
+  status:   number
+  errors?:  Record<string, string[]>
+}
 
 export async function apiFetch(
   path: string,
   options: ApiFetchOptions,
 ): Promise<Response> {
-  const traceId = options.traceId ?? crypto.randomUUID();
+  const traceId = options.traceId ?? crypto.randomUUID()
 
-  return fetch(`${env.DJANGO_API}${path}`, {
-    method: options.method ?? "GET",
+  return fetch(`${env.NEST_API}${path}`, {
+    method: options.method ?? 'GET',
     ...(options.body !== undefined ? { body: options.body } : {}),
     headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${options.ctx.accessToken}`,
-      "X-Organization-ID": options.ctx.organizationId,
-      "X-Store-ID": options.ctx.storeId,
-      "X-Terminal-ID": options.ctx.terminalId,
+      'Content-Type':    'application/json',
+      'Cookie':          `access_token=${options.accessToken}`,
       [TRACE_ID_HEADER]: traceId,
       ...options.headers,
     },
-  });
+  })
 }
 
-export async function parseApiError(
-  response: Response,
-): Promise<ApiFetchError> {
+export async function parseApiError(response: Response): Promise<ApiFetchError> {
   try {
-    const body = await response.json();
+    const body = await response.json()
     return {
-      code: body.code ?? "UNKNOWN_ERROR",
-      message: body.message ?? "An unexpected error occurred",
-      status: response.status,
-      errors: body.errors,
-    };
+      code:    body.code    ?? 'UNKNOWN_ERROR',
+      message: body.message ?? 'An unexpected error occurred',
+      status:  response.status,
+      errors:  body.errors,
+    }
   } catch {
     return {
-      code: "PARSE_ERROR",
-      message: "Could not parse error response",
-      status: response.status,
-    };
+      code:    'PARSE_ERROR',
+      message: 'Could not parse error response',
+      status:  response.status,
+    }
   }
 }
