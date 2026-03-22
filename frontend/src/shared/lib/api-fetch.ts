@@ -1,7 +1,14 @@
 import { env } from "@config/env";
-import type { TenantContext } from "@shared/types/core";
 
 export const TRACE_ID_HEADER = "x-trace-id";
+
+// Local tenant context shape — used to attach tenant headers to every request
+type TenantContext = {
+  organizationId: string;
+  storeId: string;
+  terminalId: string;
+  userId: string;
+};
 
 export type ApiFetchOptions = {
   method?: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
