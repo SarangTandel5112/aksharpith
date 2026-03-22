@@ -1,7 +1,7 @@
 import { bffGet, bffMutate }         from '@app/api/_lib/bff-handler'
 import { validateBody }               from '@app/api/_lib/validate-request'
 import { UpdateDepartmentSchema }     from '@features/admin/departments/schemas/departments.schema'
-import { type NextRequest }           from 'next/server'
+import type { NextRequest }           from 'next/server'
 
 export async function GET(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const { id } = await props.params

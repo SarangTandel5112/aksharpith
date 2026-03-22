@@ -128,9 +128,10 @@ export function LotMatrixWizard(
             </thead>
             <tbody>
               {matrix.map((row, idx) => (
-                // Safe: idx is stable — matrix built from cartesianProduct, not reordered
                 <tr
-                  key={idx}
+                  key={Object.entries(row.combination)
+                    .map(([k, v]) => `${k}:${v}`)
+                    .join("|")}
                   className="border-b border-[var(--surface-border)] last:border-0"
                 >
                   <td className="px-3 py-2 text-[var(--text-body)]">

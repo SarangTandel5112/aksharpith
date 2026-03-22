@@ -1,7 +1,7 @@
 import { bffGet, bffMutate } from '@app/api/_lib/bff-handler'
 import { validateBody } from '@app/api/_lib/validate-request'
 import { CreateAttributeSchema } from '@features/admin/attributes/schemas/attributes.schema'
-import { type NextRequest } from 'next/server'
+import type { NextRequest } from 'next/server'
 
 export async function GET(req: NextRequest) {
   return bffGet({ path: '/api/attributes', request: req, requiredRoles: ['Admin', 'Staff'] })

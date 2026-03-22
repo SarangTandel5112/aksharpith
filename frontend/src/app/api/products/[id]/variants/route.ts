@@ -1,7 +1,7 @@
 import { bffGet, bffMutate } from '@app/api/_lib/bff-handler'
 import { validateBody }      from '@app/api/_lib/validate-request'
 import { z }                 from 'zod'
-import { type NextRequest }  from 'next/server'
+import type { NextRequest }  from 'next/server'
 
 const CreateVariantSchema = z.object({
   sku:        z.string().min(1),
