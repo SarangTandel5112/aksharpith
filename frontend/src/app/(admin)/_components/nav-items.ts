@@ -3,8 +3,11 @@ import {
   IconCategory,
   IconDashboard,
   IconPackage,
+  IconPalette,
   IconSettings,
   IconShield,
+  IconStack2,
+  IconTag,
   IconUsers,
 } from "@tabler/icons-react";
 import type React from "react";
@@ -28,13 +31,17 @@ export const NAV_SECTIONS: NavSection[] = [
   {
     title: "Catalog",
     items: [
-      {
-        label: "Departments",
-        href: "/admin/departments",
-        icon: IconBuildingStore,
-      },
-      { label: "Products", href: "/admin/products", icon: IconPackage },
+      { label: "Departments", href: "/admin/departments", icon: IconBuildingStore },
       { label: "Categories", href: "/admin/categories", icon: IconCategory },
+      { label: "Sub-categories", href: "/admin/sub-categories", icon: IconStack2 },
+      { label: "Attributes", href: "/admin/attributes", icon: IconPalette },
+      { label: "Groups", href: "/admin/groups", icon: IconTag },
+    ],
+  },
+  {
+    title: "Products",
+    items: [
+      { label: "Products", href: "/admin/products", icon: IconPackage },
     ],
   },
   {
