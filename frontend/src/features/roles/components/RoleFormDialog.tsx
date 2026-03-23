@@ -5,6 +5,7 @@ import { Button } from "@shared/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -40,20 +41,16 @@ type RoleFormDialogProps = {
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function RoleFormDialog(
-  props: RoleFormDialogProps,
-): React.JSX.Element {
-  const form = useForm<
-    z.input<typeof RoleFormSchema>,
-    unknown,
-    RoleFormValues
-  >({
-    resolver: zodResolver(RoleFormSchema),
-    defaultValues: {
-      roleName: props.role?.roleName ?? "",
-      description: props.role?.description ?? "",
+export function RoleFormDialog(props: RoleFormDialogProps): React.JSX.Element {
+  const form = useForm<z.input<typeof RoleFormSchema>, unknown, RoleFormValues>(
+    {
+      resolver: zodResolver(RoleFormSchema),
+      defaultValues: {
+        roleName: props.role?.roleName ?? "",
+        description: props.role?.description ?? "",
+      },
     },
-  });
+  );
 
   const title = props.role ? "Edit Role" : "Add Role";
 
@@ -70,6 +67,11 @@ export function RoleFormDialog(
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>
+            {props.role
+              ? "Update the role details."
+              : "Create a new user role with a name and optional description."}
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form

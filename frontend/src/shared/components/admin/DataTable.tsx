@@ -7,6 +7,7 @@ import {
   TableHeader,
   TableRow,
 } from "@shared/components/ui/table";
+import { cn } from "@shared/lib/cn";
 
 type Column<T> = {
   key: keyof T | string;
@@ -31,7 +32,7 @@ export function DataTable<T extends { id: string }>(
   const colSpan = props.columns.length + (props.renderActions ? 1 : 0);
 
   return (
-    <div className="overflow-hidden rounded-lg border bg-white shadow-sm">
+    <div className="overflow-hidden rounded-xl border bg-white shadow-sm">
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent bg-zinc-50 border-b">
@@ -71,18 +72,29 @@ export function DataTable<T extends { id: string }>(
             ))
           ) : props.rows.length === 0 ? (
             <TableRow>
-              <TableCell
-                colSpan={colSpan}
-                className="h-32 text-center text-muted-foreground text-sm"
-              >
-                {props.emptyMessage ?? "No results."}
+              <TableCell colSpan={colSpan} className="py-16 text-center">
+                <p className="text-sm font-medium text-zinc-500">
+                  {props.emptyMessage ?? "No results."}
+                </p>
+                <p className="mt-1 text-xs text-zinc-400">
+                  Add a new record to get started
+                </p>
               </TableCell>
             </TableRow>
           ) : (
             props.rows.map((row) => (
-              <TableRow key={row.id}>
+              <TableRow
+                key={row.id}
+                className="hover:bg-zinc-50 border-b last:border-b-0 transition-colors"
+              >
                 {props.columns.map((col) => (
-                  <TableCell key={String(col.key)} className={col.className}>
+                  <TableCell
+                    key={String(col.key)}
+                    className={cn(
+                      "py-3.5 text-sm text-zinc-700",
+                      col.className,
+                    )}
+                  >
                     {col.render
                       ? col.render(row)
                       : String(row[col.key as keyof T] ?? "—")}

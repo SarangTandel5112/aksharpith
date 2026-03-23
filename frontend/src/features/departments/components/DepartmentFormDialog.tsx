@@ -5,6 +5,7 @@ import { Button } from "@shared/components/ui/button";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -66,6 +67,11 @@ export function DepartmentFormDialog(
       <DialogContent className="sm:max-w-[480px]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
+          <DialogDescription>
+            {props.department
+              ? "Update the department details."
+              : "Create a new product department."}
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form

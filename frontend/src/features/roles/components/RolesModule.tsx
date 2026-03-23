@@ -1,35 +1,35 @@
-'use client'
+"use client";
 
-import type React from 'react'
-import { useState } from 'react'
-import { IconPlus } from '@tabler/icons-react'
-import { Button } from '@shared/components/ui/button'
-import { DataTable, DeleteDialog, PageHeader } from '@shared/components/admin'
-import { useToast } from '@shared/hooks/useToast'
-import { useRoles } from '../hooks/useRoles'
-import { RoleFormDialog } from './RoleFormDialog'
-import type { Role } from '../types/roles.types'
-import type { RoleFormValues } from '../validations/role-form.schema'
+import { DataTable, DeleteDialog, PageHeader } from "@shared/components/admin";
+import { Button } from "@shared/components/ui/button";
+import { useToast } from "@shared/hooks/useToast";
+import { IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
+import type React from "react";
+import { useState } from "react";
+import { useRoles } from "../hooks/useRoles";
+import type { Role } from "../types/roles.types";
+import type { RoleFormValues } from "../validations/role-form.schema";
+import { RoleFormDialog } from "./RoleFormDialog";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type RoleRow = {
-  id: string
-  roleName: string
-  description: string
-}
+  id: string;
+  roleName: string;
+  description: string;
+};
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
 const COLUMNS = [
-  { key: 'roleName' as const, label: 'Role Name' },
-  { key: 'description' as const, label: 'Description' },
-]
+  { key: "roleName" as const, label: "Role Name" },
+  { key: "description" as const, label: "Description" },
+];
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function RolesModule(): React.JSX.Element {
-  const toast = useToast()
+  const toast = useToast();
   const {
     roles,
     isLoading,
@@ -39,100 +39,104 @@ export function RolesModule(): React.JSX.Element {
     isCreating,
     isUpdating,
     isDeleting,
-  } = useRoles()
+  } = useRoles();
 
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [editRole, setEditRole] = useState<Role | undefined>(undefined)
-  const [deleteTarget, setDeleteTarget] = useState<Role | undefined>(undefined)
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editRole, setEditRole] = useState<Role | undefined>(undefined);
+  const [deleteTarget, setDeleteTarget] = useState<Role | undefined>(undefined);
 
   function handleOpenAdd(): void {
-    setEditRole(undefined)
-    setDialogOpen(true)
+    setEditRole(undefined);
+    setDialogOpen(true);
   }
 
   function handleOpenEdit(role: Role): void {
-    setEditRole(role)
-    setDialogOpen(true)
+    setEditRole(role);
+    setDialogOpen(true);
   }
 
   function handleCloseDialog(): void {
-    setDialogOpen(false)
-    setEditRole(undefined)
+    setDialogOpen(false);
+    setEditRole(undefined);
   }
 
-  function buildInput(values: RoleFormValues): { roleName: string; description?: string } {
+  function buildInput(values: RoleFormValues): {
+    roleName: string;
+    description?: string;
+  } {
     if (values.description !== undefined) {
-      return { roleName: values.roleName, description: values.description }
+      return { roleName: values.roleName, description: values.description };
     }
-    return { roleName: values.roleName }
+    return { roleName: values.roleName };
   }
 
   function handleSubmit(values: RoleFormValues): void {
-    const input = buildInput(values)
+    const input = buildInput(values);
     if (editRole) {
       void updateRole(editRole.id, input)
         .then(() => {
-          toast.success('Role updated')
-          handleCloseDialog()
+          toast.success("Role updated");
+          handleCloseDialog();
         })
         .catch(() => {
-          toast.error('Failed to update role')
-        })
+          toast.error("Failed to update role");
+        });
     } else {
       void createRole(input)
         .then(() => {
-          toast.success('Role created')
-          handleCloseDialog()
+          toast.success("Role created");
+          handleCloseDialog();
         })
         .catch(() => {
-          toast.error('Failed to create role')
-        })
+          toast.error("Failed to create role");
+        });
     }
   }
 
   function handleDeleteConfirm(): void {
-    if (!deleteTarget) return
+    if (!deleteTarget) return;
     void deleteRole(deleteTarget.id)
       .then(() => {
-        toast.success('Role deleted')
-        setDeleteTarget(undefined)
+        toast.success("Role deleted");
+        setDeleteTarget(undefined);
       })
       .catch(() => {
-        toast.error('Failed to delete role')
-      })
+        toast.error("Failed to delete role");
+      });
   }
 
   const rows: RoleRow[] = roles.map((r) => ({
     id: r.id,
     roleName: r.roleName,
-    description: r.description ?? '—',
-  }))
+    description: r.description ?? "—",
+  }));
 
   function renderActions(row: RoleRow): React.ReactNode {
-    const role = roles.find((r) => r.id === row.id)
+    const role = roles.find((r) => r.id === row.id);
     return (
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex items-center justify-end gap-1">
         <Button
           variant="ghost"
           size="sm"
-          aria-label="Edit"
+          className="h-8 gap-1.5 text-zinc-500 hover:text-zinc-900"
           onClick={() => {
-            if (role) handleOpenEdit(role)
+            if (role) handleOpenEdit(role);
           }}
         >
+          <IconPencil className="h-3.5 w-3.5" />
           Edit
         </Button>
         <Button
           variant="ghost"
           size="sm"
-          aria-label="Delete"
-          className="text-destructive hover:text-destructive"
+          className="h-8 gap-1.5 text-zinc-400 hover:text-red-600 hover:bg-red-50"
           onClick={() => setDeleteTarget(role)}
         >
+          <IconTrash className="h-3.5 w-3.5" />
           Delete
         </Button>
       </div>
-    )
+    );
   }
 
   return (
@@ -157,7 +161,7 @@ export function RolesModule(): React.JSX.Element {
       />
 
       <RoleFormDialog
-        key={editRole?.id ?? 'create'}
+        key={editRole?.id ?? "create"}
         open={dialogOpen}
         onClose={handleCloseDialog}
         onSubmit={handleSubmit}
@@ -174,5 +178,5 @@ export function RolesModule(): React.JSX.Element {
         isDeleting={isDeleting}
       />
     </div>
-  )
+  );
 }

@@ -6,7 +6,7 @@ import { useRoles } from "@features/roles/hooks/useRoles";
 import { DataTable, DeleteDialog, PageHeader } from "@shared/components/admin";
 import { Button } from "@shared/components/ui/button";
 import { useToast } from "@shared/hooks/useToast";
-import { IconPlus } from "@tabler/icons-react";
+import { IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
 import type React from "react";
 import { useState } from "react";
 import { useUsers } from "../hooks/useUsers";
@@ -118,24 +118,25 @@ export function UsersModule(): React.JSX.Element {
   function renderActions(row: UserRow): React.ReactNode {
     const user = users.find((u) => u.id === row.id);
     return (
-      <div className="flex items-center justify-end gap-2">
+      <div className="flex items-center justify-end gap-1">
         <Button
           variant="ghost"
           size="sm"
-          aria-label="Edit"
+          className="h-8 gap-1.5 text-zinc-500 hover:text-zinc-900"
           onClick={() => {
             if (user) handleOpenEdit(user);
           }}
         >
+          <IconPencil className="h-3.5 w-3.5" />
           Edit
         </Button>
         <Button
           variant="ghost"
           size="sm"
-          aria-label="Delete"
-          className="text-destructive hover:text-destructive"
+          className="h-8 gap-1.5 text-zinc-400 hover:text-red-600 hover:bg-red-50"
           onClick={() => setDeleteTarget(user)}
         >
+          <IconTrash className="h-3.5 w-3.5" />
           Delete
         </Button>
       </div>
