@@ -1,35 +1,91 @@
-'use client'
+"use client";
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { queryKeys } from '@shared/lib/query-keys'
-import { createCategory, deleteCategory, listCategories, updateCategory } from '../services/categories.service'
-import type { CreateCategoryInput, UpdateCategoryInput } from '../schemas/categories.schema'
+// src/features/admin/categories/hooks/useCategories.ts
+// Query keys omit organizationId/storeId — NestJS handles tenant scoping via JWT.
 
-export function useCategoriesList(params?: { page?: number; limit?: number }) {
+import { queryKeys } from "@shared/lib/query-keys";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import {
+  createCategory as apiCreateCategory,
+  deleteCategory as apiDeleteCategory,
+  updateCategory as apiUpdateCategory,
+  fetchCategories,
+} from "../api/categories.api";
+import type {
+  Category,
+  CreateCategoryInput,
+  UpdateCategoryInput,
+} from "../types/categories.types";
+
+// Thin query hook — matches the pattern used by old ProductsModule / SubCategoriesModule
+// which destructure { data } directly from the TanStack Query result.
+export function useCategoriesList(_params?: { page?: number; limit?: number }) {
   return useQuery({
-    queryKey: queryKeys.categories.list(params),
-    queryFn: () => listCategories(params),
+    queryKey: queryKeys.categories.list(),
+    queryFn: fetchCategories,
     staleTime: 5 * 60_000,
-  })
+  });
 }
 
-export function useCategoryMutations() {
-  const qc = useQueryClient()
+type UseCategoriesReturn = {
+  categories: Category[];
+  isLoading: boolean;
+  createCategory: (input: CreateCategoryInput) => Promise<Category>;
+  updateCategory: (id: string, input: UpdateCategoryInput) => Promise<Category>;
+  deleteCategory: (id: string) => Promise<void>;
+  isCreating: boolean;
+  isUpdating: boolean;
+  isDeleting: boolean;
+};
 
-  const create = useMutation({
-    mutationFn: (input: CreateCategoryInput) => createCategory(input),
-    onSettled: () => { void qc.invalidateQueries({ queryKey: queryKeys.categories.all() }) },
-  })
+export function useCategories(): UseCategoriesReturn {
+  const qc = useQueryClient();
 
-  const update = useMutation({
-    mutationFn: ({ id, input }: { id: string; input: UpdateCategoryInput }) => updateCategory(id, input),
-    onSettled: () => { void qc.invalidateQueries({ queryKey: queryKeys.categories.all() }) },
-  })
+  const listQuery = useQuery({
+    queryKey: queryKeys.categories.list(),
+    queryFn: fetchCategories,
+    staleTime: 5 * 60_000,
+  });
 
-  const remove = useMutation({
-    mutationFn: (id: string) => deleteCategory(id),
-    onSettled: () => { void qc.invalidateQueries({ queryKey: queryKeys.categories.all() }) },
-  })
+  const createMutation = useMutation({
+    mutationFn: (input: CreateCategoryInput) => apiCreateCategory(input),
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.categories.all() });
+    },
+  });
 
-  return { create, update, remove }
+  const updateMutation = useMutation({
+    mutationFn: ({ id, input }: { id: string; input: UpdateCategoryInput }) =>
+      apiUpdateCategory(id, input),
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.categories.all() });
+    },
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => apiDeleteCategory(id),
+    onSettled: () => {
+      void qc.invalidateQueries({ queryKey: queryKeys.categories.all() });
+    },
+  });
+
+  return {
+    categories: listQuery.data?.items ?? [],
+    isLoading: listQuery.isLoading,
+
+    createCategory: (input: CreateCategoryInput): Promise<Category> =>
+      createMutation.mutateAsync(input),
+
+    updateCategory: (
+      id: string,
+      input: UpdateCategoryInput,
+    ): Promise<Category> => updateMutation.mutateAsync({ id, input }),
+
+    deleteCategory: (id: string): Promise<void> =>
+      deleteMutation.mutateAsync(id),
+
+    isCreating: createMutation.isPending,
+    isUpdating: updateMutation.isPending,
+    isDeleting: deleteMutation.isPending,
+  };
 }
