@@ -92,7 +92,7 @@ describe("useDepartments", () => {
 
   it("surfaces a 404 when updating a non-existent department", async () => {
     server.use(
-      http.patch("http://localhost:3001/api/departments/:id", () =>
+      http.patch("http://localhost:3000/api/departments/:id", () =>
         HttpResponse.json(
           { statusCode: 404, message: "Department not found", data: null },
           { status: 404 },

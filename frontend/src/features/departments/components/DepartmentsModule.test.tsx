@@ -9,7 +9,7 @@ import { DepartmentsModule } from "./DepartmentsModule";
 
 // ── Deterministic mock data ────────────────────────────────────────────────────
 
-const BASE = "http://localhost:3001";
+const BASE = "http://localhost:3000";
 
 const MOCK_DEPARTMENTS = [
   {
@@ -94,11 +94,14 @@ describe("DepartmentsModule", () => {
     await waitFor(() =>
       expect(screen.getByText("Electronics")).toBeInTheDocument(),
     );
-    // Find delete buttons (one per row) — Safe: waitFor above guarantees rows are rendered
-    const deleteButtons = screen.getAllByRole("button", { name: /delete/i });
-    // Safe: MOCK_DEPARTMENTS has 2 items so deleteButtons[0] is guaranteed to exist
-    const firstDeleteButton = deleteButtons[0]!;
-    await user.click(firstDeleteButton);
+    // Open the row actions dropdown for the first row
+    const rowActionButtons = screen.getAllByRole("button", {
+      name: /row actions/i,
+    });
+    // Safe: MOCK_DEPARTMENTS has 2 items so rowActionButtons[0] is guaranteed to exist
+    await user.click(rowActionButtons[0]!);
+    // Click Delete in the dropdown
+    await user.click(screen.getByRole("menuitem", { name: /delete/i }));
     expect(screen.getByText(/are you sure/i)).toBeInTheDocument();
   });
 });
