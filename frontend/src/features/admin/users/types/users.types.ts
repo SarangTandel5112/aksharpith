@@ -1,9 +1,9 @@
 export type User = {
-  id:        string
+  id: string
   firstName: string
-  lastName:  string
-  email:     string
-  role:      { id: string; roleName: string }
+  lastName: string
+  email: string
+  roleName: string
+  isActive: boolean
   createdAt: string
-  updatedAt: string
 }

@@ -1,292 +1,124 @@
-"use client";
+'use client'
 
-import { useRolesList } from "@features/admin/roles/hooks/useRoles";
-import { useState } from "react";
-import { useUserMutations, useUsersList } from "../hooks/useUsers";
-import type { CreateUserInput } from "../schemas/users.schema";
-import type { User } from "../types/users.types";
+import { useState } from "react"
+import type React from "react"
+import { Button } from "@shared/components/ui/button"
+import { DataTable, DeleteDialog, PageHeader, StatusBadge, TablePagination, TableToolbar } from "@shared/components/admin"
+import { IconPencil, IconTrash } from "@tabler/icons-react"
+import { UserFormDialog } from "./UserFormDialog"
+import type { User } from "../types/users.types"
 
-type Role = { id: string; roleName: string };
+const MOCK_USERS: User[] = [
+  { id: "1", firstName: "Arjun", lastName: "Sharma", email: "arjun@aksharpith.com", roleName: "Admin", isActive: true, createdAt: "2024-01-01" },
+  { id: "2", firstName: "Priya", lastName: "Patel", email: "priya@aksharpith.com", roleName: "Manager", isActive: true, createdAt: "2024-01-10" },
+  { id: "3", firstName: "Rahul", lastName: "Mehta", email: "rahul@aksharpith.com", roleName: "Staff", isActive: true, createdAt: "2024-01-20" },
+  { id: "4", firstName: "Sneha", lastName: "Joshi", email: "sneha@aksharpith.com", roleName: "Staff", isActive: true, createdAt: "2024-02-01" },
+  { id: "5", firstName: "Vikram", lastName: "Singh", email: "vikram@aksharpith.com", roleName: "Manager", isActive: true, createdAt: "2024-02-10" },
+  { id: "6", firstName: "Anita", lastName: "Desai", email: "anita@aksharpith.com", roleName: "Staff", isActive: false, createdAt: "2024-02-15" },
+  { id: "7", firstName: "Kiran", lastName: "Nair", email: "kiran@aksharpith.com", roleName: "Viewer", isActive: true, createdAt: "2024-03-01" },
+  { id: "8", firstName: "Deepak", lastName: "Gupta", email: "deepak@aksharpith.com", roleName: "Staff", isActive: true, createdAt: "2024-03-10" },
+]
 
 export function UsersModule(): React.JSX.Element {
-  const { data, isLoading, isError } = useUsersList();
-  const { create, update, remove } = useUserMutations();
-  const [editItem, setEditItem] = useState<User | null>(null);
-  const [showCreate, setShowCreate] = useState(false);
+  const [search, setSearch] = useState("")
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editItem, setEditItem] = useState<User | undefined>(undefined)
+  const [deleteTarget, setDeleteTarget] = useState<User | undefined>(undefined)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
 
-  if (isLoading)
-    return (
-      <div className="animate-pulse h-40 rounded-lg bg-[var(--surface-subtle)]" />
-    );
-  if (isError)
-    return (
-      <p className="text-sm text-[var(--color-danger)]">
-        Failed to load users.
-      </p>
-    );
+  const filtered = MOCK_USERS.filter(u =>
+    `${u.firstName} ${u.lastName}`.toLowerCase().includes(search.toLowerCase()) ||
+    u.email.toLowerCase().includes(search.toLowerCase()) ||
+    u.roleName.toLowerCase().includes(search.toLowerCase())
+  )
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize)
 
-  const items: User[] = (data?.data?.items ?? []) as User[];
+  const columns = [
+    {
+      key: "firstName" as const,
+      label: "User",
+      sortable: true,
+      render: (row: User) => (
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 rounded-full bg-zinc-200 flex items-center justify-center flex-shrink-0">
+            <span className="text-xs font-semibold text-zinc-600">
+              {row.firstName[0]}{row.lastName[0]}
+            </span>
+          </div>
+          <div>
+            <p className="text-sm font-medium text-zinc-900">{row.firstName} {row.lastName}</p>
+            <p className="text-xs text-zinc-500">{row.email}</p>
+          </div>
+        </div>
+      ),
+    },
+    { key: "roleName" as const, label: "Role" },
+    {
+      key: "isActive" as const,
+      label: "Status",
+      render: (row: User) => (
+        <StatusBadge variant={row.isActive ? "success" : "neutral"} label={row.isActive ? "Active" : "Inactive"} />
+      ),
+    },
+  ]
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold text-[var(--text-heading)]">
-          Users
-        </h1>
-        <button
-          type="button"
-          onClick={() => setShowCreate(true)}
-          className="rounded-md bg-[var(--primary-500)] px-3 py-1.5 text-sm font-medium text-white hover:bg-[var(--primary-600)]"
-        >
-          Add User
-        </button>
-      </div>
-      <div className="rounded-lg border border-[var(--surface-border)] bg-[var(--surface-page)] overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-[var(--surface-border)] bg-[var(--surface-subtle)]">
-              <th className="text-left px-4 py-3 font-medium text-[var(--text-muted)]">
-                Name
-              </th>
-              <th className="text-left px-4 py-3 font-medium text-[var(--text-muted)]">
-                Email
-              </th>
-              <th className="text-left px-4 py-3 font-medium text-[var(--text-muted)]">
-                Role
-              </th>
-              <th className="text-right px-4 py-3 font-medium text-[var(--text-muted)]">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={4}
-                  className="text-center py-8 text-[var(--text-muted)]"
-                >
-                  No users found.
-                </td>
-              </tr>
-            ) : (
-              items.map((item) => (
-                <tr
-                  key={item.id}
-                  className="border-b border-[var(--surface-border)] last:border-0"
-                >
-                  <td className="px-4 py-3 font-medium text-[var(--text-heading)]">
-                    {item.firstName} {item.lastName}
-                  </td>
-                  <td className="px-4 py-3 text-[var(--text-body)]">
-                    {item.email}
-                  </td>
-                  <td className="px-4 py-3 text-[var(--text-body)]">
-                    {item.role.roleName}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setEditItem(item)}
-                        className="text-xs text-[var(--primary-500)] hover:underline"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (
-                            window.confirm(
-                              `Delete "${item.firstName} ${item.lastName}"?`,
-                            )
-                          )
-                            remove.mutate(item.id);
-                        }}
-                        className="text-xs text-[var(--color-danger)] hover:underline"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-      {showCreate && (
-        <UserForm
-          onSubmit={(input) =>
-            create.mutate(input, { onSuccess: () => setShowCreate(false) })
-          }
-          onCancel={() => setShowCreate(false)}
-          isSubmitting={create.isPending}
-        />
-      )}
-      {editItem !== null && (
-        <UserForm
-          initial={editItem}
-          onSubmit={(input) =>
-            update.mutate(
-              { id: editItem.id, input },
-              { onSuccess: () => setEditItem(null) },
-            )
-          }
-          onCancel={() => setEditItem(null)}
-          isSubmitting={update.isPending}
-        />
-      )}
-    </div>
-  );
-}
-
-type UserFormProps = {
-  initial?: User;
-  onSubmit: (input: CreateUserInput) => void;
-  onCancel: () => void;
-  isSubmitting: boolean;
-};
-
-function UserForm(props: UserFormProps): React.JSX.Element {
-  const { data: rolesData } = useRolesList();
-  const roles: Role[] = (rolesData?.data?.items ?? []) as Role[];
-  const [firstName, setFirstName] = useState(props.initial?.firstName ?? "");
-  const [lastName, setLastName] = useState(props.initial?.lastName ?? "");
-  const [email, setEmail] = useState(props.initial?.email ?? "");
-  const [password, setPassword] = useState("");
-  const [roleId, setRoleId] = useState(props.initial?.role.id ?? "");
-
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-[var(--surface-page)] rounded-lg p-6 w-full max-w-md shadow-xl">
-        <h2 className="text-base font-semibold text-[var(--text-heading)] mb-4">
-          {props.initial !== undefined ? "Edit User" : "Create User"}
-        </h2>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (props.initial !== undefined) {
-              props.onSubmit({
-                firstName,
-                lastName,
-                email,
-                password: password.length > 0 ? password : "placeholder",
-                roleId,
-              });
-            } else {
-              props.onSubmit({ firstName, lastName, email, password, roleId });
-            }
-          }}
-          className="flex flex-col gap-3"
-        >
-          <div className="flex gap-3">
-            <div className="flex flex-col gap-1 flex-1">
-              <label
-                htmlFor="user-first-name"
-                className="text-sm text-[var(--text-muted)]"
-              >
-                First Name *
-              </label>
-              <input
-                id="user-first-name"
-                value={firstName}
-                onChange={(e) => setFirstName(e.target.value)}
-                className="rounded border border-[var(--surface-border)] bg-[var(--surface-page)] px-3 py-2 text-sm text-[var(--text-body)]"
-                required
-              />
-            </div>
-            <div className="flex flex-col gap-1 flex-1">
-              <label
-                htmlFor="user-last-name"
-                className="text-sm text-[var(--text-muted)]"
-              >
-                Last Name *
-              </label>
-              <input
-                id="user-last-name"
-                value={lastName}
-                onChange={(e) => setLastName(e.target.value)}
-                className="rounded border border-[var(--surface-border)] bg-[var(--surface-page)] px-3 py-2 text-sm text-[var(--text-body)]"
-                required
-              />
-            </div>
-          </div>
-          <div className="flex flex-col gap-1">
-            <label
-              htmlFor="user-email"
-              className="text-sm text-[var(--text-muted)]"
-            >
-              Email *
-            </label>
-            <input
-              id="user-email"
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="rounded border border-[var(--surface-border)] bg-[var(--surface-page)] px-3 py-2 text-sm text-[var(--text-body)]"
-              required
-            />
-          </div>
-          {props.initial === undefined && (
-            <div className="flex flex-col gap-1">
-              <label
-                htmlFor="user-password"
-                className="text-sm text-[var(--text-muted)]"
-              >
-                Password *
-              </label>
-              <input
-                id="user-password"
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="rounded border border-[var(--surface-border)] bg-[var(--surface-page)] px-3 py-2 text-sm text-[var(--text-body)]"
-                required
-                minLength={8}
-              />
-            </div>
-          )}
-          <div className="flex flex-col gap-1">
-            <label
-              htmlFor="user-role"
-              className="text-sm text-[var(--text-muted)]"
-            >
-              Role *
-            </label>
-            <select
-              id="user-role"
-              value={roleId}
-              onChange={(e) => setRoleId(e.target.value)}
-              className="rounded border border-[var(--surface-border)] bg-[var(--surface-page)] px-3 py-2 text-sm text-[var(--text-body)]"
-              required
-            >
-              <option value="">Select role</option>
-              {roles.map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.roleName}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="flex justify-end gap-2 mt-2">
-            <button
-              type="button"
-              onClick={props.onCancel}
-              className="px-4 py-2 text-sm rounded border border-[var(--surface-border)] text-[var(--text-body)]"
-            >
-              Cancel
+      <PageHeader title="Users" subtitle="Manage user accounts and access" />
+      <DataTable
+        columns={columns}
+        rows={paginated}
+        selectable
+        onSelectionChange={setSelectedIds}
+        renderActions={(row: User) => (
+          <div className="flex items-center gap-1">
+            <button type="button" onClick={() => { setEditItem(row); setDialogOpen(true) }}
+              className="p-1.5 rounded hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 transition-colors">
+              <IconPencil size={16} />
             </button>
-            <button
-              type="submit"
-              disabled={props.isSubmitting}
-              className="px-4 py-2 text-sm rounded bg-[var(--primary-500)] text-white disabled:opacity-60"
-            >
-              {props.isSubmitting ? "Saving…" : "Save"}
+            <button type="button" onClick={() => setDeleteTarget(row)}
+              className="p-1.5 rounded hover:bg-zinc-100 text-zinc-400 hover:text-red-500 transition-colors">
+              <IconTrash size={16} />
             </button>
           </div>
-        </form>
-      </div>
+        )}
+        toolbar={
+          <TableToolbar
+            search={search}
+            onSearch={(v) => { setSearch(v); setPage(1) }}
+            placeholder="Search users..."
+            selectedCount={selectedIds.length}
+            action={<Button size="sm" onClick={() => { setEditItem(undefined); setDialogOpen(true) }}>Add User</Button>}
+          />
+        }
+        footer={
+          <TablePagination
+            total={filtered.length}
+            page={page}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => { setPageSize(size); setPage(1) }}
+          />
+        }
+      />
+      <UserFormDialog
+        key={editItem?.id ?? "new"}
+        open={dialogOpen}
+        onClose={() => { setDialogOpen(false); setEditItem(undefined) }}
+        onSubmit={() => setDialogOpen(false)}
+        isSubmitting={false}
+        {...(editItem ? { user: editItem } : {})}
+      />
+      <DeleteDialog
+        open={deleteTarget !== undefined}
+        title="Delete User"
+        description={`Are you sure you want to delete ${deleteTarget?.firstName} ${deleteTarget?.lastName}? This action cannot be undone.`}
+        onConfirm={() => setDeleteTarget(undefined)}
+        onCancel={() => setDeleteTarget(undefined)}
+        isDeleting={false}
+      />
     </div>
-  );
+  )
 }
