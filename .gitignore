@@ -130,3 +130,14 @@ dist
 .pnp.*
 
 .package-lock.json
+ui-main
+
+# Claude Code config & memory
+.claude/
+backend/.claude/
+
+# Playwright MCP
+.playwright-mcp/
+
+# Reference screenshots
+*.png
