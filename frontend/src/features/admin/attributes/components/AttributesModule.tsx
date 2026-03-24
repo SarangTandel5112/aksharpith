@@ -1,265 +1,139 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import {
-  useAttributeMutations,
-  useAttributesList,
-} from "../hooks/useAttributes";
-import type { CreateAttributeInput } from "../schemas/attributes.schema";
-import type { Attribute } from "../types/attributes.types";
+import { useState } from "react"
+import type React from "react"
+import { Button } from "@shared/components/ui/button"
+import { DataTable, DeleteDialog, PageHeader, StatusBadge, TablePagination, TableToolbar } from "@shared/components/admin"
+import { IconPencil, IconTrash } from "@tabler/icons-react"
+import { AttributeFormDialog } from "./AttributeFormDialog"
+
+type AttributeRow = {
+  id: string
+  name: string
+  values: string[]
+  isActive: boolean
+}
+
+const MOCK_ATTRIBUTES: AttributeRow[] = [
+  { id: "1", name: "Color", values: ["Red", "Blue", "Green", "Black", "White", "Yellow"], isActive: true },
+  { id: "2", name: "Size", values: ["XS", "S", "M", "L", "XL", "XXL"], isActive: true },
+  { id: "3", name: "Material", values: ["Cotton", "Polyester", "Wool", "Silk"], isActive: true },
+  { id: "4", name: "Storage", values: ["64GB", "128GB", "256GB", "512GB"], isActive: true },
+  { id: "5", name: "RAM", values: ["4GB", "8GB", "16GB", "32GB"], isActive: false },
+]
 
 export function AttributesModule(): React.JSX.Element {
-  const { data, isLoading, isError } = useAttributesList();
-  const { create, update, remove } = useAttributeMutations();
-  const [editItem, setEditItem] = useState<Attribute | null>(null);
-  const [showCreate, setShowCreate] = useState(false);
+  const [search, setSearch] = useState("")
+  const [page, setPage] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editItem, setEditItem] = useState<AttributeRow | undefined>(undefined)
+  const [deleteTarget, setDeleteTarget] = useState<AttributeRow | undefined>(undefined)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
 
-  if (isLoading)
-    return (
-      <div className="animate-pulse h-40 rounded-lg bg-[var(--surface-subtle)]" />
-    );
-  if (isError)
-    return (
-      <p className="text-sm text-[var(--color-danger)]">
-        Failed to load attributes.
-      </p>
-    );
+  const filtered = MOCK_ATTRIBUTES.filter(a =>
+    a.name.toLowerCase().includes(search.toLowerCase())
+  )
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize)
 
-  const items: Attribute[] = (data?.data?.items ?? []) as Attribute[];
+  const columns = [
+    { key: "name" as const, label: "Attribute", sortable: true },
+    {
+      key: "values" as const,
+      label: "Values",
+      render: (row: AttributeRow) => (
+        <div className="flex flex-wrap gap-1">
+          {row.values.slice(0, 4).map((v) => (
+            <span key={v} className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-zinc-100 text-zinc-700">
+              {v}
+            </span>
+          ))}
+          {row.values.length > 4 && (
+            <span className="text-xs text-zinc-400">+{row.values.length - 4} more</span>
+          )}
+        </div>
+      ),
+    },
+    {
+      key: "isActive" as const,
+      label: "Status",
+      render: (row: AttributeRow) => (
+        <StatusBadge
+          variant={row.isActive ? "success" : "neutral"}
+          label={row.isActive ? "Active" : "Inactive"}
+        />
+      ),
+    },
+  ]
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
-        <h1 className="text-xl font-semibold text-[var(--text-heading)]">
-          Attributes
-        </h1>
-        <button
-          type="button"
-          onClick={() => setShowCreate(true)}
-          className="rounded-md bg-[var(--primary-500)] px-3 py-1.5 text-sm font-medium text-white hover:bg-[var(--primary-600)]"
-        >
-          Add Attribute
-        </button>
-      </div>
-      <div className="rounded-lg border border-[var(--surface-border)] bg-[var(--surface-page)] overflow-hidden">
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="border-b border-[var(--surface-border)] bg-[var(--surface-subtle)]">
-              <th className="text-left px-4 py-3 font-medium text-[var(--text-muted)]">
-                Attribute Name
-              </th>
-              <th className="text-left px-4 py-3 font-medium text-[var(--text-muted)]">
-                Values
-              </th>
-              <th className="text-left px-4 py-3 font-medium text-[var(--text-muted)]">
-                Description
-              </th>
-              <th className="text-right px-4 py-3 font-medium text-[var(--text-muted)]">
-                Actions
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {items.length === 0 ? (
-              <tr>
-                <td
-                  colSpan={4}
-                  className="text-center py-8 text-[var(--text-muted)]"
-                >
-                  No attributes found.
-                </td>
-              </tr>
-            ) : (
-              items.map((item) => (
-                <tr
-                  key={item.id}
-                  className="border-b border-[var(--surface-border)] last:border-0"
-                >
-                  <td className="px-4 py-3 font-medium text-[var(--text-heading)]">
-                    {item.attributeName}
-                  </td>
-                  <td className="px-4 py-3 text-[var(--text-body)]">
-                    {item.values.join(", ")}
-                  </td>
-                  <td className="px-4 py-3 text-[var(--text-body)]">
-                    {item.description}
-                  </td>
-                  <td className="px-4 py-3 text-right">
-                    <div className="flex justify-end gap-2">
-                      <button
-                        type="button"
-                        onClick={() => setEditItem(item)}
-                        className="text-xs text-[var(--primary-500)] hover:underline"
-                      >
-                        Edit
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (window.confirm(`Delete "${item.attributeName}"?`))
-                            remove.mutate(item.id);
-                        }}
-                        className="text-xs text-[var(--color-danger)] hover:underline"
-                      >
-                        Delete
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
-      </div>
-      {showCreate && (
-        <AttributeForm
-          onSubmit={(input) =>
-            create.mutate(input, { onSuccess: () => setShowCreate(false) })
-          }
-          onCancel={() => setShowCreate(false)}
-          isSubmitting={create.isPending}
-        />
-      )}
-      {editItem !== null && (
-        <AttributeForm
-          initial={editItem}
-          onSubmit={(input) =>
-            update.mutate(
-              { id: editItem.id, input },
-              { onSuccess: () => setEditItem(null) },
-            )
-          }
-          onCancel={() => setEditItem(null)}
-          isSubmitting={update.isPending}
-        />
-      )}
-    </div>
-  );
-}
-
-type AttributeFormProps = {
-  initial?: Attribute;
-  onSubmit: (input: CreateAttributeInput) => void;
-  onCancel: () => void;
-  isSubmitting: boolean;
-};
-
-function AttributeForm(props: AttributeFormProps): React.JSX.Element {
-  const [attributeName, setAttributeName] = useState(
-    props.initial?.attributeName ?? "",
-  );
-  const [description, setDescription] = useState(
-    props.initial?.description ?? "",
-  );
-  const [values, setValues] = useState<string[]>(props.initial?.values ?? [""]);
-
-  function handleValueChange(index: number, value: string): void {
-    const next = [...values];
-    next[index] = value;
-    setValues(next);
-  }
-
-  function handleAddValue(): void {
-    setValues([...values, ""]);
-  }
-
-  function handleRemoveValue(index: number): void {
-    setValues(values.filter((_, i) => i !== index));
-  }
-
-  return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-[var(--surface-page)] rounded-lg p-6 w-full max-w-md shadow-xl">
-        <h2 className="text-base font-semibold text-[var(--text-heading)] mb-4">
-          {props.initial !== undefined ? "Edit Attribute" : "Create Attribute"}
-        </h2>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            props.onSubmit({ attributeName, description, values });
-          }}
-          className="flex flex-col gap-3"
-        >
-          <div className="flex flex-col gap-1">
-            <label
-              htmlFor="attr-name"
-              className="text-sm text-[var(--text-muted)]"
-            >
-              Attribute Name *
-            </label>
-            <input
-              id="attr-name"
-              value={attributeName}
-              onChange={(e) => setAttributeName(e.target.value)}
-              className="rounded border border-[var(--surface-border)] bg-[var(--surface-page)] px-3 py-2 text-sm text-[var(--text-body)]"
-              required
-            />
-          </div>
-          <div className="flex flex-col gap-1">
-            <label
-              htmlFor="attr-description"
-              className="text-sm text-[var(--text-muted)]"
-            >
-              Description
-            </label>
-            <input
-              id="attr-description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="rounded border border-[var(--surface-border)] bg-[var(--surface-page)] px-3 py-2 text-sm text-[var(--text-body)]"
-            />
-          </div>
-          <div className="flex flex-col gap-2">
-            <label
-              htmlFor="attr-values"
-              className="text-sm text-[var(--text-muted)]"
-            >
-              Values *
-            </label>
-            {values.map((val, index) => (
-              <div key={val || `value-${index}`} className="flex gap-2">
-                <input
-                  value={val}
-                  onChange={(e) => handleValueChange(index, e.target.value)}
-                  className="flex-1 rounded border border-[var(--surface-border)] bg-[var(--surface-page)] px-3 py-2 text-sm text-[var(--text-body)]"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => handleRemoveValue(index)}
-                  disabled={values.length === 1}
-                  className="px-2 py-1 text-xs text-[var(--color-danger)] border border-[var(--surface-border)] rounded disabled:opacity-40"
-                >
-                  Remove
-                </button>
-              </div>
-            ))}
+      <PageHeader
+        title="Attributes"
+        subtitle="Manage product attributes and their values"
+      />
+      <DataTable
+        columns={columns}
+        rows={paginated}
+        selectable
+        onSelectionChange={setSelectedIds}
+        renderActions={(row: AttributeRow) => (
+          <div className="flex items-center gap-1">
             <button
               type="button"
-              onClick={handleAddValue}
-              className="self-start px-3 py-1.5 text-xs text-[var(--primary-500)] border border-[var(--primary-500)] rounded hover:bg-[var(--surface-subtle)]"
+              onClick={() => { setEditItem(row); setDialogOpen(true) }}
+              className="p-1.5 rounded hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 transition-colors"
             >
-              Add Value
+              <IconPencil size={16} />
             </button>
-          </div>
-          <div className="flex justify-end gap-2 mt-2">
             <button
               type="button"
-              onClick={props.onCancel}
-              className="px-4 py-2 text-sm rounded border border-[var(--surface-border)] text-[var(--text-body)]"
+              onClick={() => setDeleteTarget(row)}
+              className="p-1.5 rounded hover:bg-zinc-100 text-zinc-400 hover:text-red-500 transition-colors"
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              disabled={props.isSubmitting}
-              className="px-4 py-2 text-sm rounded bg-[var(--primary-500)] text-white disabled:opacity-60"
-            >
-              {props.isSubmitting ? "Saving…" : "Save"}
+              <IconTrash size={16} />
             </button>
           </div>
-        </form>
-      </div>
+        )}
+        toolbar={
+          <TableToolbar
+            search={search}
+            onSearch={(v) => { setSearch(v); setPage(1) }}
+            placeholder="Search attributes..."
+            selectedCount={selectedIds.length}
+            action={
+              <Button size="sm" onClick={() => { setEditItem(undefined); setDialogOpen(true) }}>
+                Add Attribute
+              </Button>
+            }
+          />
+        }
+        footer={
+          <TablePagination
+            total={filtered.length}
+            page={page}
+            pageSize={pageSize}
+            onPageChange={setPage}
+            onPageSizeChange={(size) => { setPageSize(size); setPage(1) }}
+          />
+        }
+      />
+      <AttributeFormDialog
+        key={editItem?.id ?? "new"}
+        open={dialogOpen}
+        onClose={() => { setDialogOpen(false); setEditItem(undefined) }}
+        onSubmit={() => setDialogOpen(false)}
+        isSubmitting={false}
+        {...(editItem ? { attribute: editItem } : {})}
+      />
+      <DeleteDialog
+        open={deleteTarget !== undefined}
+        title="Delete Attribute"
+        description={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
+        onConfirm={() => setDeleteTarget(undefined)}
+        onCancel={() => setDeleteTarget(undefined)}
+        isDeleting={false}
+      />
     </div>
-  );
+  )
 }
