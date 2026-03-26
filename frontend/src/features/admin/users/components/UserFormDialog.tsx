@@ -24,7 +24,7 @@ import {
 import { UserFormFields } from "./dialog/UserFormFields";
 
 type RoleOption = {
-  id: number;
+  id: string;
   name: string;
 };
 
@@ -53,8 +53,9 @@ export function UserFormDialog(props: UserFormDialogProps): React.JSX.Element {
       lastName: "",
       email: "",
       password: "",
-      roleId: 0,
+      roleId: "",
       isActive: true,
+      isTempPassword: false,
     },
   });
 
@@ -70,8 +71,9 @@ export function UserFormDialog(props: UserFormDialogProps): React.JSX.Element {
       middleName: props.user?.middleName ?? "",
       lastName: props.user?.lastName ?? "",
       email: props.user?.email ?? "",
-      roleId: props.user?.roleId ?? props.user?.role?.id ?? 0,
+      roleId: props.user?.roleId ?? props.user?.role?.id ?? "",
       isActive: props.user?.isActive ?? true,
+      isTempPassword: props.user?.isTempPassword ?? false,
     },
   });
 
@@ -86,9 +88,9 @@ export function UserFormDialog(props: UserFormDialogProps): React.JSX.Element {
           <Form {...editForm}>
             <form
               onSubmit={editForm.handleSubmit(props.onSubmit)}
-              className="space-y-6"
+              className="flex min-h-0 flex-1 flex-col"
             >
-              <div className="space-y-6">
+              <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-6">
                 <UserFormFields
                   control={editForm.control}
                   includePassword={false}
@@ -114,9 +116,9 @@ export function UserFormDialog(props: UserFormDialogProps): React.JSX.Element {
           <Form {...createForm}>
             <form
               onSubmit={createForm.handleSubmit(props.onSubmit)}
-              className="space-y-6"
+              className="flex min-h-0 flex-1 flex-col"
             >
-              <div className="space-y-6">
+              <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-6">
                 <UserFormFields
                   control={createForm.control}
                   includePassword

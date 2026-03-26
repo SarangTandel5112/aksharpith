@@ -1,14 +1,14 @@
 import { z } from 'zod'
 
 export const CategorySchema = z.object({
-  id: z.number().int(),
+  id: z.string(),
   name: z.string(),
   description: z.string().nullable(),
   photo: z.string().nullable(),
-  departmentId: z.number().int(),
+  departmentId: z.string().nullable(),
   department: z
     .object({
-      id: z.number().int(),
+      id: z.string(),
       name: z.string(),
     })
     .nullable(),
@@ -21,8 +21,7 @@ export const CreateCategorySchema = z.object({
   name: z.string().min(1, 'Category name is required').max(100),
   description: z.string().optional(),
   photo: z.string().nullable().optional(),
-  departmentId: z.coerce.number().int().min(1, 'Select a department'),
-  isActive: z.boolean().default(true),
+  departmentId: z.string().min(1, 'Select a department').optional(),
 })
 
 export const UpdateCategorySchema = CreateCategorySchema.partial()

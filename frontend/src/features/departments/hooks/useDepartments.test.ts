@@ -53,7 +53,6 @@ describe("useDepartments", () => {
     await act(async () => {
       await result.current.createDepartment({
         name: "New Dept",
-        isActive: true,
       });
     });
 
@@ -68,7 +67,7 @@ describe("useDepartments", () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {
-      await result.current.updateDepartment(1, {
+      await result.current.updateDepartment("dept-1", {
         name: "Electronics Updated",
       });
     });
@@ -84,7 +83,7 @@ describe("useDepartments", () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {
-      await result.current.deleteDepartment(1);
+      await result.current.deleteDepartment("dept-1");
     });
 
     expect(result.current.isDeleting).toBe(false);
@@ -108,7 +107,7 @@ describe("useDepartments", () => {
 
     await act(async () => {
       await result.current
-        .updateDepartment(9999, { name: "Ghost" })
+        .updateDepartment("9999", { name: "Ghost" })
         .catch(() => null);
     });
 

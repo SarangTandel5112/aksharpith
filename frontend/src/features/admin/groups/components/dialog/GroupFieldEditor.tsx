@@ -1,5 +1,9 @@
 "use client";
 
+import type {
+  CreateGroupInput,
+  CreateGroupSchema,
+} from "@features/admin/groups/schemas/groups.schema";
 import { Button } from "@shared/components/ui/button";
 import { Checkbox } from "@shared/components/ui/checkbox";
 import {
@@ -21,9 +25,16 @@ import { IconPlus, IconTrash } from "@tabler/icons-react";
 import type React from "react";
 import type { Control } from "react-hook-form";
 import { useFieldArray, useWatch } from "react-hook-form";
+import type { z } from "zod";
+
+type GroupFieldEditorControl = Control<
+  z.input<typeof CreateGroupSchema>,
+  unknown,
+  CreateGroupInput
+>;
 
 type GroupFieldEditorProps = {
-  control: Control<any>;
+  control: GroupFieldEditorControl;
   index: number;
   canRemove: boolean;
   onRemove: () => void;
@@ -102,7 +113,7 @@ export function GroupFieldEditor(
             <FormItem>
               <FormLabel>Field Type</FormLabel>
               <Select
-                value={field.value}
+                value={(field.value as string | undefined) ?? "text"}
                 onValueChange={field.onChange}
                 disabled={props.lockKeyAndType}
               >
@@ -133,7 +144,7 @@ export function GroupFieldEditor(
                 <Input
                   type="number"
                   min="0"
-                  value={field.value ?? 0}
+                  value={(field.value as number | undefined) ?? 0}
                   onChange={(event) => field.onChange(event.target.value)}
                 />
               </FormControl>
@@ -262,7 +273,7 @@ export function GroupFieldEditor(
                         <Input
                           type="number"
                           min="0"
-                          value={field.value ?? 0}
+                          value={(field.value as number | undefined) ?? 0}
                           onChange={(event) => field.onChange(event.target.value)}
                         />
                       </FormControl>

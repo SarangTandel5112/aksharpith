@@ -2,8 +2,8 @@
 
 import type {
   CategoryResponseDto,
-  DepartmentResponseDto,
-} from "@shared/contracts";
+} from "@features/admin/categories/contracts/categories.contracts";
+import type { DepartmentResponseDto } from "@features/departments/contracts/departments.contracts";
 import { useShallow } from "zustand/react/shallow";
 import { useCategories, useDepartments } from "../hooks/useProducts";
 import {

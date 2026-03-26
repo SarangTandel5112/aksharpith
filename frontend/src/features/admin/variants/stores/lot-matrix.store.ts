@@ -26,7 +26,7 @@ export const useLotMatrixStore = create<LotMatrixState>((set, get) => ({
     }),
 }));
 
-export const selectLotSelectedAttributeIds = (s: LotMatrixState): number[] =>
+export const selectLotSelectedAttributeIds = (s: LotMatrixState): string[] =>
   s.selectedAttributeIds;
 export const selectLotIsSubmitting = (s: LotMatrixState): boolean =>
   s.isSubmitting;

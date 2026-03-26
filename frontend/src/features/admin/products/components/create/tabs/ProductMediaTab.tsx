@@ -51,7 +51,7 @@ export function ProductMediaTab(props: ProductMediaTabProps): React.JSX.Element 
 
         {props.items.map((item, index) => (
           <div
-            key={index}
+            key={item.clientId ?? `${item.url}-${item.sortOrder ?? index}`}
             className="rounded-lg border border-zinc-200 bg-zinc-50 p-4"
           >
             <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_140px_100px]">
@@ -68,16 +68,16 @@ export function ProductMediaTab(props: ProductMediaTabProps): React.JSX.Element 
               <div className="space-y-1">
                 <p className="text-xs font-medium text-zinc-600">Type</p>
                 <Select
-                  value={item.type}
+                  value={item.mediaType ?? "photo"}
                   onValueChange={(val) =>
-                    props.onChange(index, "type", val)
+                    props.onChange(index, "mediaType", val)
                   }
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="image">Image</SelectItem>
+                    <SelectItem value="photo">Photo</SelectItem>
                     <SelectItem value="video">Video</SelectItem>
                   </SelectContent>
                 </Select>

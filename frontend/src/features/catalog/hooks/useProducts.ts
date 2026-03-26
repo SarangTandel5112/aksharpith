@@ -1,6 +1,5 @@
 "use client";
 
-import { useMemo } from "react";
 import {
   fetchCategories,
   fetchDepartments,
@@ -30,45 +29,32 @@ function buildResult<T>(data: T | undefined, error?: Error): StaticQueryResult<T
 export function useProductsList(
   filters: Partial<FilterState>,
 ): StaticQueryResult<ReturnType<typeof fetchProducts>> {
-  return useMemo(
-    () => buildResult(fetchProducts(filters)),
-    [
-      filters.search,
-      filters.categoryId,
-      filters.departmentId,
-      filters.minPrice,
-      filters.maxPrice,
-      filters.page,
-      filters.limit,
-    ],
-  );
+  return buildResult(fetchProducts(filters));
 }
 
 export function useProductDetail(
   id: string,
 ): StaticQueryResult<NonNullable<ReturnType<typeof fetchProductById>>> {
-  return useMemo(() => {
-    if (id.length === 0) {
-      return buildResult<NonNullable<ReturnType<typeof fetchProductById>>>(
-        undefined,
-        new Error("Missing product id"),
-      );
-    }
+  if (id.length === 0) {
+    return buildResult<NonNullable<ReturnType<typeof fetchProductById>>>(
+      undefined,
+      new Error("Missing product id"),
+    );
+  }
 
-    const data = fetchProductById(id);
-    return data
-      ? buildResult(data)
-      : buildResult<NonNullable<ReturnType<typeof fetchProductById>>>(
-          undefined,
-          new Error(`Product not found: ${id}`),
-        );
-  }, [id]);
+  const data = fetchProductById(id);
+  return data
+    ? buildResult(data)
+    : buildResult<NonNullable<ReturnType<typeof fetchProductById>>>(
+        undefined,
+        new Error(`Product not found: ${id}`),
+      );
 }
 
 export function useCategories(): StaticQueryResult<ReturnType<typeof fetchCategories>> {
-  return useMemo(() => buildResult(fetchCategories()), []);
+  return buildResult(fetchCategories());
 }
 
 export function useDepartments(): StaticQueryResult<ReturnType<typeof fetchDepartments>> {
-  return useMemo(() => buildResult(fetchDepartments()), []);
+  return buildResult(fetchDepartments());
 }

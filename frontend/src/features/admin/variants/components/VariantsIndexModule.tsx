@@ -12,8 +12,10 @@ import { Button } from "@shared/components/ui/button";
 import { IconArrowRight } from "@tabler/icons-react";
 import Link from "next/link";
 import type React from "react";
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useState } from "react";
 import type { DirectVariantWorkspaceRow } from "../types/variants.types";
+
+const VARIANT_WORKSPACE_ROWS = buildVariantWorkspaceRows();
 
 const COLUMNS: Column<DirectVariantWorkspaceRow>[] = [
   {
@@ -52,28 +54,25 @@ export function VariantsIndexModule(): React.JSX.Element {
   const [typeFilter, setTypeFilter] = useState("all");
   const [coverageFilter, setCoverageFilter] = useState("all");
 
-  const rows = useMemo(() => buildVariantWorkspaceRows(), []);
-  const filteredRows = useMemo(() => {
+  const filteredRows = VARIANT_WORKSPACE_ROWS.filter((row) => {
     const query = deferredSearch.toLowerCase();
-    return rows.filter((row) => {
-      const matchesSearch = !deferredSearch.trim()
+    const matchesSearch = !deferredSearch.trim()
+      ? true
+      : [row.productName, row.productCode, row.productType]
+          .join(" ")
+          .toLowerCase()
+          .includes(query);
+    const matchesType =
+      typeFilter === "all" ? true : row.productType === typeFilter;
+    const matchesCoverage =
+      coverageFilter === "all"
         ? true
-        : [row.productName, row.productCode, row.productType]
-            .join(" ")
-            .toLowerCase()
-            .includes(query);
-      const matchesType =
-        typeFilter === "all" ? true : row.productType === typeFilter;
-      const matchesCoverage =
-        coverageFilter === "all"
-          ? true
-          : coverageFilter === "generated"
-            ? row.variantCount > 0
-            : row.variantCount === 0;
+        : coverageFilter === "generated"
+          ? row.variantCount > 0
+          : row.variantCount === 0;
 
-      return matchesSearch && matchesType && matchesCoverage;
-    });
-  }, [coverageFilter, deferredSearch, rows, typeFilter]);
+    return matchesSearch && matchesType && matchesCoverage;
+  });
 
   return (
     <div className="space-y-6">

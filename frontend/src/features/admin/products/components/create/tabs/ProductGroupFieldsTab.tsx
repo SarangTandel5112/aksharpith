@@ -128,10 +128,10 @@ export function ProductGroupFieldsTab(
 
     return (
       <Select
-        value={entry.valueOptionId !== null ? String(entry.valueOptionId) : "__none__"}
+        value={entry.valueOptionId ?? "__none__"}
         onValueChange={(value) =>
           updateEntry(index, {
-            valueOptionId: value === "__none__" ? null : Number(value),
+            valueOptionId: value === "__none__" ? null : value,
           })
         }
       >
@@ -141,7 +141,7 @@ export function ProductGroupFieldsTab(
         <SelectContent>
           <SelectItem value="__none__">No selection</SelectItem>
           {entry.options.map((option) => (
-            <SelectItem key={option.id} value={String(option.id)}>
+            <SelectItem key={option.id} value={option.id}>
               {option.label}
             </SelectItem>
           ))}

@@ -1,23 +1,21 @@
-import {
-  type ApiEnvelope,
-  type CategoryResponseDto,
-  type DepartmentResponseDto,
-  type PaginatedData,
-  type ProductResponseDto,
-} from "@shared/contracts";
+import type {
+  CategoryResponseDto,
+} from "@features/admin/categories/contracts/categories.contracts";
+import type { DepartmentResponseDto } from "@features/departments/contracts/departments.contracts";
+import type { ApiResponse, PaginatedResponse } from "@shared/types/core";
+import type { CatalogProduct, FilterState } from "../types/catalog.types";
 import {
   MOCK_CATEGORIES,
   MOCK_DEPARTMENTS,
   MOCK_PRODUCTS,
   getCategoryForProduct,
 } from "@features/admin/products/services/product-admin.mock";
-import type { FilterState } from "../types/catalog.types";
 
 function paginate<T>(
   items: T[],
   page: number,
   limit: number,
-): PaginatedData<T> {
+): PaginatedResponse<T> {
   const total = items.length;
   const totalPages = Math.max(1, Math.ceil(total / limit));
   const currentPage = Math.min(Math.max(page, 1), totalPages);
@@ -32,7 +30,7 @@ function paginate<T>(
   };
 }
 
-function buildEnvelope<T>(data: T): ApiEnvelope<T> {
+function buildEnvelope<T>(data: T): ApiResponse<T> {
   return {
     statusCode: 200,
     message: "OK",
@@ -41,14 +39,14 @@ function buildEnvelope<T>(data: T): ApiEnvelope<T> {
 }
 
 export function getCatalogCategory(
-  product: ProductResponseDto,
+  product: CatalogProduct,
 ): CategoryResponseDto | undefined {
   return getCategoryForProduct(product);
 }
 
 export function getCatalogProducts(
   filters: Partial<FilterState>,
-): ApiEnvelope<PaginatedData<ProductResponseDto>> {
+): ApiResponse<PaginatedResponse<CatalogProduct>> {
   const searchTerm = filters.search?.trim().toLowerCase() ?? "";
   const page = filters.page ?? 1;
   const limit = filters.limit ?? 12;
@@ -100,23 +98,22 @@ export function getCatalogProducts(
 
 export function getCatalogProductById(
   productId: string,
-): ApiEnvelope<ProductResponseDto> | undefined {
-  const id = Number(productId);
-  const product = MOCK_PRODUCTS.find((item) => item.id === id);
+): ApiResponse<CatalogProduct> | undefined {
+  const product = MOCK_PRODUCTS.find((item) => item.id === productId);
 
   return product ? buildEnvelope(product) : undefined;
 }
 
-export function getCatalogCategories(): ApiEnvelope<
-  PaginatedData<CategoryResponseDto>
+export function getCatalogCategories(): ApiResponse<
+  PaginatedResponse<CategoryResponseDto>
 > {
   return buildEnvelope(
     paginate(MOCK_CATEGORIES, 1, Math.max(MOCK_CATEGORIES.length, 1)),
   );
 }
 
-export function getCatalogDepartments(): ApiEnvelope<
-  PaginatedData<DepartmentResponseDto>
+export function getCatalogDepartments(): ApiResponse<
+  PaginatedResponse<DepartmentResponseDto>
 > {
   return buildEnvelope(
     paginate(MOCK_DEPARTMENTS, 1, Math.max(MOCK_DEPARTMENTS.length, 1)),

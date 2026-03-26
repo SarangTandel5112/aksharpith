@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@shared/components/ui/dropdown-menu";
 import { IconDots, IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
+import Image from "next/image";
 import type React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -32,16 +33,16 @@ type SubCategoryRow = SubCategory & {
 };
 
 const CATEGORIES: Pick<Category, "id" | "name">[] = [
-  { id: 101, name: "Smart Devices" },
-  { id: 102, name: "Audio" },
-  { id: 103, name: "Furniture" },
+  { id: "101", name: "Smart Devices" },
+  { id: "102", name: "Audio" },
+  { id: "103", name: "Furniture" },
 ];
 
 const SUB_CATEGORY_ROWS: SubCategoryRow[] = [
   {
-    id: 201,
+    id: "201",
     name: "Phones",
-    categoryId: 101,
+    categoryId: "101",
     description: "<p>Mobile phones and smartphones.</p>",
     photo: null,
     sortOrder: 0,
@@ -52,9 +53,9 @@ const SUB_CATEGORY_ROWS: SubCategoryRow[] = [
     updatedAt: "2026-03-24",
   },
   {
-    id: 202,
+    id: "202",
     name: "Headphones",
-    categoryId: 102,
+    categoryId: "102",
     description: "<p>Over-ear, on-ear, and in-ear audio.</p>",
     photo: null,
     sortOrder: 1,
@@ -65,9 +66,9 @@ const SUB_CATEGORY_ROWS: SubCategoryRow[] = [
     updatedAt: "2026-03-23",
   },
   {
-    id: 203,
+    id: "203",
     name: "Desks",
-    categoryId: 103,
+    categoryId: "103",
     description: "<p>Standing desks and workstations.</p>",
     photo: null,
     sortOrder: 2,
@@ -85,10 +86,12 @@ const COLUMNS: Column<SubCategoryRow>[] = [
     label: "Photo",
     render: (row) =>
       row.photo ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <Image
           src={row.photo}
           alt={row.name}
+          width={40}
+          height={40}
+          unoptimized
           className="h-10 w-10 rounded-xl object-cover"
         />
       ) : (
@@ -152,7 +155,7 @@ export function SubCategoriesModule(): React.JSX.Element {
     const matchesCategory =
       categoryFilter === "all"
         ? true
-        : row.categoryId === Number(categoryFilter);
+        : row.categoryId === categoryFilter;
     const matchesStatus =
       statusFilter === "all"
         ? true
@@ -185,7 +188,6 @@ export function SubCategoriesModule(): React.JSX.Element {
               description: values.description ?? null,
               photo: values.photo ?? null,
               sortOrder: values.sortOrder,
-              isActive: values.isActive,
               updatedAt: today,
             }
           : r,
@@ -193,7 +195,7 @@ export function SubCategoriesModule(): React.JSX.Element {
       toast.success("Sub-category updated");
     } else {
       const newRow: SubCategoryRow = {
-        id: Date.now(),
+        id: String(Date.now()),
         name: values.name,
         categoryId: values.categoryId,
         category: category ?? null,
@@ -201,7 +203,7 @@ export function SubCategoriesModule(): React.JSX.Element {
         photo: values.photo ?? null,
         sortOrder: values.sortOrder,
         productCount: 0,
-        isActive: values.isActive,
+        isActive: true,
         createdAt: today,
         updatedAt: today,
       };
@@ -360,7 +362,6 @@ export function SubCategoriesModule(): React.JSX.Element {
                   : {}),
                 ...(editItem.photo !== null ? { photo: editItem.photo } : {}),
                 sortOrder: editItem.sortOrder,
-                isActive: editItem.isActive,
                 createdAt: editItem.createdAt,
                 updatedAt: editItem.updatedAt,
               },

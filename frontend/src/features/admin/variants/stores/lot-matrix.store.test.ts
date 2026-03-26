@@ -5,17 +5,17 @@ beforeEach(() => useLotMatrixStore.getState().reset());
 
 describe("lot-matrix.store", () => {
   it("toggleAttribute adds and removes selected attribute IDs", () => {
-    useLotMatrixStore.getState().toggleAttribute(1);
-    expect(useLotMatrixStore.getState().selectedAttributeIds).toContain(1);
+    useLotMatrixStore.getState().toggleAttribute("1");
+    expect(useLotMatrixStore.getState().selectedAttributeIds).toContain("1");
 
-    useLotMatrixStore.getState().toggleAttribute(1);
+    useLotMatrixStore.getState().toggleAttribute("1");
     expect(useLotMatrixStore.getState().selectedAttributeIds).not.toContain(
-      1,
+      "1",
     );
   });
 
   it("reset clears selection and submit state", () => {
-    useLotMatrixStore.getState().toggleAttribute(1);
+    useLotMatrixStore.getState().toggleAttribute("1");
     useLotMatrixStore.getState().setIsSubmitting(true);
 
     useLotMatrixStore.getState().reset();

@@ -1,11 +1,14 @@
 import type {
   CreateSubCategoryDto,
-  PaginatedData,
   SubCategoryResponseDto,
   UpdateSubCategoryDto,
-} from "@shared/contracts";
+} from "@features/admin/sub-categories/contracts/sub-categories.contracts";
+import type { CategoryResponseDto as CategoryDto } from "@features/admin/categories/contracts/categories.contracts";
+import type { PaginatedResponse } from "@shared/types/core";
 
-export type SubCategory = SubCategoryResponseDto;
-export type PaginatedSubCategories = PaginatedData<SubCategory>;
+export type SubCategory = SubCategoryResponseDto & {
+  category?: Pick<CategoryDto, "id" | "name"> | null;
+};
+export type PaginatedSubCategories = PaginatedResponse<SubCategory>;
 export type CreateSubCategoryInput = CreateSubCategoryDto;
 export type UpdateSubCategoryInput = UpdateSubCategoryDto;

@@ -12,7 +12,7 @@ import type { RoleFormValues } from "../validations/role-form.schema";
 import { RoleFormDialog } from "./RoleFormDialog";
 
 type RoleRow = {
-  id: number;
+  id: string;
   name: string;
   isActive: boolean;
 };

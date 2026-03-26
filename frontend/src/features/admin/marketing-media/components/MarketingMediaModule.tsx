@@ -16,41 +16,39 @@ import { Button } from "@shared/components/ui/button";
 import { IconArrowRight } from "@tabler/icons-react";
 import Link from "next/link";
 import type React from "react";
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useState } from "react";
+
+const MARKETING_WORKSPACE_ROWS = buildMarketingWorkspaceRows();
 
 export function MarketingMediaModule(): React.JSX.Element {
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
   const [typeFilter, setTypeFilter] = useState("all");
   const [assetFilter, setAssetFilter] = useState("all");
-  const rows = useMemo(() => buildMarketingWorkspaceRows(), []);
-  const filteredRows = useMemo(() => {
+  const filteredRows = MARKETING_WORKSPACE_ROWS.filter((row) => {
     const query = deferredSearch.toLowerCase();
-    return rows.filter((row) => {
-      const matchesSearch = !deferredSearch.trim()
+    const matchesSearch = !deferredSearch.trim()
+      ? true
+      : [row.product.name, row.product.code, row.product.type]
+          .join(" ")
+          .toLowerCase()
+          .includes(query);
+    const matchesType =
+      typeFilter === "all" ? true : row.product.type === typeFilter;
+    const matchesAsset =
+      assetFilter === "all"
         ? true
-        : [row.product.name, row.product.code, row.product.type]
-            .join(" ")
-            .toLowerCase()
-            .includes(query);
-      const matchesType =
-        typeFilter === "all" ? true : row.product.type === typeFilter;
-        const matchesAsset =
-          assetFilter === "all"
-            ? true
-            : assetFilter === "photos"
-              ? row.photoCount > 0
-              : assetFilter === "videos"
-                ? row.videoCount > 0
-                : row.photoCount > 0 && row.videoCount > 0;
+        : assetFilter === "photos"
+          ? row.photoCount > 0
+          : assetFilter === "videos"
+            ? row.videoCount > 0
+            : row.photoCount > 0 && row.videoCount > 0;
 
-        return matchesSearch && matchesType && matchesAsset;
-      },
-    );
-  }, [assetFilter, deferredSearch, rows, typeFilter]);
+    return matchesSearch && matchesType && matchesAsset;
+  });
 
-  const [selectedProductId, setSelectedProductId] = useState<number | null>(
-    rows[0]?.product.id ?? null,
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(
+    MARKETING_WORKSPACE_ROWS[0]?.product.id ?? null,
   );
 
   useEffect(() => {
@@ -62,7 +60,7 @@ export function MarketingMediaModule(): React.JSX.Element {
   const { data: selectedRow, isLoading } = useMockProductResource(
     selectedProductId,
     (productId) =>
-      buildMarketingWorkspaceRows().find((row) => row.product.id === productId) ??
+      MARKETING_WORKSPACE_ROWS.find((row) => row.product.id === productId) ??
       null,
   );
 

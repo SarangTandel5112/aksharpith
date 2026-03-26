@@ -29,6 +29,7 @@ import { Input } from "@shared/components/ui/input";
 import { IconPlus } from "@tabler/icons-react";
 import type React from "react";
 import { useFieldArray, useForm } from "react-hook-form";
+import type { z } from "zod";
 
 type GroupFormDialogProps = {
   open: boolean;
@@ -41,7 +42,11 @@ type GroupFormDialogProps = {
 export function GroupFormDialog(
   props: GroupFormDialogProps,
 ): React.JSX.Element {
-  const form = useForm<any>({
+  const form = useForm<
+    z.input<typeof CreateGroupSchema>,
+    unknown,
+    CreateGroupInput
+  >({
     resolver: zodResolver(CreateGroupSchema),
     defaultValues: {
       name: props.group?.name ?? "",
@@ -96,12 +101,10 @@ export function GroupFormDialog(
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit((values) =>
-              props.onSubmit(values as CreateGroupInput),
-            )}
-            className="space-y-6"
+            onSubmit={form.handleSubmit(props.onSubmit)}
+            className="flex min-h-0 flex-1 flex-col"
           >
-            <div className="space-y-6">
+            <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-6">
               <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_180px]">
                 <FormField
                   control={form.control}

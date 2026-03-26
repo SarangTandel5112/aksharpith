@@ -30,34 +30,36 @@ describe("attribute-usage.helpers", () => {
   it("returns zero usage for a new attribute with no linked rows", () => {
     const usageMap = buildAttributeUsageMap([
       {
-        id: 9001,
-        productId: 0,
+        id: "9001",
+        productId: null,
         name: "Material",
         code: "MATERIAL",
         sortOrder: 0,
         isRequired: false,
         isActive: true,
         createdAt: "2026-03-25T00:00:00.000Z",
+        updatedAt: "2026-03-25T00:00:00.000Z",
         values: [
           {
-            id: 90011,
-            attributeId: 9001,
+            id: "90011",
+            attributeId: "9001",
             label: "Steel",
             code: "STEEL",
             sortOrder: 0,
             isActive: true,
             createdAt: "2026-03-25T00:00:00.000Z",
+            updatedAt: "2026-03-25T00:00:00.000Z",
           },
         ],
       },
     ]);
 
-    expect(usageMap[9001]).toMatchObject({
+    expect(usageMap["9001"]).toMatchObject({
       productCount: 0,
       lotMatrixRowCount: 0,
       inUse: false,
     });
-    expect(usageMap[9001]?.valueUsageById[90011]).toMatchObject({
+    expect(usageMap["9001"]?.valueUsageById["90011"]).toMatchObject({
       productCount: 0,
       lotMatrixRowCount: 0,
       inUse: false,

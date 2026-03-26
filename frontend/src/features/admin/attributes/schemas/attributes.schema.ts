@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const AttributeValueSchema = z.object({
-  valueId: z.number().int().positive().optional(),
+  valueId: z.string().min(1).optional(),
   label: z.string().min(1, "Label is required").max(255),
   code: z.string().min(1, "Code is required").max(100),
   sortOrder: z.coerce.number().int().min(0).nullable().default(0),

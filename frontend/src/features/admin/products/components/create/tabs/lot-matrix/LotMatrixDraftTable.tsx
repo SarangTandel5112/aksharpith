@@ -32,8 +32,8 @@ type LotMatrixDraftTableProps = {
   price: number;
   onChangeSelection: (
     rowId: string,
-    attributeId: number,
-    attributeValueId: number | null,
+    attributeId: string,
+    attributeValueId: string | null,
   ) => void;
   onChangeField: (
     rowId: string,
@@ -135,7 +135,7 @@ export function LotMatrixDraftTable(
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-200">
-                  {props.rows.map((row, index) => (
+                  {props.rows.map((row) => (
                     <tr
                       key={row.id}
                       ref={
@@ -171,7 +171,7 @@ export function LotMatrixDraftTable(
                                 props.onChangeSelection(
                                   row.id,
                                   attribute.id,
-                                  value === EMPTY_VALUE ? null : Number(value),
+                                  value === EMPTY_VALUE ? null : value,
                                 )
                               }
                             >
@@ -254,9 +254,10 @@ export function LotMatrixDraftTable(
                               row.source === "generated" ? "info" : "neutral"
                             }
                           />
-                          <label className="flex h-9 items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50 px-3">
+                          <div className="flex h-9 items-center gap-3 rounded-xl border border-zinc-200 bg-zinc-50 px-3">
                             <Checkbox
                               checked={row.isActive}
+                              aria-label={`Set ${row.sku || "row"} active`}
                               onCheckedChange={(checked) =>
                                 props.onChangeField(
                                   row.id,
@@ -268,7 +269,7 @@ export function LotMatrixDraftTable(
                             <span className="text-sm text-zinc-700">
                               {row.isActive ? "Active" : "Inactive"}
                             </span>
-                          </label>
+                          </div>
                         </div>
                       </td>
                       <td className="px-4 py-4">

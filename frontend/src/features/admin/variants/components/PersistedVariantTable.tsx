@@ -16,28 +16,31 @@ export function PersistedVariantTable(
       title="Saved Lot Matrix Rows"
       description="Review the saved lot matrix rows for this product."
       headers={["SKU", "Attributes", "Price", "Stock", "Status"]}
-      rows={props.variants.map((variant) => [
-        variant.sku,
-        summarizeVariantAttributes(variant),
-        variant.price === null
-          ? "Not set"
-          : new Intl.NumberFormat("en-IN", {
-              style: "currency",
-              currency: "INR",
-              maximumFractionDigits: 0,
-            }).format(variant.price),
-        String(variant.stockQuantity),
-        <div key={variant.id} className="flex flex-col gap-2">
-          <StatusBadge
-            label={variant.isActive ? "Active" : "Inactive"}
-            variant={variant.isActive ? "success" : "neutral"}
-          />
-          <StatusBadge
-            label={variant.isDeleted ? "Deleted" : "Current"}
-            variant={variant.isDeleted ? "danger" : "info"}
-          />
-        </div>,
-      ])}
+      rows={props.variants.map((variant) => ({
+        id: variant.id,
+        cells: [
+          variant.sku,
+          summarizeVariantAttributes(variant),
+          variant.price === null
+            ? "Not set"
+            : new Intl.NumberFormat("en-IN", {
+                style: "currency",
+                currency: "INR",
+                maximumFractionDigits: 0,
+              }).format(variant.price),
+          String(variant.stockQuantity),
+          <div key={variant.id} className="flex flex-col gap-2">
+            <StatusBadge
+              label={variant.isActive ? "Active" : "Inactive"}
+              variant={variant.isActive ? "success" : "neutral"}
+            />
+            <StatusBadge
+              label={variant.isDeleted ? "Deleted" : "Current"}
+              variant={variant.isDeleted ? "danger" : "info"}
+            />
+          </div>,
+        ],
+      }))}
       emptyMessage="No lot matrix rows have been created for this product yet."
     />
   );

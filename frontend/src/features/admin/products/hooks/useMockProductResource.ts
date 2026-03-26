@@ -8,8 +8,8 @@ type MockProductResourceState<T> = {
 };
 
 export function useMockProductResource<T>(
-  productId: number | null,
-  loader: (productId: number) => T,
+  productId: string | null,
+  loader: (productId: string) => T,
 ): MockProductResourceState<T> {
   const [data, setData] = useState<T | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -34,7 +34,7 @@ export function useMockProductResource<T>(
       cancelled = true;
       window.clearTimeout(timeout);
     };
-  }, [productId]);
+  }, [loader, productId]);
 
   return { data, isLoading };
 }

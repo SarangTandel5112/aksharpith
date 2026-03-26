@@ -1,24 +1,32 @@
 import type {
   CreateAttributeValueDto,
   CreateProductAttributeDto,
-  PaginatedData,
   ProductAttributeResponseDto,
   ProductAttributeValueResponseDto,
   UpdateAttributeValueDto,
   UpdateProductAttributeDto,
-} from "@shared/contracts";
+} from "@features/admin/attributes/contracts/attributes.contracts";
+import type { PaginatedResponse } from "@shared/types/core";
 
-export type ProductAttributeValue = ProductAttributeValueResponseDto;
-export type ProductAttribute = ProductAttributeResponseDto;
+export type ProductAttributeValue = Omit<
+  ProductAttributeValueResponseDto,
+  "value"
+> & {
+  attributeId: string;
+  label: ProductAttributeValueResponseDto["value"];
+};
+export type ProductAttribute = Omit<ProductAttributeResponseDto, "values"> & {
+  values: ProductAttributeValue[];
+};
 export type Attribute = ProductAttribute;
-export type PaginatedAttributes = PaginatedData<Attribute>;
+export type PaginatedAttributes = PaginatedResponse<Attribute>;
 export type CreateAttributeInput = CreateProductAttributeDto;
 export type UpdateAttributeInput = UpdateProductAttributeDto;
 export type AttributeValueInput = CreateAttributeValueDto;
 export type UpdateAttributeValueInput = UpdateAttributeValueDto;
 
 export type AttributeValueUsageSummary = {
-  valueId: number;
+  valueId: string;
   productCount: number;
   lotMatrixRowCount: number;
   inUse: boolean;
@@ -28,5 +36,5 @@ export type AttributeUsageSummary = {
   productCount: number;
   lotMatrixRowCount: number;
   inUse: boolean;
-  valueUsageById: Record<number, AttributeValueUsageSummary>;
+  valueUsageById: Record<string, AttributeValueUsageSummary>;
 };

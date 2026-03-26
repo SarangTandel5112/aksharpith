@@ -65,6 +65,7 @@ export enum OrderStatus { Draft = 'draft' }
 |---------------|-----------|
 | Only inside one file | Same file — do not export |
 | Across a feature | `features/<feature>/types/<name>.types.ts` |
+| Backend DTO contract owned by one feature/domain | `features/<feature>/contracts/<name>.contracts.ts` |
 | Across the whole app | `shared/types/<name>.types.ts` |
 | Only inside infrastructure | Same infrastructure file |
 
@@ -86,6 +87,12 @@ features/catalog/types/
 
 features/auth/types/
   (empty -- add auth.types.ts here when building the auth feature)
+
+features/admin/products/contracts/
+  products.contracts.ts           -> ProductResponseDto, CreateProductDto
+
+features/users/contracts/
+  users.contracts.ts              -> UserResponseDto, CreateUserDto
 ```
 
 ### Never re-export types from implementation files

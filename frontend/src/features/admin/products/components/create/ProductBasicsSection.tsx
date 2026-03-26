@@ -19,10 +19,10 @@ import {
 } from "@shared/components/ui/select";
 import { RichTextEditor } from "@shared/components/ui/rich-text-editor";
 import type React from "react";
-import type { Control } from "react-hook-form";
+import type { Control, FieldValues, Path } from "react-hook-form";
 
-type ProductBasicsSectionProps = {
-  control: Control<any>;
+type ProductBasicsSectionProps<TFieldValues extends FieldValues> = {
+  control: Control<TFieldValues>;
 };
 
 const PRODUCT_TYPE_OPTIONS: Array<{
@@ -33,8 +33,8 @@ const PRODUCT_TYPE_OPTIONS: Array<{
   { value: "Lot Matrix", label: "Lot Matrix" },
 ];
 
-export function ProductBasicsSection(
-  props: ProductBasicsSectionProps,
+export function ProductBasicsSection<TFieldValues extends FieldValues>(
+  props: ProductBasicsSectionProps<TFieldValues>,
 ): React.JSX.Element {
   return (
     <SectionCard
@@ -44,7 +44,7 @@ export function ProductBasicsSection(
       <div className="grid gap-4 lg:grid-cols-2">
         <FormField
           control={props.control}
-          name="name"
+          name={"name" as Path<TFieldValues>}
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-zinc-700">Product Name</FormLabel>
@@ -57,7 +57,7 @@ export function ProductBasicsSection(
         />
         <FormField
           control={props.control}
-          name="code"
+          name={"code" as Path<TFieldValues>}
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-zinc-700">Code</FormLabel>
@@ -70,7 +70,7 @@ export function ProductBasicsSection(
         />
         <FormField
           control={props.control}
-          name="upc"
+          name={"upc" as Path<TFieldValues>}
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-zinc-700">UPC</FormLabel>
@@ -83,7 +83,7 @@ export function ProductBasicsSection(
         />
         <FormField
           control={props.control}
-          name="model"
+          name={"model" as Path<TFieldValues>}
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-zinc-700">Model</FormLabel>
@@ -97,7 +97,7 @@ export function ProductBasicsSection(
       </div>
       <FormField
         control={props.control}
-        name="type"
+        name={"type" as Path<TFieldValues>}
         render={({ field }) => (
           <FormItem>
             <FormLabel className="text-zinc-700">Product Type</FormLabel>
@@ -126,7 +126,7 @@ export function ProductBasicsSection(
       />
       <FormField
         control={props.control}
-        name="description"
+        name={"description" as Path<TFieldValues>}
         render={({ field }) => (
           <FormItem>
             <FormLabel className="text-zinc-700">Description</FormLabel>

@@ -22,9 +22,9 @@ export const CreateProductSchema = z.object({
     .int()
     .min(0, "Stock must be 0 or more")
     .default(0),
-  departmentId: z.coerce.number().int().min(1, "Select a department"),
-  subCategoryId: z.coerce.number().int().min(1, "Select a sub-category"),
-  groupId: z.coerce.number().int().min(1, "Select a group"),
+  departmentId: z.string().min(1, "Select a department"),
+  subCategoryId: z.string().min(1, "Select a sub-category"),
+  groupId: z.string().min(1, "Select a group"),
   nonTaxable: z.boolean().default(false),
   itemInactive: z.boolean().default(false),
   nonStockItem: z.boolean().default(false),

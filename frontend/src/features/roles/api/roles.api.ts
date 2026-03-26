@@ -43,7 +43,7 @@ export async function createRole(input: CreateRoleInput): Promise<Role> {
 }
 
 export async function updateRole(
-  id: number,
+  id: string,
   input: UpdateRoleInput,
 ): Promise<Role> {
   const res = await fetch(`/api/roles/${id}`, {
@@ -60,7 +60,7 @@ export async function updateRole(
   return json.data;
 }
 
-export async function deleteRole(id: number): Promise<void> {
+export async function deleteRole(id: string): Promise<void> {
   const res = await fetch(`/api/roles/${id}`, { method: "DELETE" });
   if (res.status === 204) return;
   await throwIfNotOk(res);

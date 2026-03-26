@@ -5,6 +5,7 @@ import { LoginPageClient } from "./LoginPageClient";
 
 vi.mock("next-auth/react", () => ({
   signIn: vi.fn(),
+  getSession: vi.fn(),
 }));
 
 const mockPush = vi.fn();
@@ -12,13 +13,18 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: mockPush }),
 }));
 
-import { signIn } from "next-auth/react";
+import { getSession, signIn } from "next-auth/react";
 
 const mockSignIn = vi.mocked(signIn);
+const mockGetSession = vi.mocked(getSession);
 
 describe("LoginPageClient", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockGetSession.mockResolvedValue({
+      user: { role: { name: "Viewer" } },
+      expires: new Date(Date.now() + 60_000).toISOString(),
+    } as never);
   });
   it("renders the heading and form fields", () => {
     render(<LoginPageClient />);

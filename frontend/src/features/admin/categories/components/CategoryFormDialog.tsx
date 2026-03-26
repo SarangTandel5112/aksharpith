@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Checkbox } from "@shared/components/ui/checkbox";
 import { Button } from "@shared/components/ui/button";
 import {
   Dialog,
@@ -61,8 +60,7 @@ export function CategoryFormDialog(
       name: props.category?.name ?? "",
       description: props.category?.description ?? "",
       photo: props.category?.photo ?? null,
-      departmentId: props.category?.departmentId ?? 0,
-      isActive: props.category?.isActive ?? true,
+      departmentId: props.category?.departmentId ?? "",
     },
   });
   return (
@@ -79,9 +77,9 @@ export function CategoryFormDialog(
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(props.onSubmit)}
-            className="space-y-6"
+            className="flex min-h-0 flex-1 flex-col"
           >
-            <div className="space-y-6">
+            <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-6">
               <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
                 <FormField
                   control={form.control}
@@ -103,14 +101,11 @@ export function CategoryFormDialog(
                     <FormItem>
                       <FormLabel>Department</FormLabel>
                       {(() => {
-                        const currentValue =
-                          typeof field.value === "number" && field.value > 0
-                            ? String(field.value)
-                            : "";
+                        const currentValue = field.value ?? "";
                         return (
                       <Select
                         value={currentValue}
-                        onValueChange={(value) => field.onChange(Number(value))}
+                        onValueChange={field.onChange}
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -119,7 +114,7 @@ export function CategoryFormDialog(
                         </FormControl>
                         <SelectContent>
                           {props.departments.map((department) => (
-                            <SelectItem key={department.id} value={String(department.id)}>
+                            <SelectItem key={department.id} value={department.id}>
                               {department.name}
                             </SelectItem>
                           ))}
@@ -163,28 +158,6 @@ export function CategoryFormDialog(
                       />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="isActive"
-                render={({ field }) => (
-                  <FormItem className="flex items-center gap-3 rounded-2xl border border-zinc-200 px-4 py-3">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value ?? false}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1">
-                      <FormLabel className="text-sm font-medium text-zinc-900">
-                        Active
-                      </FormLabel>
-                      <p className="text-sm text-zinc-500">
-                        Keep this category available for new products.
-                      </p>
-                    </div>
                   </FormItem>
                 )}
               />

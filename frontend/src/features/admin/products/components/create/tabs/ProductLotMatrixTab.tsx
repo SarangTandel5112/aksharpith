@@ -21,10 +21,10 @@ type ProductLotMatrixTabProps = {
   productType: Product["type"];
   productCode: string;
   price: number;
-  selectedAttributeIds: number[];
+  selectedAttributeIds: string[];
   rows: ProductLotMatrixRowDraft[];
   highlightedRowId: string | null;
-  onToggleAttribute: (id: number) => void;
+  onToggleAttribute: (id: string) => void;
   onCreateAttribute: (input: ProductLotMatrixAttributeBuilderInput) => void;
   onGenerateRows: () => void;
   onAddRow: () => void;
@@ -32,8 +32,8 @@ type ProductLotMatrixTabProps = {
   onRemoveRow: (rowId: string) => void;
   onChangeSelection: (
     rowId: string,
-    attributeId: number,
-    attributeValueId: number | null,
+    attributeId: string,
+    attributeValueId: string | null,
   ) => void;
   onChangeField: (
     rowId: string,

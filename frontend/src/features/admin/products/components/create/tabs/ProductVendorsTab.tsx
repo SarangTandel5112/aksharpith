@@ -47,12 +47,15 @@ export function ProductVendorsTab(
 
         {props.items.map((item, index) => (
           <div
-            key={index}
+            key={
+              item.clientId ??
+              `${item.vendorName}-${item.contactEmail ?? index}`
+            }
             className="rounded-lg border border-zinc-200 bg-zinc-50 p-4"
           >
             <div className="mb-3 flex items-center justify-between">
               <p className="text-sm font-medium text-zinc-800">
-                {item.name || `Vendor ${index + 1}`}
+                {item.vendorName || `Vendor ${index + 1}`}
               </p>
               <Button
                 type="button"
@@ -72,9 +75,9 @@ export function ProductVendorsTab(
                 </p>
                 <Input
                   placeholder="e.g. Apple India Pvt Ltd"
-                  value={item.name}
+                  value={item.vendorName}
                   onChange={(e) =>
-                    props.onChange(index, "name", e.target.value)
+                    props.onChange(index, "vendorName", e.target.value)
                   }
                 />
               </div>

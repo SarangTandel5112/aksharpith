@@ -5,7 +5,10 @@ type ProductResourcePanelProps = {
   title: string;
   description: string;
   headers: string[];
-  rows: Array<Array<React.ReactNode>>;
+  rows: Array<{
+    id: string;
+    cells: React.ReactNode[];
+  }>;
   emptyMessage: string;
 };
 
@@ -34,10 +37,13 @@ export function ProductResourcePanel(
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-200 bg-white">
-              {props.rows.map((row, index) => (
-                <tr key={index}>
-                  {row.map((cell, cellIndex) => (
-                    <td key={cellIndex} className="px-4 py-4 text-sm text-zinc-700">
+              {props.rows.map((row) => (
+                <tr key={row.id}>
+                  {row.cells.map((cell, cellIndex) => (
+                    <td
+                      key={`${row.id}-${props.headers[cellIndex] ?? cellIndex}`}
+                      className="px-4 py-4 text-sm text-zinc-700"
+                    >
                       {cell}
                     </td>
                   ))}

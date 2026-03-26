@@ -38,6 +38,8 @@ export function ProductsGridView(
   const productTypePreviewClasses = {
     Standard: "from-slate-100 via-white to-zinc-100 text-zinc-900",
     "Lot Matrix": "from-sky-100 via-cyan-50 to-white text-sky-950",
+    Digital: "from-emerald-100 via-teal-50 to-white text-emerald-950",
+    Service: "from-amber-100 via-orange-50 to-white text-amber-950",
   } as const;
 
   return (

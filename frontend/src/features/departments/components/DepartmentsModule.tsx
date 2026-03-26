@@ -27,10 +27,10 @@ import type { Department } from "../types/departments.types";
 import type { DepartmentFormValues } from "../validations/department-form.schema";
 
 const MOCK_DEPARTMENTS: Department[] = [
-  { id: 1, name: "Electronics", code: "ELEC", description: "<p>Devices and accessories.</p>", isActive: true, createdAt: "2026-03-01", updatedAt: "2026-03-21" },
-  { id: 2, name: "Fashion", code: "FSHN", description: "<p>Apparel and lifestyle collections.</p>", isActive: true, createdAt: "2026-03-02", updatedAt: "2026-03-21" },
-  { id: 3, name: "Home", code: "HOME", description: "<p>Furniture and home setups.</p>", isActive: true, createdAt: "2026-03-03", updatedAt: "2026-03-21" },
-  { id: 4, name: "Archive", code: "ARCH", description: "<p>Retired catalog section.</p>", isActive: false, createdAt: "2026-03-04", updatedAt: "2026-03-12" },
+  { id: "1", name: "Electronics", code: "ELEC", description: "<p>Devices and accessories.</p>", isActive: true, createdAt: "2026-03-01", updatedAt: "2026-03-21" },
+  { id: "2", name: "Fashion", code: "FSHN", description: "<p>Apparel and lifestyle collections.</p>", isActive: true, createdAt: "2026-03-02", updatedAt: "2026-03-21" },
+  { id: "3", name: "Home", code: "HOME", description: "<p>Furniture and home setups.</p>", isActive: true, createdAt: "2026-03-03", updatedAt: "2026-03-21" },
+  { id: "4", name: "Archive", code: "ARCH", description: "<p>Retired catalog section.</p>", isActive: false, createdAt: "2026-03-04", updatedAt: "2026-03-12" },
 ];
 
 const COLUMNS: Column<Department>[] = [
@@ -211,7 +211,6 @@ export function DepartmentsModule(): React.JSX.Element {
                       name: values.name,
                       code: values.code ?? null,
                       description: values.description ?? null,
-                      isActive: values.isActive,
                       updatedAt: today,
                     }
                   : r,
@@ -222,11 +221,11 @@ export function DepartmentsModule(): React.JSX.Element {
             setRows((prev) => [
               ...prev,
               {
-                id: Date.now(),
+                id: String(Date.now()),
                 name: values.name,
                 code: values.code ?? null,
                 description: values.description ?? null,
-                isActive: values.isActive,
+                isActive: true,
                 createdAt: today,
                 updatedAt: today,
               },

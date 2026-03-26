@@ -1,7 +1,6 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Checkbox } from "@shared/components/ui/checkbox";
 import { Button } from "@shared/components/ui/button";
 import {
   Dialog,
@@ -51,7 +50,6 @@ export function DepartmentFormDialog(
       name: props.department?.name ?? "",
       code: props.department?.code ?? "",
       description: props.department?.description ?? "",
-      isActive: props.department?.isActive ?? true,
     },
   });
 
@@ -77,9 +75,9 @@ export function DepartmentFormDialog(
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-6"
+            className="flex min-h-0 flex-1 flex-col"
           >
-            <div className="space-y-6">
+            <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-6">
               <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
                 <FormField
                   control={form.control}
@@ -122,28 +120,6 @@ export function DepartmentFormDialog(
                       />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="isActive"
-                render={({ field }) => (
-                  <FormItem className="flex items-center gap-3 rounded-2xl border border-zinc-200 px-4 py-3">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value ?? false}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1">
-                      <FormLabel className="text-sm font-medium text-zinc-900">
-                        Active
-                      </FormLabel>
-                      <p className="text-sm text-zinc-500">
-                        Show this department for catalog setup.
-                      </p>
-                    </div>
                   </FormItem>
                 )}
               />

@@ -17,9 +17,9 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@shared/components/ui/dropdown-menu";
-import {
-  type CreateUserFormValues,
-  type UpdateUserFormValues,
+import type {
+  CreateUserFormValues,
+  UpdateUserFormValues,
 } from "@features/users/validations/user-form.schema";
 import { IconDots, IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
 import type React from "react";
@@ -29,14 +29,35 @@ import type { User } from "../types/users.types";
 import { UserFormDialog } from "./UserFormDialog";
 
 const ROLE_OPTIONS = [
-  { id: 1, name: "Admin", isActive: true },
-  { id: 2, name: "Staff", isActive: true },
-  { id: 3, name: "Viewer", isActive: true },
+  {
+    id: "1",
+    roleName: "Admin",
+    name: "Admin",
+    isActive: true,
+    createdAt: "2026-03-01",
+    updatedAt: "2026-03-21",
+  },
+  {
+    id: "2",
+    roleName: "Staff",
+    name: "Staff",
+    isActive: true,
+    createdAt: "2026-03-01",
+    updatedAt: "2026-03-21",
+  },
+  {
+    id: "3",
+    roleName: "Viewer",
+    name: "Viewer",
+    isActive: true,
+    createdAt: "2026-03-01",
+    updatedAt: "2026-03-21",
+  },
 ];
 
 const MOCK_USERS: User[] = [
   {
-    id: 1,
+    id: "1",
     username: "arjun.sharma",
     firstName: "Arjun",
     middleName: null,
@@ -50,7 +71,7 @@ const MOCK_USERS: User[] = [
     updatedAt: "2026-03-21",
   },
   {
-    id: 2,
+    id: "2",
     username: "priya.patel",
     firstName: "Priya",
     middleName: "R",
@@ -64,7 +85,7 @@ const MOCK_USERS: User[] = [
     updatedAt: "2026-03-18",
   },
   {
-    id: 3,
+    id: "3",
     username: "kiran.nair",
     firstName: "Kiran",
     middleName: null,
@@ -96,7 +117,11 @@ const COLUMNS: Column<User>[] = [
   {
     key: "role",
     label: "Role",
-    render: (row) => <span className="text-sm text-zinc-700">{row.role?.name ?? "—"}</span>,
+    render: (row) => (
+      <span className="text-sm text-zinc-700">
+        {row.role?.roleName ?? row.role?.name ?? "—"}
+      </span>
+    ),
   },
   {
     key: "isActive",
@@ -135,7 +160,7 @@ export function UsersModule(): React.JSX.Element {
           user.lastName,
           user.username,
           user.email,
-          user.role?.name ?? "",
+          user.role?.roleName ?? user.role?.name ?? "",
         ]
           .join(" ")
           .toLowerCase()
@@ -144,7 +169,7 @@ export function UsersModule(): React.JSX.Element {
     : rows;
   const filtered = searchFiltered.filter((user) => {
       const matchesRole =
-      roleFilter === "all" ? true : user.roleId === Number(roleFilter);
+      roleFilter === "all" ? true : user.roleId === roleFilter;
     const matchesStatus =
       statusFilter === "all"
         ? true
@@ -185,15 +210,15 @@ export function UsersModule(): React.JSX.Element {
       const roleId = createValues.roleId;
       const matchedRole = ROLE_OPTIONS.find((r) => r.id === roleId) ?? ROLE_OPTIONS[0]!;
       const newUser: User = {
-        id: Date.now(),
-        username: createValues.username,
+        id: String(Date.now()),
+        username: createValues.username ?? "",
         firstName: createValues.firstName,
         middleName: createValues.middleName ?? null,
         lastName: createValues.lastName,
         email: createValues.email,
         role: matchedRole,
         roleId: matchedRole.id,
-        isTempPassword: false,
+        isTempPassword: createValues.isTempPassword ?? false,
         isActive: createValues.isActive ?? true,
         createdAt: today,
         updatedAt: today,

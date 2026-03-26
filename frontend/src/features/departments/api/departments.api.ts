@@ -45,7 +45,7 @@ export async function createDepartment(
 }
 
 export async function updateDepartment(
-  id: number,
+  id: string,
   input: UpdateDepartmentInput,
 ): Promise<Department> {
   const res = await fetch(`/api/departments/${id}`, {
@@ -62,7 +62,7 @@ export async function updateDepartment(
   return json.data;
 }
 
-export async function deleteDepartment(id: number): Promise<void> {
+export async function deleteDepartment(id: string): Promise<void> {
   const res = await fetch(`/api/departments/${id}`, { method: "DELETE" });
   if (res.status === 204) return;
   await throwIfNotOk(res);

@@ -9,14 +9,14 @@ import {
   FormLabel,
 } from "@shared/components/ui/form";
 import type React from "react";
-import type { Control } from "react-hook-form";
+import type { Control, FieldValues, Path } from "react-hook-form";
 
-type ProductStatusSectionProps = {
-  control: Control<any>;
+type ProductStatusSectionProps<TFieldValues extends FieldValues> = {
+  control: Control<TFieldValues>;
 };
 
-export function ProductStatusSection(
-  props: ProductStatusSectionProps,
+export function ProductStatusSection<TFieldValues extends FieldValues>(
+  props: ProductStatusSectionProps<TFieldValues>,
 ): React.JSX.Element {
   return (
     <SectionCard
@@ -25,7 +25,7 @@ export function ProductStatusSection(
     >
       <FormField
         control={props.control}
-        name="isActive"
+        name={"isActive" as Path<TFieldValues>}
         render={({ field }) => (
           <FormItem className="flex items-start gap-3 space-y-0 rounded-md border border-zinc-200 p-4">
             <FormControl>
@@ -47,13 +47,13 @@ export function ProductStatusSection(
       />
       <FormField
         control={props.control}
-        name="itemInactive"
+        name={"itemInactive" as Path<TFieldValues>}
         render={({ field }) => (
           <FormItem className="flex items-start gap-3 space-y-0 rounded-md border border-zinc-200 p-4">
             <FormControl>
               <Checkbox
                 checked={!(field.value ?? false)}
-                onCheckedChange={(checked) => field.onChange(!Boolean(checked))}
+                onCheckedChange={(checked) => field.onChange(!checked)}
               />
             </FormControl>
             <div className="space-y-1">
@@ -69,7 +69,7 @@ export function ProductStatusSection(
       />
       <FormField
         control={props.control}
-        name="nonTaxable"
+        name={"nonTaxable" as Path<TFieldValues>}
         render={({ field }) => (
           <FormItem className="flex items-start gap-3 space-y-0 rounded-md border border-zinc-200 p-4">
             <FormControl>
@@ -91,7 +91,7 @@ export function ProductStatusSection(
       />
       <FormField
         control={props.control}
-        name="nonStockItem"
+        name={"nonStockItem" as Path<TFieldValues>}
         render={({ field }) => (
           <FormItem className="flex items-start gap-3 space-y-0 rounded-md border border-zinc-200 p-4">
             <FormControl>

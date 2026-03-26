@@ -5,8 +5,8 @@ import type { CatalogFiltersStore } from "../types/catalog.types";
 
 const initialState = {
   search: "",
-  categoryId: null as number | null,
-  departmentId: null as number | null,
+  categoryId: null as string | null,
+  departmentId: null as string | null,
   minPrice: null as number | null,
   maxPrice: null as number | null,
   page: 1,

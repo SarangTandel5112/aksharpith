@@ -144,7 +144,7 @@ export function ProductFormDialog(
   return (
     <Dialog open={props.open} onOpenChange={handleOpenChange}>
       <DialogContent className="sm:max-w-[680px]">
-        <DialogHeader className="border-b border-zinc-100 pb-4">
+        <DialogHeader>
           <DialogTitle className="text-base font-semibold text-zinc-900">
             {title}
           </DialogTitle>
@@ -156,8 +156,9 @@ export function ProductFormDialog(
           <form
             key={props.product?.id ?? "new"}
             onSubmit={form.handleSubmit(handleSubmit)}
+            className="flex min-h-0 flex-1 flex-col"
           >
-            <div className="space-y-5 py-5">
+            <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-6 py-6">
               {/* Section: Basic Information */}
               <p className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
                 Basic Information
@@ -383,7 +384,7 @@ export function ProductFormDialog(
                 )}
               />
             </div>
-            <DialogFooter className="border-t border-zinc-100 pt-4">
+            <DialogFooter>
               <Button
                 type="button"
                 variant="outline"

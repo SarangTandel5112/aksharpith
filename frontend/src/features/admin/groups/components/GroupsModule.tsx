@@ -219,7 +219,10 @@ export function GroupsModule(): React.JSX.Element {
                       description: values.description ?? null,
                       isActive: values.isActive,
                       fields: values.fields.map((f, i) => ({
-                        id: r.fields[i]?.id ?? Date.now() + i,
+                        id:
+                          r.fields[i]?.id ??
+                          globalThis.crypto?.randomUUID?.() ??
+                          `${r.id}-field-${i + 1}`,
                         groupId: r.id,
                         name: f.name,
                         key:
@@ -234,8 +237,12 @@ export function GroupsModule(): React.JSX.Element {
                         options: (f.options ?? []).map((o, j) => ({
                           id:
                             r.fields[i]?.options[j]?.id ??
-                            Date.now() + i * 100 + j,
-                          fieldId: r.fields[i]?.id ?? Date.now() + i,
+                            globalThis.crypto?.randomUUID?.() ??
+                            `${r.id}-field-${i + 1}-option-${j + 1}`,
+                          fieldId:
+                            r.fields[i]?.id ??
+                            globalThis.crypto?.randomUUID?.() ??
+                            `${r.id}-field-${i + 1}`,
                           label: o.label,
                           value: o.value,
                           sortOrder: o.sortOrder ?? j,
@@ -251,7 +258,8 @@ export function GroupsModule(): React.JSX.Element {
             );
             toast.success("Group updated");
           } else {
-            const newId = Date.now();
+            const newId =
+              globalThis.crypto?.randomUUID?.() ?? `group-${Date.now()}`;
             setRows((prev) => [
               ...prev,
               {
@@ -260,7 +268,9 @@ export function GroupsModule(): React.JSX.Element {
                 description: values.description ?? null,
                 isActive: values.isActive,
                 fields: values.fields.map((f, i) => {
-                  const fieldId = newId * 100 + i;
+                  const fieldId =
+                    globalThis.crypto?.randomUUID?.() ??
+                    `${newId}-field-${i + 1}`;
                   return {
                     id: fieldId,
                     groupId: newId,
@@ -274,7 +284,9 @@ export function GroupsModule(): React.JSX.Element {
                     sortOrder: f.sortOrder ?? i,
                     isActive: f.isActive ?? true,
                     options: (f.options ?? []).map((o, j) => ({
-                      id: fieldId * 100 + j,
+                      id:
+                        globalThis.crypto?.randomUUID?.() ??
+                        `${fieldId}-option-${j + 1}`,
                       fieldId,
                       label: o.label,
                       value: o.value,

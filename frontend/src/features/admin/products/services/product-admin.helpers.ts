@@ -65,6 +65,8 @@ export const PRODUCT_WORKSPACE_TABS: ProductWorkspaceTab[] = [
 const PRODUCT_TYPE_LABELS: Record<Product["type"], string> = {
   Standard: "Standard",
   "Lot Matrix": "Lot Matrix",
+  Digital: "Digital",
+  Service: "Service",
 };
 
 const ATTRIBUTE_VALUE_BY_ID = new Map(
@@ -159,7 +161,7 @@ export function buildMediaWorkspaceRows(): ProductMediaWorkspaceRow[] {
     return {
       product,
       totalMedia: items.length,
-      imageCount: items.filter((item) => item.type === "image").length,
+      imageCount: items.filter((item) => item.type === "photo").length,
       videoCount: items.filter((item) => item.type === "video").length,
       primaryMedia: items.find((item) => item.isPrimary) ?? items[0] ?? null,
       items,
@@ -174,7 +176,7 @@ export function buildMarketingWorkspaceRows(): ProductMarketingWorkspaceRow[] {
     return {
       product,
       totalAssets: items.length,
-      photoCount: items.filter((item) => item.type === "image").length,
+      photoCount: items.filter((item) => item.type === "photo").length,
       videoCount: items.filter((item) => item.type === "video").length,
       heroAsset: items[0] ?? null,
       items,

@@ -10,14 +10,14 @@ import {
 } from "@shared/components/ui/form";
 import { Input } from "@shared/components/ui/input";
 import type React from "react";
-import type { Control } from "react-hook-form";
+import type { Control, FieldValues, Path } from "react-hook-form";
 
-type ProductPricingInventorySectionProps = {
-  control: Control<any>;
+type ProductPricingInventorySectionProps<TFieldValues extends FieldValues> = {
+  control: Control<TFieldValues>;
 };
 
-export function ProductPricingInventorySection(
-  props: ProductPricingInventorySectionProps,
+export function ProductPricingInventorySection<TFieldValues extends FieldValues>(
+  props: ProductPricingInventorySectionProps<TFieldValues>,
 ): React.JSX.Element {
   return (
     <SectionCard
@@ -27,7 +27,7 @@ export function ProductPricingInventorySection(
       <div className="grid gap-4 md:grid-cols-2">
         <FormField
           control={props.control}
-          name="price"
+          name={"price" as Path<TFieldValues>}
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-zinc-700">Price</FormLabel>
@@ -46,7 +46,7 @@ export function ProductPricingInventorySection(
         />
         <FormField
           control={props.control}
-          name="stockQuantity"
+          name={"stockQuantity" as Path<TFieldValues>}
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-zinc-700">Stock Quantity</FormLabel>
@@ -65,7 +65,7 @@ export function ProductPricingInventorySection(
         />
         <FormField
           control={props.control}
-          name="hsnCode"
+          name={"hsnCode" as Path<TFieldValues>}
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-zinc-700">HSN Code</FormLabel>

@@ -1,7 +1,6 @@
 import type { Attribute } from "@features/admin/attributes/types/attributes.types";
 import type { Group } from "@features/admin/groups/types/groups.types";
 import type {
-  CreateProductDto,
   CreateProductMarketingMediaDto,
   CreateProductMediaDto,
   CreateProductVendorDto,
@@ -9,7 +8,7 @@ import type {
   UpsertProductGroupFieldValueDto,
   UpsertProductPhysicalAttributesDto,
   UpsertProductZoneDto,
-} from "@shared/contracts";
+} from "@features/admin/products/contracts/products.contracts";
 import type {
   CreateProductInput,
   ProductCreateWorkspaceValues,
@@ -32,13 +31,13 @@ export type ProductCreateTabDefinition = {
 };
 
 export type ProductGroupFieldOptionDraft = {
-  id: number;
+  id: string;
   label: string;
   value: string;
 };
 
 export type ProductGroupFieldValueDraft = {
-  fieldId: number;
+  fieldId: string;
   name: string;
   key: string;
   type: "text" | "textarea" | "number" | "boolean" | "dropdown";
@@ -46,29 +45,37 @@ export type ProductGroupFieldValueDraft = {
   valueText: string | null;
   valueNumber: number | null;
   valueBoolean: boolean;
-  valueOptionId: number | null;
+  valueOptionId: string | null;
   options: ProductGroupFieldOptionDraft[];
 };
 
 export type ProductGroupFieldValuePayloadItem = UpsertProductGroupFieldValueDto;
 
-export type ProductMediaDraft = CreateProductMediaDto;
+export type ProductMediaDraft = CreateProductMediaDto & {
+  clientId?: string;
+};
 
-export type ProductMarketingMediaDraft = CreateProductMarketingMediaDto;
+export type ProductMarketingMediaDraft = CreateProductMarketingMediaDto & {
+  clientId?: string;
+};
 
-export type ProductVendorDraft = CreateProductVendorDto;
+export type ProductVendorDraft = CreateProductVendorDto & {
+  clientId?: string;
+};
 
-export type ProductZoneDraft = UpsertProductZoneDto;
+export type ProductZoneDraft = UpsertProductZoneDto & {
+  clientId?: string;
+};
 
 export type ProductPhysicalAttributesDraft = UpsertProductPhysicalAttributesDto;
 
 export type ProductLotMatrixAttributeValueDefinition = {
-  id: number;
+  id: string;
   label: string;
 };
 
 export type ProductLotMatrixAttributeDefinition = {
-  id: number;
+  id: string;
   name: string;
   values: ProductLotMatrixAttributeValueDefinition[];
 };
@@ -79,9 +86,9 @@ export type ProductLotMatrixAttributeBuilderInput = {
 };
 
 export type ProductLotMatrixSelectionDraft = {
-  attributeId: number;
+  attributeId: string;
   attributeName: string;
-  attributeValueId: number | null;
+  attributeValueId: string | null;
   attributeValueLabel: string | null;
 };
 
@@ -100,11 +107,11 @@ export type ProductLotMatrixVariantPayloadItem = {
   price: number;
   stockQuantity: number;
   isActive: boolean;
-  attributeValueIds: number[];
+  attributeValueIds: string[];
 };
 
 export type ProductLotMatrixDraft = {
-  attributeIds: number[];
+  attributeIds: string[];
   expectedVariantCount: number;
   preview: string[];
   variants: ProductLotMatrixVariantPayloadItem[];
@@ -114,7 +121,7 @@ export type ProductCreateWorkspaceState = {
   groupFieldValues: ProductGroupFieldValueDraft[];
   media: ProductMediaDraft[];
   marketingMedia: ProductMarketingMediaDraft[];
-  selectedAttributeIds: number[];
+  selectedAttributeIds: string[];
   lotMatrixRows: ProductLotMatrixRowDraft[];
   vendors: ProductVendorDraft[];
   zones: ProductZoneDraft[];
@@ -188,7 +195,7 @@ export type ProductCardMetric = {
 };
 
 export type ProductGridCardModel = {
-  id: number;
+  id: string;
   name: string;
   code: string;
   description: string | null;

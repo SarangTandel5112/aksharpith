@@ -5,7 +5,6 @@ import {
   buildMediaWorkspaceRows,
   formatProductType,
 } from "@features/admin/products/services/product-admin.helpers";
-import type { ProductMediaWorkspaceRow } from "@features/admin/media/types/media.types";
 import {
   PageHeader,
   SectionCard,
@@ -16,41 +15,39 @@ import { Button } from "@shared/components/ui/button";
 import { IconArrowRight } from "@tabler/icons-react";
 import Link from "next/link";
 import type React from "react";
-import { useDeferredValue, useEffect, useMemo, useState } from "react";
+import { useDeferredValue, useEffect, useState } from "react";
+
+const MEDIA_WORKSPACE_ROWS = buildMediaWorkspaceRows();
 
 export function MediaModule(): React.JSX.Element {
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
   const [typeFilter, setTypeFilter] = useState("all");
   const [assetFilter, setAssetFilter] = useState("all");
-  const rows = useMemo(() => buildMediaWorkspaceRows(), []);
-  const filteredRows = useMemo(() => {
+  const filteredRows = MEDIA_WORKSPACE_ROWS.filter((row) => {
     const query = deferredSearch.toLowerCase();
-    return rows.filter((row) => {
-      const matchesSearch = !deferredSearch.trim()
+    const matchesSearch = !deferredSearch.trim()
+      ? true
+      : [row.product.name, row.product.code, row.product.type]
+          .join(" ")
+          .toLowerCase()
+          .includes(query);
+    const matchesType =
+      typeFilter === "all" ? true : row.product.type === typeFilter;
+    const matchesAsset =
+      assetFilter === "all"
         ? true
-        : [row.product.name, row.product.code, row.product.type]
-            .join(" ")
-            .toLowerCase()
-            .includes(query);
-      const matchesType =
-        typeFilter === "all" ? true : row.product.type === typeFilter;
-        const matchesAsset =
-          assetFilter === "all"
-            ? true
-            : assetFilter === "images"
-              ? row.imageCount > 0
-              : assetFilter === "videos"
-                ? row.videoCount > 0
-                : row.imageCount > 0 && row.videoCount > 0;
+        : assetFilter === "images"
+          ? row.imageCount > 0
+          : assetFilter === "videos"
+            ? row.videoCount > 0
+            : row.imageCount > 0 && row.videoCount > 0;
 
-        return matchesSearch && matchesType && matchesAsset;
-      },
-    );
-  }, [assetFilter, deferredSearch, rows, typeFilter]);
+    return matchesSearch && matchesType && matchesAsset;
+  });
 
-  const [selectedProductId, setSelectedProductId] = useState<number | null>(
-    rows[0]?.product.id ?? null,
+  const [selectedProductId, setSelectedProductId] = useState<string | null>(
+    MEDIA_WORKSPACE_ROWS[0]?.product.id ?? null,
   );
 
   useEffect(() => {
@@ -62,7 +59,7 @@ export function MediaModule(): React.JSX.Element {
   const { data: selectedRow, isLoading } = useMockProductResource(
     selectedProductId,
     (productId) =>
-      buildMediaWorkspaceRows().find((row) => row.product.id === productId) ?? null,
+      MEDIA_WORKSPACE_ROWS.find((row) => row.product.id === productId) ?? null,
   );
 
   return (
