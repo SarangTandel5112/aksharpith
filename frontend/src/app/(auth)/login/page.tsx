@@ -1,5 +1,5 @@
-import { redirect } from "next/navigation";
+import { LoginPageClient } from "@features/auth/components/LoginPageClient";
 
-export default function LoginPage(): never {
-  redirect("/admin");
+export default function LoginPage(): React.JSX.Element {
+  return <LoginPageClient />;
 }
