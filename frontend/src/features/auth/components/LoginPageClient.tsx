@@ -41,10 +41,10 @@ export function LoginPageClient(): React.JSX.Element {
       return;
     }
 
-    const roleName = session.user?.role?.roleName;
+    const roleName = session.user?.role?.name;
 
     if (roleName === "Admin" || roleName === "Staff") {
-      router.push("/admin");
+      router.push("/admin/dashboard");
     } else {
       router.push("/products");
     }

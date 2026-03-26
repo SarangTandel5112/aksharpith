@@ -1,6 +1,4 @@
-import { authOptions } from "@shared/lib/auth-options";
-import { redirect } from "next/navigation";
-import { getServerSession } from "next-auth";
+import { Toaster } from "@shared/components/ui/sonner";
 import type React from "react";
 import { AdminSidebar } from "./_components/AdminSidebar";
 import { AdminTopbar } from "./_components/AdminTopbar";
@@ -8,16 +6,16 @@ import { AdminTopbar } from "./_components/AdminTopbar";
 export default async function AdminLayout(props: {
   children: React.ReactNode;
 }): Promise<React.JSX.Element> {
-  const session = await getServerSession(authOptions);
-  if (!session) redirect("/login");
-
   return (
-    <div className="flex h-screen overflow-hidden">
+    <div className="flex h-dvh overflow-hidden overscroll-none bg-zinc-50">
       <AdminSidebar />
-      <div className="flex flex-1 flex-col overflow-hidden bg-zinc-50">
-        <AdminTopbar session={session} />
-        <main className="flex-1 overflow-y-auto p-6">{props.children}</main>
+      <div className="flex min-h-0 flex-1 flex-col overflow-hidden bg-zinc-50">
+        <AdminTopbar />
+        <main className="min-h-0 flex-1 overflow-y-auto overscroll-y-contain bg-zinc-50 p-6">
+          {props.children}
+        </main>
       </div>
+      <Toaster />
     </div>
   );
 }

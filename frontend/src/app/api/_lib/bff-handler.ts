@@ -15,11 +15,29 @@ type BffGetOptions = {
 
 type BffMutateOptions = {
   path: string;
-  method: "POST" | "PATCH" | "DELETE";
+  method: "POST" | "PUT" | "PATCH" | "DELETE";
   request: NextRequest;
   body?: unknown;
   requiredRoles?: string[];
 };
+
+async function toBffResponse(res: Response): Promise<NextResponse> {
+  if (res.status === 204) {
+    return new NextResponse(null, { status: 204 });
+  }
+
+  const text = await res.text();
+  if (text === "") {
+    return new NextResponse(null, { status: res.status });
+  }
+
+  try {
+    const data = JSON.parse(text);
+    return NextResponse.json(data, { status: res.status });
+  } catch {
+    return new NextResponse(text, { status: res.status });
+  }
+}
 
 export async function bffGet(options: BffGetOptions): Promise<NextResponse> {
   const session = await getServerSession(authOptions);
@@ -27,7 +45,7 @@ export async function bffGet(options: BffGetOptions): Promise<NextResponse> {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   if (options.requiredRoles !== undefined) {
-    const roleName = session.user.role.roleName;
+    const roleName = session.user.role?.name ?? "";
     if (!options.requiredRoles.includes(roleName)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -37,8 +55,7 @@ export async function bffGet(options: BffGetOptions): Promise<NextResponse> {
   const nestPath = `${options.path}${url.search}`;
 
   const res = await apiFetch(nestPath, { accessToken: session.accessToken });
-  const data = await res.json();
-  return NextResponse.json(data, { status: res.status });
+  return toBffResponse(res);
 }
 
 export async function bffMutate(
@@ -49,7 +66,7 @@ export async function bffMutate(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   if (options.requiredRoles !== undefined) {
-    const roleName = session.user.role.roleName;
+    const roleName = session.user.role?.name ?? "";
     if (!options.requiredRoles.includes(roleName)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -62,6 +79,5 @@ export async function bffMutate(
     ...(bodyStr !== undefined ? { body: bodyStr } : {}),
     accessToken: session.accessToken,
   });
-  const data = await res.json();
-  return NextResponse.json(data, { status: res.status });
+  return toBffResponse(res);
 }

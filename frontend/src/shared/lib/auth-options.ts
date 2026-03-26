@@ -5,6 +5,8 @@ import type { SessionUser } from '@shared/types/core'
 
 const NEST_API = process.env.NEST_API ?? 'http://localhost:3001'
 
+type BackendSessionUser = Omit<SessionUser, 'id'> & { id: number }
+
 export const authOptions: AuthOptions = {
   providers: [
     CredentialsProvider({
@@ -40,14 +42,17 @@ export const authOptions: AuthOptions = {
 
           if (!meRes.ok) return null
 
-          const meBody  = await meRes.json() as { data: SessionUser }
+          const meBody  = await meRes.json() as { data: BackendSessionUser }
           const user    = meBody.data
 
           return {
-            id:          user.id,
+            id:          String(user.id),
             email:       user.email,
+            username:    user.username,
             firstName:   user.firstName,
+            middleName:  user.middleName,
             lastName:    user.lastName,
+            roleId:      user.roleId,
             role:        user.role,
             accessToken: token,
           }
@@ -65,15 +70,21 @@ export const authOptions: AuthOptions = {
         const u = user as {
           id: string
           email: string
+          username: string
           firstName: string
+          middleName: string | null
           lastName: string
-          role: { id: string; roleName: string }
+          roleId: number
+          role: { id: number; name: string; isActive: boolean } | null
           accessToken: string
         }
         token.id          = u.id
         token.email       = u.email
+        token.username    = u.username
         token.firstName   = u.firstName
+        token.middleName  = u.middleName
         token.lastName    = u.lastName
+        token.roleId      = u.roleId
         token.role        = u.role
         token.accessToken = u.accessToken
       }
@@ -84,8 +95,11 @@ export const authOptions: AuthOptions = {
       session.accessToken    = token.accessToken
       session.user.id        = token.id
       session.user.email     = token.email ?? ''
+      session.user.username  = token.username
       session.user.firstName = token.firstName
+      session.user.middleName = token.middleName
       session.user.lastName  = token.lastName
+      session.user.roleId    = token.roleId
       session.user.role      = token.role
       return session
     },

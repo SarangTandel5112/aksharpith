@@ -2,8 +2,6 @@
 
 import { Toaster } from "@shared/components/ui/sonner";
 import { AnalyticsProvider } from "@shared/providers/AnalyticsProvider";
-import { QueryProvider } from "@shared/providers/QueryProvider";
-import { SessionProvider } from "@shared/providers/SessionProvider";
 import { ThemeProvider } from "@shared/providers/ThemeProvider";
 import type { Metadata } from "next";
 import { DM_Sans } from "next/font/google";
@@ -26,13 +24,9 @@ export default function RootLayout(props: RootLayoutProps): React.ReactElement {
   return (
     <html lang="en" className={dmSans.variable} suppressHydrationWarning>
       <body className="antialiased">
-        <SessionProvider>
-          <ThemeProvider>
-            <QueryProvider>
-              <AnalyticsProvider>{props.children}</AnalyticsProvider>
-            </QueryProvider>
-          </ThemeProvider>
-        </SessionProvider>
+        <ThemeProvider>
+          <AnalyticsProvider>{props.children}</AnalyticsProvider>
+        </ThemeProvider>
         <Toaster richColors position="top-right" />
       </body>
     </html>

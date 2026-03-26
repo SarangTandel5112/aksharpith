@@ -20,10 +20,14 @@ function fakeRole() {
 // ── Departments ───────────────────────────────────────────────────────────────
 
 function fakeDepartment() {
+  const departmentName = faker.commerce.department()
   return {
     id:          faker.string.uuid(),
-    name:        faker.commerce.department(),
+    departmentName,
+    departmentCode: faker.string.alpha({ length: 4 }).toUpperCase(),
+    name:        departmentName,
     description: faker.lorem.sentence(),
+    isActive:    faker.datatype.boolean(),
     createdAt:   faker.date.past().toISOString(),
     updatedAt:   faker.date.recent().toISOString(),
   }
@@ -32,11 +36,16 @@ function fakeDepartment() {
 // ── Categories ────────────────────────────────────────────────────────────────
 
 function fakeCategory() {
+  const categoryName = faker.commerce.productAdjective()
   return {
     id:           faker.string.uuid(),
-    name:         faker.commerce.productAdjective(),
+    categoryName,
+    name:         categoryName,
     description:  faker.lorem.sentence(),
+    photo:        null,
     departmentId: faker.string.uuid(),
+    department:   null,
+    isActive:     faker.datatype.boolean(),
     createdAt:    faker.date.past().toISOString(),
     updatedAt:    faker.date.recent().toISOString(),
   }
@@ -45,11 +54,16 @@ function fakeCategory() {
 // ── Sub-Categories ────────────────────────────────────────────────────────────
 
 function fakeSubCategory() {
+  const subCategoryName = faker.commerce.productMaterial()
   return {
     id:         faker.string.uuid(),
-    name:       faker.commerce.productMaterial(),
+    subCategoryName,
+    name:       subCategoryName,
     description: faker.lorem.sentence(),
+    photo:      null,
     categoryId: faker.string.uuid(),
+    displayOrder: faker.number.int({ min: 0, max: 10 }),
+    isActive:   faker.datatype.boolean(),
     createdAt:  faker.date.past().toISOString(),
     updatedAt:  faker.date.recent().toISOString(),
   }
@@ -132,14 +146,14 @@ export const adminHandlers: RequestHandler[] = [
   // ── Roles ──────────────────────────────────────────────────────────────────
   http.get(`${BASE}/api/roles`, () => HttpResponse.json(paginatedResponse([fakeRole(), fakeRole()]))),
   http.post(`${BASE}/api/roles`, async ({ request }) => {
-    const body = await request.json() as { roleName: string }
-    return HttpResponse.json({ statusCode: 201, message: 'Role created', data: { ...fakeRole(), roleName: body.roleName } }, { status: 201 })
+    const body = await request.json() as { roleName: string; isActive?: boolean }
+    return HttpResponse.json({ statusCode: 201, message: 'Role created', data: { ...fakeRole(), roleName: body.roleName, isActive: body.isActive ?? true } }, { status: 201 })
   }),
   http.get(`${BASE}/api/roles/:id`, ({ params }) =>
     HttpResponse.json({ statusCode: 200, message: 'OK', data: { ...fakeRole(), id: params['id'] as string } }),
   ),
   http.patch(`${BASE}/api/roles/:id`, async ({ request, params }) => {
-    const body = await request.json() as Partial<{ roleName: string }>
+    const body = await request.json() as Partial<{ roleName: string; isActive: boolean }>
     return HttpResponse.json({ statusCode: 200, message: 'Role updated', data: { ...fakeRole(), id: params['id'] as string, ...body } })
   }),
   http.delete(`${BASE}/api/roles/:id`, () =>
@@ -149,15 +163,15 @@ export const adminHandlers: RequestHandler[] = [
   // ── Departments ────────────────────────────────────────────────────────────
   http.get(`${BASE}/api/departments`, () => HttpResponse.json(paginatedResponse([fakeDepartment(), fakeDepartment()]))),
   http.post(`${BASE}/api/departments`, async ({ request }) => {
-    const body = await request.json() as { name: string }
-    return HttpResponse.json({ statusCode: 201, message: 'Department created', data: { ...fakeDepartment(), name: body.name } }, { status: 201 })
+    const body = await request.json() as { departmentName: string; departmentCode?: string | null; description?: string | null; isActive?: boolean }
+    return HttpResponse.json({ statusCode: 201, message: 'Department created', data: { ...fakeDepartment(), departmentName: body.departmentName, name: body.departmentName, departmentCode: body.departmentCode ?? null, description: body.description ?? null, isActive: body.isActive ?? true } }, { status: 201 })
   }),
   http.get(`${BASE}/api/departments/:id`, ({ params }) =>
     HttpResponse.json({ statusCode: 200, message: 'OK', data: { ...fakeDepartment(), id: params['id'] as string } }),
   ),
   http.patch(`${BASE}/api/departments/:id`, async ({ request, params }) => {
-    const body = await request.json() as Partial<{ name: string }>
-    return HttpResponse.json({ statusCode: 200, message: 'Department updated', data: { ...fakeDepartment(), id: params['id'] as string, ...body } })
+    const body = await request.json() as Partial<{ departmentName: string; departmentCode: string | null; description: string | null; isActive: boolean }>
+    return HttpResponse.json({ statusCode: 200, message: 'Department updated', data: { ...fakeDepartment(), id: params['id'] as string, ...body, name: body.departmentName ?? fakeDepartment().name } })
   }),
   http.delete(`${BASE}/api/departments/:id`, () =>
     HttpResponse.json({ statusCode: 200, message: 'Department deleted', data: null }),
@@ -166,15 +180,15 @@ export const adminHandlers: RequestHandler[] = [
   // ── Categories ─────────────────────────────────────────────────────────────
   http.get(`${BASE}/api/categories`, () => HttpResponse.json(paginatedResponse([fakeCategory(), fakeCategory()]))),
   http.post(`${BASE}/api/categories`, async ({ request }) => {
-    const body = await request.json() as { name: string }
-    return HttpResponse.json({ statusCode: 201, message: 'Category created', data: { ...fakeCategory(), name: body.name } }, { status: 201 })
+    const body = await request.json() as { categoryName: string; description?: string | null; photo?: string | null; departmentId: string; isActive?: boolean }
+    return HttpResponse.json({ statusCode: 201, message: 'Category created', data: { ...fakeCategory(), categoryName: body.categoryName, name: body.categoryName, description: body.description ?? null, photo: body.photo ?? null, departmentId: body.departmentId, isActive: body.isActive ?? true } }, { status: 201 })
   }),
   http.get(`${BASE}/api/categories/:id`, ({ params }) =>
     HttpResponse.json({ statusCode: 200, message: 'OK', data: { ...fakeCategory(), id: params['id'] as string } }),
   ),
   http.patch(`${BASE}/api/categories/:id`, async ({ request, params }) => {
-    const body = await request.json() as Partial<{ name: string }>
-    return HttpResponse.json({ statusCode: 200, message: 'Category updated', data: { ...fakeCategory(), id: params['id'] as string, ...body } })
+    const body = await request.json() as Partial<{ categoryName: string; description: string | null; photo: string | null; departmentId: string; isActive: boolean }>
+    return HttpResponse.json({ statusCode: 200, message: 'Category updated', data: { ...fakeCategory(), id: params['id'] as string, ...body, name: body.categoryName ?? fakeCategory().name } })
   }),
   http.delete(`${BASE}/api/categories/:id`, () =>
     HttpResponse.json({ statusCode: 200, message: 'Category deleted', data: null }),
@@ -183,15 +197,15 @@ export const adminHandlers: RequestHandler[] = [
   // ── Sub-Categories ─────────────────────────────────────────────────────────
   http.get(`${BASE}/api/sub-categories`, () => HttpResponse.json(paginatedResponse([fakeSubCategory(), fakeSubCategory()]))),
   http.post(`${BASE}/api/sub-categories`, async ({ request }) => {
-    const body = await request.json() as { name: string }
-    return HttpResponse.json({ statusCode: 201, message: 'SubCategory created', data: { ...fakeSubCategory(), name: body.name } }, { status: 201 })
+    const body = await request.json() as { subCategoryName: string; description?: string | null; photo?: string | null; categoryId: string; displayOrder?: number; isActive?: boolean }
+    return HttpResponse.json({ statusCode: 201, message: 'SubCategory created', data: { ...fakeSubCategory(), subCategoryName: body.subCategoryName, name: body.subCategoryName, description: body.description ?? null, photo: body.photo ?? null, categoryId: body.categoryId, displayOrder: body.displayOrder ?? 0, isActive: body.isActive ?? true } }, { status: 201 })
   }),
   http.get(`${BASE}/api/sub-categories/:id`, ({ params }) =>
     HttpResponse.json({ statusCode: 200, message: 'OK', data: { ...fakeSubCategory(), id: params['id'] as string } }),
   ),
   http.patch(`${BASE}/api/sub-categories/:id`, async ({ request, params }) => {
-    const body = await request.json() as Partial<{ name: string }>
-    return HttpResponse.json({ statusCode: 200, message: 'SubCategory updated', data: { ...fakeSubCategory(), id: params['id'] as string, ...body } })
+    const body = await request.json() as Partial<{ subCategoryName: string; description: string | null; photo: string | null; categoryId: string; displayOrder: number; isActive: boolean }>
+    return HttpResponse.json({ statusCode: 200, message: 'SubCategory updated', data: { ...fakeSubCategory(), id: params['id'] as string, ...body, name: body.subCategoryName ?? fakeSubCategory().name } })
   }),
   http.delete(`${BASE}/api/sub-categories/:id`, () =>
     HttpResponse.json({ statusCode: 200, message: 'SubCategory deleted', data: null }),

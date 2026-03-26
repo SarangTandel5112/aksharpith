@@ -1,8 +1,11 @@
-export { DataTable } from './DataTable'
-export type { Column } from './DataTable'
-export { DeleteDialog } from './DeleteDialog'
-export { PageHeader } from './PageHeader'
-export { StatusBadge } from './StatusBadge'
-export type { StatusVariant } from './StatusBadge'
-export { TablePagination } from './TablePagination'
-export { TableToolbar } from './TableToolbar'
+export { BackendFieldCoverageCard } from "./BackendFieldCoverageCard";
+export { DataTable } from "./DataTable";
+export type { Column } from "./DataTable";
+export { DeleteDialog } from "./DeleteDialog";
+export { MetadataCard } from "./MetadataCard";
+export { PageHeader } from "./PageHeader";
+export { SectionCard } from "./SectionCard";
+export { StatusBadge } from "./StatusBadge";
+export type { StatusVariant } from "./StatusBadge";
+export { TablePagination } from "./TablePagination";
+export { TableToolbar } from "./TableToolbar";

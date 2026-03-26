@@ -1,14 +1,11 @@
-// src/features/admin/sub-categories/types/sub-categories.types.ts
+import type {
+  CreateSubCategoryDto,
+  PaginatedData,
+  SubCategoryResponseDto,
+  UpdateSubCategoryDto,
+} from "@shared/contracts";
 
-export type SubCategory = {
-  id: string;
-  name: string;
-  categoryId: string;
-  categoryName?: string;
-  category: { id: string; name: string };
-  description?: string;
-  photo?: string;
-  displayOrder?: number;
-  isActive: boolean;
-  createdAt: string;
-};
+export type SubCategory = SubCategoryResponseDto;
+export type PaginatedSubCategories = PaginatedData<SubCategory>;
+export type CreateSubCategoryInput = CreateSubCategoryDto;
+export type UpdateSubCategoryInput = UpdateSubCategoryDto;

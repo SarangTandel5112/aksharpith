@@ -1,107 +1,155 @@
-'use client'
+"use client";
 
-import { zodResolver } from "@hookform/resolvers/zod"
-import { Button } from "@shared/components/ui/button"
-import { Checkbox } from "@shared/components/ui/checkbox"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@shared/components/ui/dialog"
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@shared/components/ui/form"
-import { Input } from "@shared/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@shared/components/ui/select"
-import { Textarea } from "@shared/components/ui/textarea"
-import type React from "react"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
-
-const SubCategoryFormSchema = z.object({
-  name: z.string().min(1, "Sub-category name is required").max(100),
-  categoryId: z.string().min(1, "Please select a parent category"),
-  description: z.string().max(500).optional().transform(v => v || undefined),
-  isActive: z.boolean().default(true),
-})
-
-type SubCategoryFormValues = z.infer<typeof SubCategoryFormSchema>
-
-const CATEGORIES = ["Electronics", "Clothing", "Food & Beverage", "Home Appliances", "Books", "Sports"] as const
-
-type SubCategory = {
-  id: string
-  name: string
-  categoryName: string
-  description: string | null
-  isActive: boolean
-}
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@shared/components/ui/button";
+import { Checkbox } from "@shared/components/ui/checkbox";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@shared/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@shared/components/ui/form";
+import { ImageDropzone } from "@shared/components/ui/image-dropzone";
+import { Input } from "@shared/components/ui/input";
+import { RichTextEditor } from "@shared/components/ui/rich-text-editor";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@shared/components/ui/select";
+import type React from "react";
+import { useForm } from "react-hook-form";
+import type { z } from "zod";
+import {
+  CreateSubCategorySchema,
+  type CreateSubCategoryInput,
+} from "../schemas/sub-categories.schema";
+import type { Category } from "@features/admin/categories/types/categories.types";
 
 type SubCategoryFormDialogProps = {
-  open: boolean
-  onClose: () => void
-  onSubmit: (values: SubCategoryFormValues) => void
-  isSubmitting: boolean
-  subCategory?: SubCategory
-}
+  open: boolean;
+  onClose: () => void;
+  onSubmit: (values: CreateSubCategoryInput) => void;
+  isSubmitting: boolean;
+  subCategory?: CreateSubCategoryInput & {
+    id: number;
+    createdAt: string;
+    updatedAt: string | null;
+  };
+  categories: Pick<Category, "id" | "name">[];
+};
 
-export function SubCategoryFormDialog(props: SubCategoryFormDialogProps): React.JSX.Element {
-  const form = useForm<z.input<typeof SubCategoryFormSchema>, unknown, SubCategoryFormValues>({
-    resolver: zodResolver(SubCategoryFormSchema),
+export function SubCategoryFormDialog(
+  props: SubCategoryFormDialogProps,
+): React.JSX.Element {
+  const form = useForm<
+    z.input<typeof CreateSubCategorySchema>,
+    unknown,
+    CreateSubCategoryInput
+  >({
+    resolver: zodResolver(CreateSubCategorySchema),
     defaultValues: {
       name: props.subCategory?.name ?? "",
-      categoryId: props.subCategory?.categoryName ?? "",
+      categoryId: props.subCategory?.categoryId ?? 0,
       description: props.subCategory?.description ?? "",
+      photo: props.subCategory?.photo ?? null,
+      sortOrder: props.subCategory?.sortOrder ?? 0,
       isActive: props.subCategory?.isActive ?? true,
     },
-  })
-
-  const title = props.subCategory ? "Edit Sub-category" : "Add Sub-category"
-  const description = props.subCategory ? "Update the sub-category details." : "Create a new product sub-category."
-
-  function handleSubmit(values: SubCategoryFormValues): void {
-    props.onSubmit(values)
-  }
-
-  function handleOpenChange(open: boolean): void {
-    if (!open) props.onClose()
-  }
-
+  });
   return (
-    <Dialog open={props.open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[560px]">
-        <DialogHeader className="border-b border-zinc-100 pb-4">
-          <DialogTitle className="text-base font-semibold text-zinc-900">{title}</DialogTitle>
-          <DialogDescription className="text-sm text-zinc-500">{description}</DialogDescription>
+    <Dialog open={props.open} onOpenChange={(open) => !open && props.onClose()}>
+      <DialogContent className="sm:max-w-[760px]">
+        <DialogHeader>
+          <DialogTitle>
+            {props.subCategory ? "Edit Sub-category" : "Add Sub-category"}
+          </DialogTitle>
+          <DialogDescription>
+            Add the sub-category details, category, and display order.
+          </DialogDescription>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(handleSubmit)}>
-            <div className="space-y-5 py-5">
-              <FormField
-                control={form.control}
-                name="name"
+          <form
+            onSubmit={form.handleSubmit(props.onSubmit)}
+            className="space-y-6"
+          >
+            <div className="space-y-6">
+              <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_200px]">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Sub-category Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. Phones" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="sortOrder"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Name</FormLabel>
+                    <FormLabel>Display Order</FormLabel>
                     <FormControl>
-                      <Input placeholder="Sub-category name" {...field} />
+                      <Input
+                        type="number"
+                        min={0}
+                        {...field}
+                        value={typeof field.value === "number" ? field.value : 0}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
-                )}
-              />
+                  )}
+                />
+              </div>
               <FormField
                 control={form.control}
                 name="categoryId"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Parent Category</FormLabel>
-                    <Select value={field.value} onValueChange={field.onChange}>
+                    {(() => {
+                      const currentValue =
+                        typeof field.value === "number" && field.value > 0
+                          ? String(field.value)
+                          : "";
+                      return (
+                    <Select
+                      value={currentValue}
+                      onValueChange={(value) => field.onChange(Number(value))}
+                    >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a category" />
+                          <SelectValue placeholder="Select category" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {CATEGORIES.map(cat => (
-                          <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                        {props.categories.map((category) => (
+                          <SelectItem key={category.id} value={String(category.id)}>
+                            {category.name}
+                          </SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
+                      );
+                    })()}
                     <FormMessage />
                   </FormItem>
                 )}
@@ -113,7 +161,28 @@ export function SubCategoryFormDialog(props: SubCategoryFormDialogProps): React.
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea placeholder="Optional description" {...field} />
+                      <RichTextEditor
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                        placeholder="Add a short description for this sub-category."
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="photo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Photo</FormLabel>
+                    <FormControl>
+                      <ImageDropzone
+                        value={field.value ?? null}
+                        onChange={field.onChange}
+                        emptyLabel="Drop the sub-category image here"
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -123,24 +192,41 @@ export function SubCategoryFormDialog(props: SubCategoryFormDialogProps): React.
                 control={form.control}
                 name="isActive"
                 render={({ field }) => (
-                  <FormItem className="flex items-center gap-3 space-y-0">
+                  <FormItem className="flex items-center gap-3 rounded-2xl border border-zinc-200 px-4 py-3">
                     <FormControl>
-                      <Checkbox checked={field.value ?? false} onCheckedChange={field.onChange} />
+                      <Checkbox
+                        checked={field.value ?? false}
+                        onCheckedChange={field.onChange}
+                      />
                     </FormControl>
-                    <FormLabel className="font-normal text-sm text-zinc-700 cursor-pointer">Active</FormLabel>
+                    <div className="space-y-1">
+                      <FormLabel className="text-sm font-medium text-zinc-900">
+                        Active
+                      </FormLabel>
+                      <p className="text-sm text-zinc-500">
+                        Show this sub-category during product setup.
+                      </p>
+                    </div>
                   </FormItem>
                 )}
               />
             </div>
-            <DialogFooter className="border-t border-zinc-100 pt-4">
-              <Button type="button" variant="outline" onClick={props.onClose} disabled={props.isSubmitting}>Cancel</Button>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={props.onClose}
+                disabled={props.isSubmitting}
+              >
+                Cancel
+              </Button>
               <Button type="submit" disabled={props.isSubmitting}>
-                {props.isSubmitting ? "Saving…" : "Save"}
+                {props.isSubmitting ? "Saving…" : "Save Sub-category"}
               </Button>
             </DialogFooter>
           </form>
         </Form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

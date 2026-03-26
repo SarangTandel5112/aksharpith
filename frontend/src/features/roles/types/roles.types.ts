@@ -1,27 +1,11 @@
-// src/features/roles/types/roles.types.ts
+import type {
+  CreateRoleDto,
+  PaginatedData,
+  RoleResponseDto,
+  UpdateRoleDto,
+} from "@shared/contracts";
 
-export type Role = {
-  id: string;
-  roleName: string;
-  description: string | null;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type PaginatedRoles = {
-  items: Role[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-};
-
-export type CreateRoleInput = {
-  roleName: string;
-  description?: string;
-};
-
-export type UpdateRoleInput = {
-  roleName?: string;
-  description?: string;
-};
+export type Role = RoleResponseDto;
+export type PaginatedRoles = PaginatedData<Role>;
+export type CreateRoleInput = CreateRoleDto;
+export type UpdateRoleInput = UpdateRoleDto;

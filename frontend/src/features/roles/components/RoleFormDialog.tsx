@@ -19,7 +19,6 @@ import {
   FormMessage,
 } from "@shared/components/ui/form";
 import { Input } from "@shared/components/ui/input";
-import { Textarea } from "@shared/components/ui/textarea";
 import type React from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
@@ -29,8 +28,6 @@ import {
   type RoleFormValues,
 } from "../validations/role-form.schema";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
 type RoleFormDialogProps = {
   open: boolean;
   onClose: () => void;
@@ -39,66 +36,36 @@ type RoleFormDialogProps = {
   role?: Role;
 };
 
-// ── Component ─────────────────────────────────────────────────────────────────
-
 export function RoleFormDialog(props: RoleFormDialogProps): React.JSX.Element {
-  const form = useForm<z.input<typeof RoleFormSchema>, unknown, RoleFormValues>(
-    {
-      resolver: zodResolver(RoleFormSchema),
-      defaultValues: {
-        roleName: props.role?.roleName ?? "",
-        description: props.role?.description ?? "",
-      },
+  const form = useForm<z.input<typeof RoleFormSchema>, unknown, RoleFormValues>({
+    resolver: zodResolver(RoleFormSchema),
+    defaultValues: {
+      name: props.role?.name ?? "",
     },
-  );
-
-  const title = props.role ? "Edit Role" : "Add Role";
-
-  function handleSubmit(values: RoleFormValues): void {
-    props.onSubmit(values);
-  }
-
-  function handleOpenChange(open: boolean): void {
-    if (!open) props.onClose();
-  }
+  });
 
   return (
-    <Dialog open={props.open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[480px]">
+    <Dialog open={props.open} onOpenChange={(open) => !open && props.onClose()}>
+      <DialogContent className="sm:max-w-[560px]">
         <DialogHeader>
-          <DialogTitle>{title}</DialogTitle>
+          <DialogTitle>{props.role ? "Edit Role" : "Add Role"}</DialogTitle>
           <DialogDescription>
-            {props.role
-              ? "Update the role details."
-              : "Create a new user role with a name and optional description."}
+            Roles are now aligned to the Nest contract and only collect the role name.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form
-            onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4"
+            onSubmit={form.handleSubmit(props.onSubmit)}
+            className="space-y-6"
           >
             <FormField
               control={form.control}
-              name="roleName"
+              name="name"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Role Name</FormLabel>
                   <FormControl>
-                    <Input placeholder="Role name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Optional description" {...field} />
+                    <Input placeholder="e.g. Admin" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -114,7 +81,7 @@ export function RoleFormDialog(props: RoleFormDialogProps): React.JSX.Element {
                 Cancel
               </Button>
               <Button type="submit" disabled={props.isSubmitting}>
-                {props.isSubmitting ? "Saving\u2026" : "Save"}
+                {props.isSubmitting ? "Saving…" : "Save"}
               </Button>
             </DialogFooter>
           </form>

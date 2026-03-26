@@ -18,8 +18,8 @@ type UseUsersReturn = {
   users: User[]
   isLoading: boolean
   create: (input: CreateUserInput) => Promise<User>
-  update: (id: string, input: UpdateUserInput) => Promise<User>
-  remove: (id: string) => Promise<void>
+  update: (id: number, input: UpdateUserInput) => Promise<User>
+  remove: (id: number) => Promise<void>
   isCreating: boolean
   isUpdating: boolean
   isRemoving: boolean
@@ -42,7 +42,7 @@ export function useUsers(): UseUsersReturn {
   })
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, input }: { id: string; input: UpdateUserInput }) =>
+    mutationFn: ({ id, input }: { id: number; input: UpdateUserInput }) =>
       apiUpdateUser(id, input),
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.users.all() })
@@ -50,7 +50,7 @@ export function useUsers(): UseUsersReturn {
   })
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => apiDeleteUser(id),
+    mutationFn: (id: number) => apiDeleteUser(id),
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.users.all() })
     },
@@ -63,10 +63,10 @@ export function useUsers(): UseUsersReturn {
     create: (input: CreateUserInput): Promise<User> =>
       createMutation.mutateAsync(input),
 
-    update: (id: string, input: UpdateUserInput): Promise<User> =>
+    update: (id: number, input: UpdateUserInput): Promise<User> =>
       updateMutation.mutateAsync({ id, input }),
 
-    remove: (id: string): Promise<void> => deleteMutation.mutateAsync(id),
+    remove: (id: number): Promise<void> => deleteMutation.mutateAsync(id),
 
     isCreating: createMutation.isPending,
     isUpdating: updateMutation.isPending,

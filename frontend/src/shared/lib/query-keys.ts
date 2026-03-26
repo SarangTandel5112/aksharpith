@@ -51,4 +51,14 @@ export const queryKeys = {
     detail: (productId: string, variantId: string) =>
               ['products', productId, 'variants', variantId] as const,
   },
+  productMedia: {
+    all:    (productId: string)   => ['products', productId, 'media'] as const,
+    list:   (productId: string, q?: object) =>
+              ['products', productId, 'media', 'list', q] as const,
+  },
+  marketingMedia: {
+    all:    (productId: string)   => ['products', productId, 'marketing-media'] as const,
+    list:   (productId: string, q?: object) =>
+              ['products', productId, 'marketing-media', 'list', q] as const,
+  },
 } as const

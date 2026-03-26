@@ -20,9 +20,12 @@ export type PaginatedResponse<T> = {
 export type SessionUser = {
   id: string
   email: string
+  username: string
   firstName: string
+  middleName: string | null
   lastName: string
-  role: { id: string; roleName: string }
+  roleId: number
+  role: { id: number; name: string; isActive: boolean } | null
 }
 
 // Generic result type — used by services that can fail

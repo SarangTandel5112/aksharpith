@@ -21,8 +21,8 @@ type UseRolesReturn = {
   roles: Role[];
   isLoading: boolean;
   createRole: (input: CreateRoleInput) => Promise<Role>;
-  updateRole: (id: string, input: UpdateRoleInput) => Promise<Role>;
-  deleteRole: (id: string) => Promise<void>;
+  updateRole: (id: number, input: UpdateRoleInput) => Promise<Role>;
+  deleteRole: (id: number) => Promise<void>;
   isCreating: boolean;
   isUpdating: boolean;
   isDeleting: boolean;
@@ -45,7 +45,7 @@ export function useRoles(): UseRolesReturn {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, input }: { id: string; input: UpdateRoleInput }) =>
+    mutationFn: ({ id, input }: { id: number; input: UpdateRoleInput }) =>
       apiUpdateRole(id, input),
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.roles.all() });
@@ -53,7 +53,7 @@ export function useRoles(): UseRolesReturn {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => apiDeleteRole(id),
+    mutationFn: (id: number) => apiDeleteRole(id),
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.roles.all() });
     },
@@ -66,10 +66,10 @@ export function useRoles(): UseRolesReturn {
     createRole: (input: CreateRoleInput): Promise<Role> =>
       createMutation.mutateAsync(input),
 
-    updateRole: (id: string, input: UpdateRoleInput): Promise<Role> =>
+    updateRole: (id: number, input: UpdateRoleInput): Promise<Role> =>
       updateMutation.mutateAsync({ id, input }),
 
-    deleteRole: (id: string): Promise<void> =>
+    deleteRole: (id: number): Promise<void> =>
       deleteMutation.mutateAsync(id),
 
     isCreating: createMutation.isPending,

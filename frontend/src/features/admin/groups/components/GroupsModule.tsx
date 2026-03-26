@@ -1,120 +1,316 @@
-'use client'
+"use client";
 
-import { useState } from "react"
-import type React from "react"
-import { Button } from "@shared/components/ui/button"
-import { DataTable, DeleteDialog, PageHeader, StatusBadge, TablePagination, TableToolbar } from "@shared/components/admin"
-import { IconPencil, IconTrash } from "@tabler/icons-react"
-import { GroupFormDialog } from "./GroupFormDialog"
+import { GroupFormDialog } from "@features/admin/groups/components/GroupFormDialog";
+import type { Group } from "@features/admin/groups/types/groups.types";
+import { MOCK_GROUPS } from "@features/admin/products/services/product-admin.mock";
+import {
+  DataTable,
+  DeleteDialog,
+  PageHeader,
+  StatusBadge,
+  TablePagination,
+  TableToolbar,
+} from "@shared/components/admin";
+import type { Column } from "@shared/components/admin/DataTable";
+import { Button } from "@shared/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@shared/components/ui/dropdown-menu";
+import { IconDots, IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
+import type React from "react";
+import { useDeferredValue, useState } from "react";
+import { toast } from "sonner";
 
-type GroupRow = {
-  id: string
-  name: string
-  description: string | null
-  fieldCount: number
-  isActive: boolean
-}
-
-const MOCK_GROUPS: GroupRow[] = [
-  { id: "1", name: "Electronics Specs", description: "Technical specifications for electronic products", fieldCount: 8, isActive: true },
-  { id: "2", name: "Apparel Details", description: "Size, fit and fabric details for clothing", fieldCount: 5, isActive: true },
-  { id: "3", name: "Food Info", description: "Nutritional and dietary information", fieldCount: 6, isActive: true },
-  { id: "4", name: "Furniture Dimensions", description: "Size and material details for furniture", fieldCount: 4, isActive: true },
-  { id: "5", name: "Book Details", description: "Author, publisher and edition information", fieldCount: 7, isActive: false },
-]
+const COLUMNS: Column<Group>[] = [
+  { key: "name", label: "Template", sortable: true },
+  {
+    key: "fields",
+    label: "Dynamic Fields",
+    render: (row) => (
+      <div className="space-y-1">
+        <p className="text-sm text-zinc-800">{row.fields.length} fields</p>
+        <p className="text-xs text-zinc-500">
+          {row.fields
+            .map((field) => field.name)
+            .slice(0, 3)
+            .join(", ") || "No fields"}
+        </p>
+      </div>
+    ),
+  },
+  {
+    key: "isActive",
+    label: "Status",
+    render: (row) => (
+      <StatusBadge
+        label={row.isActive ? "Active" : "Inactive"}
+        variant={row.isActive ? "success" : "neutral"}
+      />
+    ),
+  },
+];
 
 export function GroupsModule(): React.JSX.Element {
-  const [search, setSearch] = useState("")
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [editItem, setEditItem] = useState<GroupRow | undefined>(undefined)
-  const [deleteTarget, setDeleteTarget] = useState<GroupRow | undefined>(undefined)
-  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [fieldTypeFilter, setFieldTypeFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editItem, setEditItem] = useState<Group | undefined>(undefined);
+  const [deleteTarget, setDeleteTarget] = useState<Group | undefined>(
+    undefined,
+  );
+  const [selectedIds, setSelectedIds] = useState<Group["id"][]>([]);
+  const [rows, setRows] = useState<Group[]>(MOCK_GROUPS);
 
-  const filtered = MOCK_GROUPS.filter(g =>
-    g.name.toLowerCase().includes(search.toLowerCase())
-  )
-  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize)
+  const searchFilteredRows = deferredSearch.trim()
+    ? rows.filter((group) =>
+        group.name.toLowerCase().includes(deferredSearch.toLowerCase()),
+      )
+    : rows;
+  const filteredRows = searchFilteredRows.filter((group) => {
+    const matchesStatus =
+      statusFilter === "all"
+        ? true
+        : statusFilter === "active"
+          ? group.isActive
+          : !group.isActive;
+    const matchesFieldType =
+      fieldTypeFilter === "all"
+        ? true
+        : group.fields.some((field) => field.type === fieldTypeFilter);
 
-  const columns = [
-    { key: "name" as const, label: "Name", sortable: true },
-    {
-      key: "description" as const,
-      label: "Description",
-      render: (row: GroupRow) => (
-        <span className="text-sm text-zinc-500 line-clamp-1">{row.description ?? "—"}</span>
-      ),
-    },
-    {
-      key: "fieldCount" as const,
-      label: "Fields",
-      render: (row: GroupRow) => <span className="text-sm text-zinc-700">{row.fieldCount}</span>,
-    },
-    {
-      key: "isActive" as const,
-      label: "Status",
-      render: (row: GroupRow) => (
-        <StatusBadge variant={row.isActive ? "success" : "neutral"} label={row.isActive ? "Active" : "Inactive"} />
-      ),
-    },
-  ]
+    return matchesStatus && matchesFieldType;
+  });
+
+  const paginatedRows = filteredRows.slice(
+    (page - 1) * pageSize,
+    page * pageSize,
+  );
 
   return (
-    <div>
-      <PageHeader title="Groups" subtitle="Manage product attribute groups" />
+    <div className="space-y-6">
+      <PageHeader
+        title="Group Templates"
+        subtitle="Manage reusable custom-field templates that describe products without affecting sellable rows."
+        action={
+          <Button onClick={() => setDialogOpen(true)}>
+            <IconPlus className="h-4 w-4" />
+            Add Template
+          </Button>
+        }
+      />
       <DataTable
-        columns={columns}
-        rows={paginated}
+        columns={COLUMNS}
+        rows={paginatedRows}
         selectable
         onSelectionChange={setSelectedIds}
-        renderActions={(row: GroupRow) => (
-          <div className="flex items-center gap-1">
-            <button type="button" onClick={() => { setEditItem(row); setDialogOpen(true) }}
-              className="p-1.5 rounded hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 transition-colors">
-              <IconPencil size={16} />
-            </button>
-            <button type="button" onClick={() => setDeleteTarget(row)}
-              className="p-1.5 rounded hover:bg-zinc-100 text-zinc-400 hover:text-red-500 transition-colors">
-              <IconTrash size={16} />
-            </button>
-          </div>
+        renderActions={(row) => (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="icon-sm" aria-label="Group actions">
+                <IconDots className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem
+                onClick={() => {
+                  setEditItem(row);
+                  setDialogOpen(true);
+                }}
+              >
+                <IconPencil className="h-3.5 w-3.5" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() => setDeleteTarget(row)}
+              >
+                <IconTrash className="h-3.5 w-3.5" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
         toolbar={
           <TableToolbar
             search={search}
-            onSearch={(v) => { setSearch(v); setPage(1) }}
-            placeholder="Search groups..."
+            onSearch={(value) => {
+              setSearch(value);
+              setPage(1);
+            }}
+            placeholder="Search templates…"
             selectedCount={selectedIds.length}
-            action={<Button size="sm" onClick={() => { setEditItem(undefined); setDialogOpen(true) }}>Add Group</Button>}
+            filters={[
+              {
+                id: "status",
+                label: "Status",
+                value: statusFilter,
+                onChange: (value) => {
+                  setStatusFilter(value);
+                  setPage(1);
+                },
+                options: [
+                  { label: "Active", value: "active" },
+                  { label: "Inactive", value: "inactive" },
+                ],
+              },
+              {
+                id: "field-type",
+                label: "Field Type",
+                value: fieldTypeFilter,
+                onChange: (value) => {
+                  setFieldTypeFilter(value);
+                  setPage(1);
+                },
+                options: [
+                  { label: "Text", value: "text" },
+                  { label: "Textarea", value: "textarea" },
+                  { label: "Number", value: "number" },
+                  { label: "Boolean", value: "boolean" },
+                  { label: "Dropdown", value: "dropdown" },
+                ],
+              },
+            ]}
+            onClearFilters={() => {
+              setSearch("");
+              setStatusFilter("all");
+              setFieldTypeFilter("all");
+              setPage(1);
+            }}
           />
         }
         footer={
           <TablePagination
-            total={filtered.length}
+            total={filteredRows.length}
             page={page}
             pageSize={pageSize}
             onPageChange={setPage}
-            onPageSizeChange={(size) => { setPageSize(size); setPage(1) }}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPage(1);
+            }}
           />
         }
       />
       <GroupFormDialog
         key={editItem?.id ?? "new"}
         open={dialogOpen}
-        onClose={() => { setDialogOpen(false); setEditItem(undefined) }}
-        onSubmit={() => setDialogOpen(false)}
+        onClose={() => {
+          setDialogOpen(false);
+          setEditItem(undefined);
+        }}
+        onSubmit={(values) => {
+          const today = new Date().toISOString();
+          if (editItem) {
+            setRows((prev) =>
+              prev.map((r) =>
+                r.id === editItem.id
+                  ? {
+                      ...r,
+                      name: values.name,
+                      description: values.description ?? null,
+                      isActive: values.isActive,
+                      fields: values.fields.map((f, i) => ({
+                        id: r.fields[i]?.id ?? Date.now() + i,
+                        groupId: r.id,
+                        name: f.name,
+                        key:
+                          f.key ??
+                          r.fields[i]?.key ??
+                          f.name.toLowerCase().replace(/\s+/g, "_"),
+                        type: f.type ?? "text",
+                        isRequired: f.isRequired ?? false,
+                        isFilterable: f.isFilterable ?? false,
+                        sortOrder: f.sortOrder ?? i,
+                        isActive: f.isActive ?? true,
+                        options: (f.options ?? []).map((o, j) => ({
+                          id:
+                            r.fields[i]?.options[j]?.id ??
+                            Date.now() + i * 100 + j,
+                          fieldId: r.fields[i]?.id ?? Date.now() + i,
+                          label: o.label,
+                          value: o.value,
+                          sortOrder: o.sortOrder ?? j,
+                          isActive: o.isActive ?? true,
+                        })),
+                        createdAt: r.fields[i]?.createdAt ?? today,
+                        updatedAt: today,
+                      })),
+                      updatedAt: today,
+                    }
+                  : r,
+              ),
+            );
+            toast.success("Group updated");
+          } else {
+            const newId = Date.now();
+            setRows((prev) => [
+              ...prev,
+              {
+                id: newId,
+                name: values.name,
+                description: values.description ?? null,
+                isActive: values.isActive,
+                fields: values.fields.map((f, i) => {
+                  const fieldId = newId * 100 + i;
+                  return {
+                    id: fieldId,
+                    groupId: newId,
+                    name: f.name,
+                    key:
+                      f.key ??
+                      f.name.toLowerCase().replace(/\s+/g, "_"),
+                    type: f.type ?? "text",
+                    isRequired: f.isRequired ?? false,
+                    isFilterable: f.isFilterable ?? false,
+                    sortOrder: f.sortOrder ?? i,
+                    isActive: f.isActive ?? true,
+                    options: (f.options ?? []).map((o, j) => ({
+                      id: fieldId * 100 + j,
+                      fieldId,
+                      label: o.label,
+                      value: o.value,
+                      sortOrder: o.sortOrder ?? j,
+                      isActive: o.isActive ?? true,
+                    })),
+                    createdAt: today,
+                    updatedAt: today,
+                  };
+                }),
+                createdAt: today,
+                updatedAt: today,
+              },
+            ]);
+            toast.success("Group created");
+          }
+          setDialogOpen(false);
+          setEditItem(undefined);
+        }}
         isSubmitting={false}
-        {...(editItem ? { group: { id: editItem.id, name: editItem.name, description: editItem.description, isActive: editItem.isActive } } : {})}
+        {...(editItem ? { group: editItem } : {})}
       />
       <DeleteDialog
         open={deleteTarget !== undefined}
-        title="Delete Group"
-        description={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
-        onConfirm={() => setDeleteTarget(undefined)}
+        title="Delete Group Template"
+        description={`Delete "${deleteTarget?.name}"? This action cannot be undone.`}
+        onConfirm={() => {
+          if (deleteTarget) {
+            setRows((prev) => prev.filter((r) => r.id !== deleteTarget.id));
+            toast.success(`"${deleteTarget.name}" deleted`);
+          }
+          setDeleteTarget(undefined);
+        }}
         onCancel={() => setDeleteTarget(undefined)}
         isDeleting={false}
       />
     </div>
-  )
+  );
 }

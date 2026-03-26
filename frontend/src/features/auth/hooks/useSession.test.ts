@@ -13,9 +13,12 @@ const mockUseNextAuthSession = vi.mocked(useNextAuthSession);
 const fakeUser = {
   id: "user-1",
   email: "test@test.com",
+  username: "test.user",
   firstName: "Test",
+  middleName: null,
   lastName: "User",
-  role: { id: "role-1", roleName: "Admin" },
+  roleId: 1,
+  role: { id: 1, name: "Admin", isActive: true },
 };
 
 describe("useSession", () => {

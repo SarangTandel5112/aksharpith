@@ -27,7 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@shared/components/ui/select";
-import { Textarea } from "@shared/components/ui/textarea";
+import { RichTextEditor } from "@shared/components/ui/rich-text-editor";
 import type React from "react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -40,7 +40,7 @@ const ProductFormSchema = z.object({
   productType: z.string().min(1, "Product type is required"),
   description: z
     .string()
-    .max(1000)
+    .max(10000)
     .optional()
     .transform((v) => v || undefined),
   basePrice: z.coerce.number().min(0, "Price must be positive"),
@@ -224,9 +224,10 @@ export function ProductFormDialog(
                   <FormItem>
                     <FormLabel>Description</FormLabel>
                     <FormControl>
-                      <Textarea
+                      <RichTextEditor
                         placeholder="Optional product description"
-                        {...field}
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
                       />
                     </FormControl>
                     <FormMessage />

@@ -1,47 +1,47 @@
-import { render, screen } from '@testing-library/react'
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { describe, expect, it } from 'vitest'
-import { ProductGrid } from './ProductGrid'
+import { render, screen } from "@testing-library/react";
+import { describe, expect, it } from "vitest";
+import type { CatalogProduct } from "../types/catalog.types";
+import { ProductGrid } from "./ProductGrid";
 
-function makeWrapper(qc: QueryClient) {
-  return function Wrapper(props: { children: React.ReactNode }): React.JSX.Element {
-    return <QueryClientProvider client={qc}>{props.children}</QueryClientProvider>
-  }
-}
-
-const products = [
+const products: CatalogProduct[] = [
   {
-    id: 'p1', name: 'Blue Shirt', sku: 'BS-001', description: 'Nice shirt',
-    basePrice: 29.99,
-    category: { id: 'c1', name: 'Clothing' },
+    id: 1,
+    code: "BS-001",
+    upc: "8901234567890",
+    name: "Blue Shirt",
+    type: "Standard",
+    description: "Nice shirt",
+    model: null,
+    departmentId: 1,
+    subCategoryId: 0,
+    groupId: null,
+    hsnCode: "6109",
+    price: 29.99,
+    stockQuantity: 8,
+    nonTaxable: false,
+    itemInactive: false,
+    nonStockItem: false,
+    department: { id: 1, name: "Retail" },
     subCategory: null,
-    department: { id: 'd1', name: 'Retail' },
-    isActive: true, createdAt: '', updatedAt: '',
+    isActive: true,
+    createdAt: "",
+    updatedAt: "",
   },
-]
+];
 
-describe('ProductGrid', () => {
-  it('renders product cards when products are provided', () => {
-    const qc = new QueryClient()
-    render(<ProductGrid products={products} isLoading={false} />, {
-      wrapper: makeWrapper(qc),
-    })
-    expect(screen.getByText('Blue Shirt')).toBeInTheDocument()
-  })
+describe("ProductGrid", () => {
+  it("renders product cards when products are provided", () => {
+    render(<ProductGrid products={products} isLoading={false} />);
+    expect(screen.getByText("Blue Shirt")).toBeInTheDocument();
+  });
 
-  it('shows loading skeleton when isLoading is true', () => {
-    const qc = new QueryClient()
-    render(<ProductGrid products={[]} isLoading />, {
-      wrapper: makeWrapper(qc),
-    })
-    expect(screen.getByTestId('product-grid-skeleton')).toBeInTheDocument()
-  })
+  it("shows loading skeleton when isLoading is true", () => {
+    render(<ProductGrid products={[]} isLoading />);
+    expect(screen.getByTestId("product-grid-skeleton")).toBeInTheDocument();
+  });
 
-  it('shows empty state when no products', () => {
-    const qc = new QueryClient()
-    render(<ProductGrid products={[]} isLoading={false} />, {
-      wrapper: makeWrapper(qc),
-    })
-    expect(screen.getByText(/no products found/i)).toBeInTheDocument()
-  })
-})
+  it("shows empty state when no products", () => {
+    render(<ProductGrid products={[]} isLoading={false} />);
+    expect(screen.getByText(/no products found/i)).toBeInTheDocument();
+  });
+});

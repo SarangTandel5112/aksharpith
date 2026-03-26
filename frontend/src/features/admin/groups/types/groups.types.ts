@@ -1,33 +1,24 @@
-// src/features/admin/groups/types/groups.types.ts
+import type {
+  CreateGroupFieldDto,
+  CreateGroupFieldOptionDto,
+  CreateProductGroupDto,
+  GroupFieldOptionResponseDto,
+  GroupFieldResponseDto,
+  PaginatedData,
+  ProductGroupResponseDto,
+  UpdateGroupFieldDto,
+  UpdateGroupFieldOptionDto,
+  UpdateProductGroupDto,
+} from "@shared/contracts";
 
-export type GroupFieldOption = {
-  id: string;
-  fieldId: string;
-  optionLabel: string;
-  optionValue: string;
-  sortOrder: number;
-};
-
-export type GroupField = {
-  id: string;
-  groupId: string;
-  fieldName: string;
-  fieldKey?: string;
-  fieldType: "text" | "textarea" | "number" | "boolean" | "dropdown";
-  isRequired: boolean;
-  isFilterable: boolean;
-  sortOrder: number;
-  options: GroupFieldOption[];
-};
-
-export type ProductGroup = {
-  id: string;
-  name: string;
-  description?: string;
-  isActive: boolean;
-  fields: GroupField[];
-  createdAt: string;
-};
-
-// Alias used by GroupsModule
+export type GroupFieldOption = GroupFieldOptionResponseDto;
+export type GroupField = GroupFieldResponseDto;
+export type ProductGroup = ProductGroupResponseDto;
 export type Group = ProductGroup;
+export type PaginatedGroups = PaginatedData<Group>;
+export type CreateGroupInput = CreateProductGroupDto;
+export type UpdateGroupInput = UpdateProductGroupDto;
+export type GroupFieldInput = CreateGroupFieldDto;
+export type UpdateGroupFieldInput = UpdateGroupFieldDto;
+export type GroupFieldOptionInput = CreateGroupFieldOptionDto;
+export type UpdateGroupFieldOptionInput = UpdateGroupFieldOptionDto;

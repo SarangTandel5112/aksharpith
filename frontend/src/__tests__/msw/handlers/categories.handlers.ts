@@ -9,9 +9,13 @@ const BASE = "http://localhost:3000";
 
 type Category = {
   id: string;
+  categoryName: string;
   name: string;
   description: string | null;
-  department: { id: string; name: string };
+  photo: string | null;
+  departmentId: string;
+  department: { id: string; departmentName: string; name: string };
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 };
@@ -21,17 +25,25 @@ type Category = {
 const DEFAULT_CATEGORIES: Category[] = [
   {
     id: "cat-1",
+    categoryName: "Phones",
     name: "Phones",
     description: "Mobile phones",
-    department: { id: "dept-1", name: "Electronics" },
+    photo: null,
+    departmentId: "dept-1",
+    department: { id: "dept-1", departmentName: "Electronics", name: "Electronics" },
+    isActive: true,
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2024-01-01T00:00:00Z",
   },
   {
     id: "cat-2",
+    categoryName: "Shirts",
     name: "Shirts",
     description: null,
-    department: { id: "dept-2", name: "Clothing" },
+    photo: null,
+    departmentId: "dept-2",
+    department: { id: "dept-2", departmentName: "Clothing", name: "Clothing" },
+    isActive: true,
     createdAt: "2024-01-01T00:00:00Z",
     updatedAt: "2024-01-01T00:00:00Z",
   },
@@ -58,15 +70,21 @@ export const categoriesHandlers: RequestHandler[] = [
   // POST /api/categories → create category
   http.post(`${BASE}/api/categories`, async ({ request }) => {
     const body = (await request.json()) as {
-      name: string;
+      categoryName: string;
       description?: string;
+      photo?: string | null;
       departmentId: string;
+      isActive?: boolean;
     };
     const newCategory: Category = {
       id: "cat-new",
-      name: body.name,
+      categoryName: body.categoryName,
+      name: body.categoryName,
       description: body.description ?? null,
-      department: { id: body.departmentId, name: "Department" },
+      photo: body.photo ?? null,
+      departmentId: body.departmentId,
+      department: { id: body.departmentId, departmentName: "Department", name: "Department" },
+      isActive: body.isActive ?? true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -79,9 +97,11 @@ export const categoriesHandlers: RequestHandler[] = [
   // PATCH /api/categories/:id → update category
   http.patch(`${BASE}/api/categories/:id`, async ({ params, request }) => {
     const body = (await request.json()) as Partial<{
-      name: string;
+      categoryName: string;
       description: string;
+      photo: string | null;
       departmentId: string;
+      isActive: boolean;
     }>;
     const cat = DEFAULT_CATEGORIES.find((c) => c.id === params["id"]);
     if (!cat) {
@@ -93,7 +113,12 @@ export const categoriesHandlers: RequestHandler[] = [
     return HttpResponse.json({
       statusCode: 200,
       message: "Category updated",
-      data: { ...cat, ...body, updatedAt: new Date().toISOString() },
+      data: {
+        ...cat,
+        ...body,
+        name: body.categoryName ?? cat.name,
+        updatedAt: new Date().toISOString(),
+      },
     });
   }),
 

@@ -1,8 +1,8 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Button } from "@shared/components/ui/button";
 import { Checkbox } from "@shared/components/ui/checkbox";
+import { Button } from "@shared/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -11,8 +11,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@shared/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@shared/components/ui/form";
+import { ImageDropzone } from "@shared/components/ui/image-dropzone";
 import { Input } from "@shared/components/ui/input";
-import { Label } from "@shared/components/ui/label";
+import { RichTextEditor } from "@shared/components/ui/rich-text-editor";
 import {
   Select,
   SelectContent,
@@ -20,163 +29,181 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@shared/components/ui/select";
-import { Textarea } from "@shared/components/ui/textarea";
 import type React from "react";
 import { useForm } from "react-hook-form";
-import { z } from "zod";
-
-// ── Schema ────────────────────────────────────────────────────────────────────
-
-const CategoryFormSchema = z.object({
-  name: z.string().min(1, "Category name is required").max(100),
-  departmentId: z.string().min(1, "Please select a department"),
-  description: z.string().max(500).optional(),
-  isActive: z.boolean(),
-});
-
-type CategoryFormValues = z.infer<typeof CategoryFormSchema>;
-
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-type CategoryFormItem = {
-  id: string;
-  name: string;
-  departmentName: string;
-  subCategoryCount: number;
-  isActive: boolean;
-};
+import type { z } from "zod";
+import type { Department } from "@features/departments/types/departments.types";
+import {
+  CreateCategorySchema,
+  type CreateCategoryInput,
+} from "../schemas/categories.schema";
+import type { Category } from "../types/categories.types";
 
 type CategoryFormDialogProps = {
   open: boolean;
   onClose: () => void;
-  onSubmit: () => void;
+  onSubmit: (values: CreateCategoryInput) => void;
   isSubmitting: boolean;
-  category?: CategoryFormItem | undefined;
+  category?: Category;
+  departments: Pick<Department, "id" | "name">[];
 };
-
-// ── Constants ─────────────────────────────────────────────────────────────────
-
-const DEPARTMENT_OPTIONS = [
-  "Technology",
-  "Fashion",
-  "Grocery",
-  "Education",
-  "Recreation",
-] as const;
-
-// ── Component ─────────────────────────────────────────────────────────────────
 
 export function CategoryFormDialog(
   props: CategoryFormDialogProps,
 ): React.JSX.Element {
-  const form = useForm<CategoryFormValues>({
-    resolver: zodResolver(CategoryFormSchema),
+  const form = useForm<
+    z.input<typeof CreateCategorySchema>,
+    unknown,
+    CreateCategoryInput
+  >({
+    resolver: zodResolver(CreateCategorySchema),
     defaultValues: {
       name: props.category?.name ?? "",
-      departmentId: props.category?.departmentName ?? "",
-      description: "",
+      description: props.category?.description ?? "",
+      photo: props.category?.photo ?? null,
+      departmentId: props.category?.departmentId ?? 0,
       isActive: props.category?.isActive ?? true,
     },
   });
-
-  const title = props.category ? "Edit Category" : "Add Category";
-
-  function handleFormSubmit(_data: CategoryFormValues): void {
-    props.onSubmit();
-  }
-
-  function handleOpenChange(open: boolean): void {
-    if (!open) props.onClose();
-  }
-
   return (
-    <Dialog open={props.open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[560px]">
-        <DialogHeader className="border-b border-zinc-100 pb-4">
-          <DialogTitle className="text-base font-semibold text-zinc-900">
-            {title}
+    <Dialog open={props.open} onOpenChange={(open) => !open && props.onClose()}>
+      <DialogContent className="sm:max-w-[760px]">
+        <DialogHeader>
+          <DialogTitle>
+            {props.category ? "Edit Category" : "Add Category"}
           </DialogTitle>
-          <DialogDescription className="text-sm text-zinc-500">
-            {props.category
-              ? "Update the category details."
-              : "Fill in the details to create a new category."}
+          <DialogDescription>
+            Add the category details, department, and photo.
           </DialogDescription>
         </DialogHeader>
-        <form
-          key={props.category?.id ?? "new"}
-          onSubmit={form.handleSubmit(handleFormSubmit)}
-          className="space-y-4"
-        >
-          <div className="space-y-1.5">
-            <Label htmlFor="cat-name">
-              Name <span className="text-red-500">*</span>
-            </Label>
-            <Input
-              id="cat-name"
-              placeholder="Category name"
-              {...form.register("name")}
-            />
-            {form.formState.errors.name && (
-              <p className="text-sm text-red-500">
-                {form.formState.errors.name.message}
-              </p>
-            )}
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="cat-department">
-              Department <span className="text-red-500">*</span>
-            </Label>
-            <Select
-              value={form.watch("departmentId")}
-              onValueChange={(v) => form.setValue("departmentId", v)}
-            >
-              <SelectTrigger id="cat-department">
-                <SelectValue placeholder="Select a department" />
-              </SelectTrigger>
-              <SelectContent>
-                {DEPARTMENT_OPTIONS.map((dept) => (
-                  <SelectItem key={dept} value={dept}>
-                    {dept}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            {form.formState.errors.departmentId && (
-              <p className="text-sm text-red-500">
-                {form.formState.errors.departmentId.message}
-              </p>
-            )}
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="cat-description">Description</Label>
-            <Textarea
-              id="cat-description"
-              placeholder="Optional description"
-              {...form.register("description")}
-            />
-          </div>
-          <div className="flex items-center gap-3 space-y-0">
-            <Checkbox
-              id="cat-isActive"
-              checked={form.watch("isActive")}
-              onCheckedChange={(v) => form.setValue("isActive", Boolean(v))}
-            />
-            <Label htmlFor="cat-isActive">Active</Label>
-          </div>
-          <DialogFooter className="border-t border-zinc-100 pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={props.onClose}
-              disabled={props.isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={props.isSubmitting}>
-              {props.isSubmitting ? "Saving…" : "Save"}
-            </Button>
-          </DialogFooter>
-        </form>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit(props.onSubmit)}
+            className="space-y-6"
+          >
+            <div className="space-y-6">
+              <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Category Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. Audio" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="departmentId"
+                render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Department</FormLabel>
+                      {(() => {
+                        const currentValue =
+                          typeof field.value === "number" && field.value > 0
+                            ? String(field.value)
+                            : "";
+                        return (
+                      <Select
+                        value={currentValue}
+                        onValueChange={(value) => field.onChange(Number(value))}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select department" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {props.departments.map((department) => (
+                            <SelectItem key={department.id} value={String(department.id)}>
+                              {department.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                        );
+                      })()}
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <RichTextEditor
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                        placeholder="Add a short description for this category."
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="photo"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Photo</FormLabel>
+                    <FormControl>
+                      <ImageDropzone
+                        value={field.value ?? null}
+                        onChange={field.onChange}
+                        emptyLabel="Drop the category image here"
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="isActive"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-3 rounded-2xl border border-zinc-200 px-4 py-3">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value ?? false}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1">
+                      <FormLabel className="text-sm font-medium text-zinc-900">
+                        Active
+                      </FormLabel>
+                      <p className="text-sm text-zinc-500">
+                        Keep this category available for new products.
+                      </p>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </div>
+            <DialogFooter>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={props.onClose}
+                disabled={props.isSubmitting}
+              >
+                Cancel
+              </Button>
+              <Button type="submit" disabled={props.isSubmitting}>
+                {props.isSubmitting ? "Saving…" : "Save Category"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
       </DialogContent>
     </Dialog>
   );

@@ -11,9 +11,12 @@ declare module 'next-auth' {
     user: {
       id: string
       email: string
+      username: string
       firstName: string
+      middleName: string | null
       lastName: string
-      role: { id: string; roleName: string }
+      roleId: number
+      role: { id: number; name: string; isActive: boolean } | null
     }
   }
 }
@@ -24,7 +27,10 @@ declare module 'next-auth/jwt' {
     accessToken: string
     id: string
     firstName: string
+    middleName: string | null
     lastName: string
-    role: { id: string; roleName: string }
+    username: string
+    roleId: number
+    role: { id: number; name: string; isActive: boolean } | null
   }
 }

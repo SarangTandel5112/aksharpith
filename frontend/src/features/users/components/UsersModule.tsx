@@ -10,7 +10,7 @@ import { IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
 import type React from "react";
 import { useState } from "react";
 import { useUsers } from "../hooks/useUsers";
-import type { User } from "../types/users.types";
+import type { UpdateUserInput, User } from "../types/users.types";
 import type {
   CreateUserFormValues,
   UpdateUserFormValues,
@@ -20,7 +20,7 @@ import { UserFormDialog } from "./UserFormDialog";
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type UserRow = {
-  id: string;
+  id: number;
   name: string;
   email: string;
   role: string;
@@ -75,7 +75,32 @@ export function UsersModule(): React.JSX.Element {
     values: CreateUserFormValues | UpdateUserFormValues,
   ): void {
     if (editUser) {
-      void update(editUser.id, values as UpdateUserFormValues)
+      const updateValues = values as UpdateUserFormValues;
+      const input: UpdateUserInput = {
+        ...(updateValues.username !== undefined
+          ? { username: updateValues.username }
+          : {}),
+        ...(updateValues.firstName !== undefined
+          ? { firstName: updateValues.firstName }
+          : {}),
+        ...(updateValues.middleName !== undefined
+          ? { middleName: updateValues.middleName }
+          : {}),
+        ...(updateValues.lastName !== undefined
+          ? { lastName: updateValues.lastName }
+          : {}),
+        ...(updateValues.email !== undefined
+          ? { email: updateValues.email }
+          : {}),
+        ...(updateValues.roleId !== undefined
+          ? { roleId: updateValues.roleId }
+          : {}),
+        ...(updateValues.isActive !== undefined
+          ? { isActive: updateValues.isActive }
+          : {}),
+      };
+
+      void update(editUser.id, input)
         .then(() => {
           toast.success("User updated");
           handleCloseDialog();
@@ -84,7 +109,21 @@ export function UsersModule(): React.JSX.Element {
           toast.error("Failed to update user");
         });
     } else {
-      void create(values as CreateUserFormValues)
+      const createValues = values as CreateUserFormValues;
+      const input = {
+        username: createValues.username,
+        firstName: createValues.firstName,
+        ...(createValues.middleName
+          ? { middleName: createValues.middleName }
+          : {}),
+        lastName: createValues.lastName,
+        email: createValues.email,
+        password: createValues.password,
+        roleId: createValues.roleId,
+        isActive: createValues.isActive,
+      };
+
+      void create(input)
         .then(() => {
           toast.success("User created");
           handleCloseDialog();
@@ -111,7 +150,7 @@ export function UsersModule(): React.JSX.Element {
     id: u.id,
     name: `${u.firstName} ${u.lastName}`,
     email: u.email,
-    role: u.role.roleName,
+    role: u.role?.name ?? "—",
     createdAt: new Date(u.createdAt).toLocaleDateString(),
   }));
 

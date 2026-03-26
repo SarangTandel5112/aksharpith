@@ -7,7 +7,7 @@ export async function GET(req: NextRequest) {
   return bffGet({
     path: "/api/roles",
     request: req,
-    requiredRoles: ["Admin", "Staff"],
+    requiredRoles: ["Admin"],
   });
 }
 

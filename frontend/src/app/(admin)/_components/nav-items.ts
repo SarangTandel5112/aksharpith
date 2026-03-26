@@ -2,6 +2,7 @@ import {
   IconBuildingStore,
   IconCategory,
   IconDashboard,
+  IconPhoto,
   IconPackage,
   IconPalette,
   IconSettings,
@@ -26,7 +27,7 @@ export type NavSection = {
 export const NAV_SECTIONS: NavSection[] = [
   {
     title: "Overview",
-    items: [{ label: "Dashboard", href: "/admin", icon: IconDashboard }],
+    items: [{ label: "Dashboard", href: "/admin/dashboard", icon: IconDashboard }],
   },
   {
     title: "Catalog",
@@ -35,13 +36,20 @@ export const NAV_SECTIONS: NavSection[] = [
       { label: "Categories", href: "/admin/categories", icon: IconCategory },
       { label: "Sub-categories", href: "/admin/sub-categories", icon: IconStack2 },
       { label: "Attributes", href: "/admin/attributes", icon: IconPalette },
-      { label: "Groups", href: "/admin/groups", icon: IconTag },
+      { label: "Group Templates", href: "/admin/groups", icon: IconTag },
     ],
   },
   {
     title: "Products",
     items: [
       { label: "Products", href: "/admin/products", icon: IconPackage },
+      { label: "Product Media", href: "/admin/media", icon: IconPhoto },
+      {
+        label: "Marketing Media",
+        href: "/admin/marketing-media",
+        icon: IconTag,
+      },
+      { label: "Lot Matrix", href: "/admin/variants", icon: IconStack2 },
     ],
   },
   {

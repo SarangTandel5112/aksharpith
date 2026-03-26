@@ -1,27 +1,11 @@
-// src/features/departments/types/departments.types.ts
+import type {
+  CreateDepartmentDto,
+  DepartmentResponseDto,
+  PaginatedData,
+  UpdateDepartmentDto,
+} from "@shared/contracts";
 
-export type Department = {
-  id: string;
-  name: string;
-  description: string | null;
-  createdAt: string;
-  updatedAt: string;
-};
-
-export type PaginatedDepartments = {
-  items: Department[];
-  total: number;
-  page: number;
-  limit: number;
-  totalPages: number;
-};
-
-export type CreateDepartmentInput = {
-  name: string;
-  description?: string;
-};
-
-export type UpdateDepartmentInput = {
-  name?: string;
-  description?: string;
-};
+export type Department = DepartmentResponseDto;
+export type PaginatedDepartments = PaginatedData<Department>;
+export type CreateDepartmentInput = CreateDepartmentDto;
+export type UpdateDepartmentInput = UpdateDepartmentDto;

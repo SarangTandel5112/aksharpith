@@ -1,42 +1,51 @@
-import type { Attribute } from '@features/admin/attributes/types/attributes.types'
+import type {
+  CreateProductVariantDto,
+  ProductAttributeResponseDto,
+  ProductResponseDto,
+  ProductVariantResponseDto,
+  UpdateProductVariantDto,
+} from "@shared/contracts";
 
-export type VariantAttribute = {
-  attributeId:   string
-  attributeName: string
-  value:         string
-}
+export type VariantAttributeLink = {
+  variantId: number;
+  attributeId: ProductAttributeResponseDto["id"];
+  attributeValueId: number;
+};
 
-export type Variant = {
-  id:         string
-  productId:  string
-  sku:        string
-  price:      number
-  stock:      number
-  attributes: VariantAttribute[]
-  isActive:   boolean
-  createdAt:  string
-  updatedAt:  string
-}
+export type Variant = ProductVariantResponseDto & {
+  variantAttributes: VariantAttributeLink[];
+};
+export type VariantCreateInput = CreateProductVariantDto;
+export type VariantUpdateInput = UpdateProductVariantDto;
 
-export type MatrixRow = {
-  combination: Record<string, string>  // attributeName → value
-  sku:         string
-  price:       number
-  stock:       number
-}
+export type VariantListRow = {
+  id: number;
+  sku: string;
+  attributesSummary: string;
+  price: number | null;
+  stockQuantity: number;
+  isActive: boolean;
+};
+
+export type DirectVariantWorkspaceRow = {
+  id: number;
+  productId: ProductResponseDto["id"];
+  productName: ProductResponseDto["name"];
+  productCode: ProductResponseDto["code"];
+  productType: ProductResponseDto["type"];
+  variantCount: number;
+  activeVariantCount: number;
+};
+
+export type VariantGenerateInput = {
+  attributeIds: number[];
+};
 
 export type LotMatrixState = {
-  step:            1 | 2 | 3
-  productId:       string
-  selectedAttrIds: string[]
-  matrix:          MatrixRow[]
-  isSubmitting:    boolean
-  // Actions
-  setStep:         (step: 1 | 2 | 3) => void
-  setProductId:    (id: string) => void
-  toggleAttribute: (id: string) => void
-  generateMatrix:  (attributes: Attribute[]) => void
-  updateMatrixRow: (idx: number, field: 'sku' | 'price' | 'stock', value: string | number) => void
-  setIsSubmitting: (v: boolean) => void
-  reset:           () => void
-}
+  selectedAttributeIds: number[];
+  isSubmitting: boolean;
+  setSelectedAttributeIds: (attributeIds: number[]) => void;
+  toggleAttribute: (attributeId: number) => void;
+  setIsSubmitting: (isSubmitting: boolean) => void;
+  reset: () => void;
+};

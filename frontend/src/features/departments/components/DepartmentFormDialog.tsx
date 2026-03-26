@@ -1,6 +1,7 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Checkbox } from "@shared/components/ui/checkbox";
 import { Button } from "@shared/components/ui/button";
 import {
   Dialog,
@@ -19,7 +20,7 @@ import {
   FormMessage,
 } from "@shared/components/ui/form";
 import { Input } from "@shared/components/ui/input";
-import { Textarea } from "@shared/components/ui/textarea";
+import { RichTextEditor } from "@shared/components/ui/rich-text-editor";
 import type React from "react";
 import { useForm } from "react-hook-form";
 import type { z } from "zod";
@@ -48,7 +49,9 @@ export function DepartmentFormDialog(
     resolver: zodResolver(DepartmentFormSchema),
     defaultValues: {
       name: props.department?.name ?? "",
+      code: props.department?.code ?? "",
       description: props.department?.description ?? "",
+      isActive: props.department?.isActive ?? true,
     },
   });
 
@@ -64,46 +67,87 @@ export function DepartmentFormDialog(
 
   return (
     <Dialog open={props.open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[480px]">
+      <DialogContent className="sm:max-w-[760px]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
-            {props.department
-              ? "Update the department details."
-              : "Create a new product department."}
+            Add the department details used across the catalog.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(handleSubmit)}
-            className="space-y-4"
+            className="space-y-6"
           >
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Department name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Optional description" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="space-y-6">
+              <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_220px]">
+                <FormField
+                  control={form.control}
+                  name="name"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Department Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. Electronics" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name="code"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Department Code</FormLabel>
+                      <FormControl>
+                        <Input placeholder="e.g. ELEC" {...field} value={field.value ?? ""} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <FormField
+                control={form.control}
+                name="description"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Description</FormLabel>
+                    <FormControl>
+                      <RichTextEditor
+                        value={field.value ?? ""}
+                        onChange={field.onChange}
+                        placeholder="Add a short description for this department."
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="isActive"
+                render={({ field }) => (
+                  <FormItem className="flex items-center gap-3 rounded-2xl border border-zinc-200 px-4 py-3">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value ?? false}
+                        onCheckedChange={field.onChange}
+                      />
+                    </FormControl>
+                    <div className="space-y-1">
+                      <FormLabel className="text-sm font-medium text-zinc-900">
+                        Active
+                      </FormLabel>
+                      <p className="text-sm text-zinc-500">
+                        Show this department for catalog setup.
+                      </p>
+                    </div>
+                  </FormItem>
+                )}
+              />
+            </div>
             <DialogFooter>
               <Button
                 type="button"
@@ -114,7 +158,7 @@ export function DepartmentFormDialog(
                 Cancel
               </Button>
               <Button type="submit" disabled={props.isSubmitting}>
-                {props.isSubmitting ? "Saving\u2026" : "Save"}
+                {props.isSubmitting ? "Saving…" : "Save Department"}
               </Button>
             </DialogFooter>
           </form>

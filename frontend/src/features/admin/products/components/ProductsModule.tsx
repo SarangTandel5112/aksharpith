@@ -1,5 +1,15 @@
 "use client";
 
+import { ProductsGridView } from "@features/admin/products/components/list/ProductsGridView";
+import { ProductsSummaryStrip } from "@features/admin/products/components/list/ProductsSummaryStrip";
+import {
+  buildProductListRows,
+  formatCurrency,
+  formatProductListingStatus,
+  formatProductSellingStatus,
+  formatProductType,
+} from "@features/admin/products/services/product-admin.helpers";
+import type { ProductListRow } from "@features/admin/products/types/products.types";
 import {
   DataTable,
   DeleteDialog,
@@ -10,321 +20,412 @@ import {
 } from "@shared/components/admin";
 import type { Column } from "@shared/components/admin/DataTable";
 import { Button } from "@shared/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@shared/components/ui/dropdown-menu";
 import { cn } from "@shared/lib/utils";
-import { IconPencil, IconPhoto, IconTrash } from "@tabler/icons-react";
+import {
+  IconDots,
+  IconLayoutGrid,
+  IconList,
+  IconPlus,
+  IconTrash,
+} from "@tabler/icons-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type React from "react";
-import { useState } from "react";
-import { ProductFormDialog } from "./ProductFormDialog";
+import { useDeferredValue, useState } from "react";
+import { toast } from "sonner";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+type ViewMode = "list" | "grid";
 
-type ProductRow = {
-  id: string;
-  name: string;
-  sku: string;
-  productType: string;
-  basePrice: number;
-  stockQuantity: number;
-  department: string;
-  isActive: boolean;
-};
-
-// ── Mock Data ─────────────────────────────────────────────────────────────────
-
-const MOCK_PRODUCTS: ProductRow[] = [
+const COLUMNS: Column<ProductListRow>[] = [
   {
-    id: "1",
-    name: "iPhone 15 Pro",
-    sku: "IPH-15-PRO",
-    productType: "SIMPLE",
-    basePrice: 134900,
-    stockQuantity: 45,
-    department: "Electronics",
-    isActive: true,
-  },
-  {
-    id: "2",
-    name: "Samsung Galaxy S24",
-    sku: "SAM-S24-BLK",
-    productType: "VARIABLE",
-    basePrice: 89900,
-    stockQuantity: 32,
-    department: "Electronics",
-    isActive: true,
-  },
-  {
-    id: "3",
-    name: "Men's Cotton T-Shirt",
-    sku: "TSH-MEN-001",
-    productType: "VARIABLE",
-    basePrice: 599,
-    stockQuantity: 200,
-    department: "Clothing",
-    isActive: true,
-  },
-  {
-    id: "4",
-    name: 'MacBook Pro 14"',
-    sku: "MBP-14-M3",
-    productType: "SIMPLE",
-    basePrice: 199900,
-    stockQuantity: 12,
-    department: "Electronics",
-    isActive: true,
-  },
-  {
-    id: "5",
-    name: "Wireless Headphones",
-    sku: "WH-BT-200",
-    productType: "SIMPLE",
-    basePrice: 4999,
-    stockQuantity: 78,
-    department: "Electronics",
-    isActive: true,
-  },
-  {
-    id: "6",
-    name: "Organic Green Tea",
-    sku: "TEA-ORG-100",
-    productType: "SIMPLE",
-    basePrice: 299,
-    stockQuantity: 500,
-    department: "Food & Beverage",
-    isActive: false,
-  },
-  {
-    id: "7",
-    name: "Running Shoes",
-    sku: "SHO-RUN-M42",
-    productType: "VARIABLE",
-    basePrice: 3499,
-    stockQuantity: 65,
-    department: "Clothing",
-    isActive: true,
-  },
-  {
-    id: "8",
-    name: "E-Book: React Mastery",
-    sku: "EBOOK-REACT-01",
-    productType: "DIGITAL",
-    basePrice: 999,
-    stockQuantity: 999,
-    department: "Electronics",
-    isActive: true,
-  },
-  {
-    id: "9",
-    name: "Premium Yoga Mat",
-    sku: "YM-PRO-6MM",
-    productType: "SIMPLE",
-    basePrice: 1499,
-    stockQuantity: 43,
-    department: "Home & Garden",
-    isActive: true,
-  },
-  {
-    id: "10",
-    name: "Coffee Subscription",
-    sku: "COFFSUB-3M",
-    productType: "SERVICE",
-    basePrice: 2999,
-    stockQuantity: 0,
-    department: "Food & Beverage",
-    isActive: false,
-  },
-];
-
-// ── Columns ───────────────────────────────────────────────────────────────────
-
-const columns: Column<ProductRow>[] = [
-  {
-    key: "name",
+    key: "product",
     label: "Product",
     sortable: true,
     render: (row) => (
-      <div className="flex items-center gap-3">
-        <div className="w-10 h-10 rounded-md bg-zinc-100 flex items-center justify-center flex-shrink-0">
-          <IconPhoto size={16} className="text-zinc-400" />
-        </div>
-        <div>
-          <p className="text-sm font-medium text-zinc-900">{row.name}</p>
-          <p className="text-xs text-zinc-500">{row.sku}</p>
-        </div>
+      <div className="space-y-1">
+        <p className="font-medium text-zinc-950">{row.product.name}</p>
+        <p className="text-xs text-zinc-500">
+          {row.product.code} • {row.categoryName}
+        </p>
       </div>
     ),
   },
   {
-    key: "productType",
+    key: "departmentName",
+    label: "Department",
+    render: (row) => (
+      <div className="space-y-1">
+        <p className="text-sm text-zinc-800">{row.departmentName}</p>
+        <p className="text-xs text-zinc-500">{row.subCategoryName}</p>
+      </div>
+    ),
+  },
+  {
+    key: "groupName",
+    label: "Group",
+  },
+  {
+    key: "type",
     label: "Type",
     render: (row) => (
-      <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-zinc-100 text-zinc-700">
-        {row.productType}
-      </span>
+      <StatusBadge
+        label={formatProductType(row.product.type)}
+        variant="info"
+      />
     ),
   },
   {
-    key: "basePrice",
-    label: "Price",
-    sortable: true,
+    key: "price",
+    label: "Price / Stock",
     render: (row) => (
-      <span className="text-sm text-zinc-900">
-        &#8377;{row.basePrice.toLocaleString("en-IN")}
-      </span>
+      <div className="space-y-1">
+        <p className="text-sm font-medium text-zinc-900">
+          {formatCurrency(row.product.price)}
+        </p>
+        <p className="text-xs text-zinc-500">
+          {row.product.stockQuantity} in stock
+        </p>
+      </div>
     ),
   },
   {
-    key: "stockQuantity",
-    label: "Stock",
-    sortable: true,
+    key: "mediaCount",
+    label: "Assets",
     render: (row) => (
-      <span
-        className={cn(
-          "text-sm",
-          row.stockQuantity === 0 ? "text-red-500" : "text-zinc-700",
-        )}
-      >
-        {row.stockQuantity === 0 ? "Out of stock" : row.stockQuantity}
-      </span>
+      <div className="space-y-1 text-sm text-zinc-700">
+        <p>{row.mediaCount} media</p>
+        <p>{row.marketingMediaCount} marketing</p>
+        <p>{row.variantCount} lot matrix rows</p>
+      </div>
     ),
-  },
-  {
-    key: "department",
-    label: "Department",
   },
   {
     key: "isActive",
     label: "Status",
     render: (row) => (
-      <StatusBadge
-        variant={row.isActive ? "success" : "neutral"}
-        label={row.isActive ? "Active" : "Inactive"}
-      />
+      <div className="flex flex-col gap-2">
+        <StatusBadge
+          label={formatProductListingStatus(row.product.isActive)}
+          variant={row.product.isActive ? "success" : "neutral"}
+        />
+        <StatusBadge
+          label={formatProductSellingStatus(row.product.itemInactive)}
+          variant={row.product.itemInactive ? "warning" : "info"}
+        />
+      </div>
     ),
   },
 ];
 
-// ── Component ─────────────────────────────────────────────────────────────────
-
 export function ProductsModule(): React.JSX.Element {
+  const router = useRouter();
   const [search, setSearch] = useState("");
+  const deferredSearch = useDeferredValue(search);
+  const [departmentFilter, setDepartmentFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
+  const [listingFilter, setListingFilter] = useState("all");
+  const [sellingFilter, setSellingFilter] = useState("all");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-  const [dialogOpen, setDialogOpen] = useState(false);
-  const [editItem, setEditItem] = useState<ProductRow | undefined>(undefined);
-  const [deleteTarget, setDeleteTarget] = useState<ProductRow | undefined>(
+  const [viewMode, setViewMode] = useState<ViewMode>("list");
+  const [selectedIds, setSelectedIds] = useState<ProductListRow["id"][]>([]);
+  const [deleteTarget, setDeleteTarget] = useState<ProductListRow | undefined>(
     undefined,
   );
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
-  const filtered = MOCK_PRODUCTS.filter(
-    (p) =>
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.sku.toLowerCase().includes(search.toLowerCase()) ||
-      p.department.toLowerCase().includes(search.toLowerCase()),
+  const [rows, setRows] = useState<ProductListRow[]>(() =>
+    buildProductListRows(),
   );
 
-  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
+  const searchFilteredRows = deferredSearch.trim()
+    ? rows.filter((row) =>
+        [
+          row.product.name,
+          row.product.code,
+          row.departmentName,
+          row.categoryName,
+          row.subCategoryName,
+          row.groupName,
+        ]
+          .join(" ")
+          .toLowerCase()
+          .includes(deferredSearch.toLowerCase()),
+      )
+    : rows;
+  const filteredRows = searchFilteredRows.filter((row) => {
+    const matchesDepartment =
+      departmentFilter === "all"
+        ? true
+        : row.departmentName === departmentFilter;
+    const matchesType =
+      typeFilter === "all" ? true : row.product.type === typeFilter;
+    const matchesListing =
+      listingFilter === "all"
+        ? true
+        : listingFilter === "listed"
+          ? row.product.isActive
+          : !row.product.isActive;
+    const matchesSelling =
+      sellingFilter === "all"
+        ? true
+        : sellingFilter === "sellable"
+          ? !row.product.itemInactive
+          : row.product.itemInactive;
 
-  function renderActions(row: ProductRow): React.ReactNode {
     return (
-      <div className="flex items-center gap-1">
-        <button
-          type="button"
-          onClick={() => {
-            setEditItem(row);
-            setDialogOpen(true);
-          }}
-          className="p-1.5 rounded hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 transition-colors"
-        >
-          <IconPencil size={16} />
-        </button>
-        <button
-          type="button"
-          onClick={() => setDeleteTarget(row)}
-          className="p-1.5 rounded hover:bg-zinc-100 text-zinc-400 hover:text-red-500 transition-colors"
-        >
-          <IconTrash size={16} />
-        </button>
-      </div>
+      matchesDepartment &&
+      matchesType &&
+      matchesListing &&
+      matchesSelling
     );
-  }
+  });
+
+  const paginatedRows = filteredRows.slice(
+    (page - 1) * pageSize,
+    page * pageSize,
+  );
+
+  const summaryItems = [
+    {
+      label: "Products",
+      value: String(rows.length),
+      tone: "info" as const,
+    },
+    {
+      label: "Merchandising Ready",
+      value: String(
+        rows.filter((row) => row.mediaCount > 0 && row.marketingMediaCount > 0)
+          .length,
+      ),
+      tone: "success" as const,
+    },
+    {
+      label: "Lot Matrix Catalog",
+      value: String(rows.filter((row) => row.variantCount > 0).length),
+      tone: "neutral" as const,
+    },
+  ];
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Products" subtitle="Manage your product catalog" />
-      <DataTable
-        columns={columns}
-        rows={paginated}
-        selectable
-        onSelectionChange={setSelectedIds}
-        renderActions={renderActions}
-        toolbar={
-          <TableToolbar
-            search={search}
-            onSearch={(v) => {
-              setSearch(v);
-              setPage(1);
-            }}
-            placeholder="Search products..."
-            selectedCount={selectedIds.length}
-            action={
-              <Button
-                size="sm"
-                onClick={() => {
-                  setEditItem(undefined);
-                  setDialogOpen(true);
-                }}
-              >
-                Add Product
-              </Button>
-            }
-          />
-        }
-        footer={
-          <TablePagination
-            total={filtered.length}
-            page={page}
-            pageSize={pageSize}
-            onPageChange={setPage}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              setPage(1);
-            }}
-          />
+      <PageHeader
+        title="Products"
+        subtitle="Manage your product catalog, media, and lot matrix readiness."
+        action={
+          <Button asChild>
+            <Link href="/admin/products/new">
+              <IconPlus className="h-4 w-4" />
+              Add Product
+            </Link>
+          </Button>
         }
       />
-      <ProductFormDialog
-        key={editItem?.id ?? "new"}
-        open={dialogOpen}
-        onClose={() => {
-          setDialogOpen(false);
-          setEditItem(undefined);
-        }}
-        onSubmit={() => setDialogOpen(false)}
-        isSubmitting={false}
-        {...(editItem !== undefined
-          ? {
-              product: {
-                id: editItem.id,
-                name: editItem.name,
-                sku: editItem.sku,
-                productType: editItem.productType,
-                description: "",
-                basePrice: editItem.basePrice,
-                stockQuantity: editItem.stockQuantity,
-                department: editItem.department,
-                category: "",
-                subCategory: "",
-                isActive: editItem.isActive,
+      <ProductsSummaryStrip items={summaryItems} />
+      <div className="rounded-lg border border-zinc-200 bg-white shadow-sm">
+        <TableToolbar
+          search={search}
+          onSearch={(value) => {
+            setSearch(value);
+            setPage(1);
+          }}
+          placeholder="Search products, SKU, category, or group…"
+          selectedCount={selectedIds.length}
+          filters={[
+            {
+              id: "department",
+              label: "Department",
+              value: departmentFilter,
+              onChange: (value) => {
+                setDepartmentFilter(value);
+                setPage(1);
               },
-            }
-          : {})}
-      />
+              options: Array.from(new Set(rows.map((row) => row.departmentName))).map(
+                (departmentName) => ({
+                  label: departmentName,
+                  value: departmentName,
+                }),
+              ),
+            },
+            {
+              id: "type",
+              label: "Type",
+              value: typeFilter,
+              onChange: (value) => {
+                setTypeFilter(value);
+                setPage(1);
+              },
+              options: [
+                  { label: "Standard", value: "Standard" },
+                  { label: "Lot Matrix", value: "Lot Matrix" },
+              ],
+            },
+            {
+              id: "listing",
+              label: "Listing",
+              value: listingFilter,
+              onChange: (value) => {
+                setListingFilter(value);
+                setPage(1);
+              },
+              options: [
+                { label: "Listed", value: "listed" },
+                { label: "Hidden", value: "hidden" },
+              ],
+            },
+            {
+              id: "selling",
+              label: "Selling",
+              value: sellingFilter,
+              onChange: (value) => {
+                setSellingFilter(value);
+                setPage(1);
+              },
+              options: [
+                { label: "Sellable", value: "sellable" },
+                { label: "Not Sellable", value: "not-sellable" },
+              ],
+            },
+          ]}
+          onClearFilters={() => {
+            setSearch("");
+            setDepartmentFilter("all");
+            setTypeFilter("all");
+            setListingFilter("all");
+            setSellingFilter("all");
+            setPage(1);
+          }}
+          action={
+            <div className="flex items-center gap-2">
+              <div className="flex items-center rounded-md border border-zinc-200 bg-zinc-50 p-1">
+                <button
+                  type="button"
+                  onClick={() => setViewMode("list")}
+                  className={cn(
+                    "rounded-xl px-3 py-2 text-sm transition-colors",
+                    viewMode === "list"
+                      ? "bg-zinc-950 text-white"
+                      : "text-zinc-500 hover:text-zinc-900",
+                  )}
+                >
+                  <IconList className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode("grid")}
+                  className={cn(
+                    "rounded-xl px-3 py-2 text-sm transition-colors",
+                    viewMode === "grid"
+                      ? "bg-zinc-950 text-white"
+                      : "text-zinc-500 hover:text-zinc-900",
+                  )}
+                >
+                  <IconLayoutGrid className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          }
+        />
+        <div>
+          {viewMode === "list" ? (
+            <DataTable
+              columns={COLUMNS}
+              rows={paginatedRows}
+              selectable
+              onSelectionChange={setSelectedIds}
+              renderActions={(row) => (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="ghost"
+                      size="icon-sm"
+                      aria-label="Product actions"
+                    >
+                      <IconDots className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-44">
+                    <DropdownMenuItem
+                      onClick={() =>
+                        router.push(`/admin/products/${row.product.id}`)
+                      }
+                    >
+                      Open Product
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() =>
+                        router.push(
+                          `/admin/products/${row.product.id}/variants`,
+                        )
+                      }
+                    >
+                      Open Lot Matrix
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      variant="destructive"
+                      onClick={() => setDeleteTarget(row)}
+                    >
+                      <IconTrash className="h-3.5 w-3.5" />
+                      Delete
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+              footer={
+                <TablePagination
+                  total={filteredRows.length}
+                  page={page}
+                  pageSize={pageSize}
+                  onPageChange={setPage}
+                  onPageSizeChange={(size) => {
+                    setPageSize(size);
+                    setPage(1);
+                  }}
+                />
+              }
+            />
+          ) : (
+            <>
+              <ProductsGridView
+                rows={paginatedRows}
+                onDelete={(row) => setDeleteTarget(row)}
+              />
+              <div className="mt-5">
+                <TablePagination
+                  total={filteredRows.length}
+                  page={page}
+                  pageSize={pageSize}
+                  onPageChange={setPage}
+                  onPageSizeChange={(size) => {
+                    setPageSize(size);
+                    setPage(1);
+                  }}
+                />
+              </div>
+            </>
+          )}
+        </div>
+      </div>
       <DeleteDialog
         open={deleteTarget !== undefined}
         title="Delete Product"
-        description={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
-        onConfirm={() => setDeleteTarget(undefined)}
+        description={`Delete "${deleteTarget?.product.name}"? This action cannot be undone.`}
+        onConfirm={() => {
+          if (deleteTarget) {
+            setRows((prev) =>
+              prev.filter((r) => r.product.id !== deleteTarget.product.id),
+            );
+            toast.success(`"${deleteTarget.product.name}" deleted`);
+          }
+          setDeleteTarget(undefined);
+        }}
         onCancel={() => setDeleteTarget(undefined)}
         isDeleting={false}
       />

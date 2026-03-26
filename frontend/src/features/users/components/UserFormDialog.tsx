@@ -64,11 +64,14 @@ export function UserFormDialog(props: UserFormDialogProps): React.JSX.Element {
   >({
     resolver: zodResolver(CreateUserFormSchema),
     defaultValues: {
+      username: "",
       firstName: "",
+      middleName: "",
       lastName: "",
       email: "",
       password: "",
-      roleId: "",
+      roleId: 0,
+      isActive: true,
     },
   });
 
@@ -79,10 +82,13 @@ export function UserFormDialog(props: UserFormDialogProps): React.JSX.Element {
   >({
     resolver: zodResolver(UpdateUserFormSchema),
     defaultValues: {
+      username: props.user?.username ?? "",
       firstName: props.user?.firstName ?? "",
+      middleName: props.user?.middleName ?? "",
       lastName: props.user?.lastName ?? "",
       email: props.user?.email ?? "",
-      roleId: props.user?.role.id ?? "",
+      roleId: props.user?.roleId ?? 0,
+      isActive: props.user?.isActive ?? true,
     },
   });
 
@@ -117,6 +123,19 @@ export function UserFormDialog(props: UserFormDialogProps): React.JSX.Element {
               onSubmit={createForm.handleSubmit(handleCreateSubmit)}
               className="space-y-4"
             >
+              <FormField
+                control={createForm.control}
+                name="username"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Username</FormLabel>
+                    <FormControl>
+                      <Input placeholder="username" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
               <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={createForm.control}
@@ -126,6 +145,19 @@ export function UserFormDialog(props: UserFormDialogProps): React.JSX.Element {
                       <FormLabel>First Name</FormLabel>
                       <FormControl>
                         <Input placeholder="First name" {...field} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                <FormField
+                  control={createForm.control}
+                  name="middleName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Middle Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Optional" {...field} value={field.value ?? ""} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -187,8 +219,8 @@ export function UserFormDialog(props: UserFormDialogProps): React.JSX.Element {
                     <FormItem>
                       <FormLabel>Role</FormLabel>
                       <Select
-                        onValueChange={field.onChange}
-                        value={field.value ?? ""}
+                        onValueChange={(value) => field.onChange(Number(value))}
+                        value={field.value ? String(field.value) : ""}
                         disabled={props.isLoadingRoles}
                       >
                         <FormControl>
@@ -204,8 +236,8 @@ export function UserFormDialog(props: UserFormDialogProps): React.JSX.Element {
                         </FormControl>
                         <SelectContent>
                           {props.roles.map((role) => (
-                            <SelectItem key={role.id} value={role.id}>
-                              {role.roleName}
+                            <SelectItem key={role.id} value={String(role.id)}>
+                              {role.name}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -255,6 +287,19 @@ export function UserFormDialog(props: UserFormDialogProps): React.JSX.Element {
             onSubmit={editForm.handleSubmit(handleEditSubmit)}
             className="space-y-4"
           >
+            <FormField
+              control={editForm.control}
+              name="username"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Username</FormLabel>
+                  <FormControl>
+                    <Input placeholder="username" {...field} value={field.value ?? ""} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             <div className="grid grid-cols-2 gap-4">
               <FormField
                 control={editForm.control}
@@ -264,6 +309,19 @@ export function UserFormDialog(props: UserFormDialogProps): React.JSX.Element {
                     <FormLabel>First Name</FormLabel>
                     <FormControl>
                       <Input placeholder="First name" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={editForm.control}
+                name="middleName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Middle Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Optional" {...field} value={field.value ?? ""} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -307,8 +365,8 @@ export function UserFormDialog(props: UserFormDialogProps): React.JSX.Element {
                 <FormItem>
                   <FormLabel>Role</FormLabel>
                   <Select
-                    onValueChange={field.onChange}
-                    value={field.value ?? ""}
+                    onValueChange={(value) => field.onChange(Number(value))}
+                    value={field.value ? String(field.value) : ""}
                     disabled={props.isLoadingRoles}
                   >
                     <FormControl>
@@ -324,10 +382,34 @@ export function UserFormDialog(props: UserFormDialogProps): React.JSX.Element {
                     </FormControl>
                     <SelectContent>
                       {props.roles.map((role) => (
-                        <SelectItem key={role.id} value={role.id}>
-                          {role.roleName}
+                        <SelectItem key={role.id} value={String(role.id)}>
+                          {role.name}
                         </SelectItem>
                       ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={editForm.control}
+              name="isActive"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Status</FormLabel>
+                  <Select
+                    onValueChange={(value) => field.onChange(value === "true")}
+                    value={String(field.value ?? true)}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      <SelectItem value="true">Active</SelectItem>
+                      <SelectItem value="false">Inactive</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

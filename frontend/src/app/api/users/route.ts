@@ -4,7 +4,11 @@ import { CreateUserSchema } from "@features/users/schemas/users.schema";
 import type { NextRequest } from "next/server";
 
 export async function GET(req: NextRequest) {
-  return bffGet({ path: "/api/users", request: req, requiredRoles: ["Admin"] });
+  return bffGet({
+    path: "/api/users",
+    request: req,
+    requiredRoles: ["Admin", "Staff"],
+  });
 }
 
 export async function POST(req: NextRequest) {

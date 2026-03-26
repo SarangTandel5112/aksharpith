@@ -11,7 +11,7 @@ export async function GET(
   return bffGet({
     path: `/api/roles/${id}`,
     request: req,
-    requiredRoles: ["Admin", "Staff"],
+    requiredRoles: ["Admin"],
   });
 }
 

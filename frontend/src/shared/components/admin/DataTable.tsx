@@ -36,7 +36,9 @@ type SortState = {
   dir: SortDir;
 };
 
-type DataTableProps<T extends { id: string }> = {
+type RowId = string | number;
+
+type DataTableProps<T extends { id: RowId }> = {
   columns: Column<T>[];
   rows: T[];
   isLoading?: boolean;
@@ -47,7 +49,7 @@ type DataTableProps<T extends { id: string }> = {
   footer?: React.ReactNode;
   // Selection
   selectable?: boolean;
-  onSelectionChange?: (ids: string[]) => void;
+  onSelectionChange?: (ids: T["id"][]) => void;
   // Row actions (renders ⋯ button area)
   renderActions?: (row: T) => React.ReactNode;
 };
@@ -58,7 +60,7 @@ const SKELETON_ROW_COUNT = 5;
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function sortRows<T extends { id: string }>(
+function sortRows<T extends { id: RowId }>(
   rows: T[],
   sort: SortState | null,
 ): T[] {
@@ -80,11 +82,11 @@ function sortRows<T extends { id: string }>(
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function DataTable<T extends { id: string }>(
+export function DataTable<T extends { id: RowId }>(
   props: DataTableProps<T>,
 ): React.JSX.Element {
   const [sort, setSort] = useState<SortState | null>(null);
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [selectedIds, setSelectedIds] = useState<Set<T["id"]>>(new Set());
 
   const displayRows = sortRows(props.rows, sort);
   const colSpan =
@@ -101,7 +103,7 @@ export function DataTable<T extends { id: string }>(
     });
   }
 
-  function toggleRow(id: string): void {
+  function toggleRow(id: T["id"]): void {
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -118,7 +120,7 @@ export function DataTable<T extends { id: string }>(
     setSelectedIds((prev) => {
       const allIds = displayRows.map((r) => r.id);
       const isAllSelected = allIds.every((id) => prev.has(id));
-      const next = isAllSelected ? new Set<string>() : new Set(allIds);
+      const next = isAllSelected ? new Set<T["id"]>() : new Set(allIds);
       props.onSelectionChange?.(Array.from(next));
       return next;
     });
@@ -130,14 +132,14 @@ export function DataTable<T extends { id: string }>(
     !allSelected && displayRows.some((r) => selectedIds.has(r.id));
 
   return (
-    <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white shadow-sm">
+    <div className="overflow-hidden rounded-[1.25rem] border border-zinc-200 bg-white shadow-sm">
       {props.toolbar}
 
       <Table>
         <TableHeader>
-          <TableRow className="border-b border-zinc-200 bg-zinc-50 hover:bg-zinc-50">
+          <TableRow className="border-b border-zinc-200 bg-zinc-50/80 hover:bg-zinc-50/80">
             {props.selectable && (
-              <TableHead className="w-10 py-3 pl-4">
+              <TableHead className="w-10 py-4 pl-5">
                 <Checkbox
                   checked={allSelected ? true : someSelected ? "indeterminate" : false}
                   onCheckedChange={toggleAll}
@@ -149,7 +151,7 @@ export function DataTable<T extends { id: string }>(
               <TableHead
                 key={String(col.key)}
                 className={cn(
-                  "py-3 text-xs font-semibold uppercase tracking-wide text-zinc-500",
+                  "py-4 text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500",
                   col.sortable && "cursor-pointer select-none",
                   col.className,
                 )}
@@ -174,7 +176,7 @@ export function DataTable<T extends { id: string }>(
               </TableHead>
             ))}
             {props.renderActions && (
-              <TableHead className="w-24 py-3 text-right text-xs font-semibold uppercase tracking-wide text-zinc-500">
+              <TableHead className="w-24 py-4 pr-5 text-right text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500">
                 Actions
               </TableHead>
             )}
@@ -207,11 +209,11 @@ export function DataTable<T extends { id: string }>(
             ))
           ) : displayRows.length === 0 ? (
             <TableRow>
-              <TableCell colSpan={colSpan} className="py-16 text-center">
-                <p className="text-sm font-medium text-zinc-500">
+              <TableCell colSpan={colSpan} className="py-20 text-center">
+                <p className="text-sm font-semibold text-zinc-700">
                   {props.emptyMessage ?? "No results."}
                 </p>
-                <p className="mt-1 text-xs text-zinc-400">
+                <p className="mt-2 text-sm text-zinc-500">
                   {props.emptySubMessage ?? "Add a new record to get started."}
                 </p>
               </TableCell>
@@ -222,12 +224,12 @@ export function DataTable<T extends { id: string }>(
                 key={row.id}
                 data-state={selectedIds.has(row.id) ? "selected" : undefined}
                 className={cn(
-                  "border-b border-zinc-100 last:border-b-0 transition-colors hover:bg-zinc-50",
-                  selectedIds.has(row.id) && "bg-zinc-50",
+                  "border-b border-zinc-100 last:border-b-0 transition-colors hover:bg-zinc-50/70",
+                  selectedIds.has(row.id) && "bg-zinc-50/70",
                 )}
               >
                 {props.selectable && (
-                  <TableCell className="pl-4">
+                  <TableCell className="pl-5">
                     <Checkbox
                       checked={selectedIds.has(row.id)}
                       onCheckedChange={() => toggleRow(row.id)}
@@ -238,7 +240,7 @@ export function DataTable<T extends { id: string }>(
                 {props.columns.map((col) => (
                   <TableCell
                     key={String(col.key)}
-                    className={cn("py-3.5 text-sm text-zinc-700", col.className)}
+                    className={cn("py-4 text-sm text-zinc-700", col.className)}
                   >
                     {col.render
                       ? col.render(row)
@@ -246,7 +248,7 @@ export function DataTable<T extends { id: string }>(
                   </TableCell>
                 ))}
                 {props.renderActions && (
-                  <TableCell className="text-right">
+                  <TableCell className="pr-5 text-right">
                     {props.renderActions(row)}
                   </TableCell>
                 )}

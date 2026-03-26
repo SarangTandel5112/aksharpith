@@ -1,22 +1,8 @@
 // src/proxy.ts
-import { getToken } from 'next-auth/jwt'
 import { type NextRequest, NextResponse } from 'next/server'
 
 export const TRACE_ID_HEADER = 'x-trace-id'
 export const NONCE_HEADER    = 'x-nonce'
-
-const PUBLIC_PATHS = [
-  '/login',
-  '/api/health',
-  '/api/auth',
-  '/_next',
-  '/favicon.ico',
-  '/unauthorized',
-]
-
-function isPublicPath(pathname: string): boolean {
-  return PUBLIC_PATHS.some((p) => pathname.startsWith(p))
-}
 
 function generateNonce(): string {
   const array = new Uint8Array(16)
@@ -25,37 +11,6 @@ function generateNonce(): string {
 }
 
 export async function proxy(request: NextRequest): Promise<NextResponse> {
-  const pathname = request.nextUrl.pathname
-
-  if (!isPublicPath(pathname)) {
-    const token = await getToken({
-      req:    request,
-      secret: process.env.NEXTAUTH_SECRET ?? '',
-    })
-
-    if (!token) {
-      const loginUrl = new URL('/login', request.url)
-      loginUrl.searchParams.set('callbackUrl', request.url)
-      return NextResponse.redirect(loginUrl)
-    }
-
-    const roleName = (token.role as { roleName: string } | undefined)?.roleName ?? ''
-
-    // Admin-only routes
-    if (pathname.startsWith('/admin/roles') || pathname.startsWith('/admin/users')) {
-      if (roleName !== 'Admin') {
-        return NextResponse.redirect(new URL('/unauthorized', request.url))
-      }
-    }
-
-    // Admin + Staff routes
-    if (pathname.startsWith('/admin')) {
-      if (roleName !== 'Admin' && roleName !== 'Staff') {
-        return NextResponse.redirect(new URL('/unauthorized', request.url))
-      }
-    }
-  }
-
   // Propagate or generate trace ID
   const traceId = request.headers.get(TRACE_ID_HEADER) ?? crypto.randomUUID()
   const nonce   = generateNonce()

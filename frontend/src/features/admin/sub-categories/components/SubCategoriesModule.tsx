@@ -1,8 +1,5 @@
-'use client'
+"use client";
 
-import { useState } from "react"
-import type React from "react"
-import { Button } from "@shared/components/ui/button"
 import {
   DataTable,
   DeleteDialog,
@@ -10,126 +7,324 @@ import {
   StatusBadge,
   TablePagination,
   TableToolbar,
-} from "@shared/components/admin"
-import type { Column } from "@shared/components/admin/DataTable"
-import { IconPencil, IconTrash } from "@tabler/icons-react"
-import { SubCategoryFormDialog } from "./SubCategoryFormDialog"
+} from "@shared/components/admin";
+import type { Column } from "@shared/components/admin/DataTable";
+import { Button } from "@shared/components/ui/button";
+import { plainTextFromRichText } from "@shared/lib/rich-text";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@shared/components/ui/dropdown-menu";
+import { IconDots, IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
+import type React from "react";
+import { useState } from "react";
+import { toast } from "sonner";
+import type { CreateSubCategoryInput } from "../schemas/sub-categories.schema";
+import { SubCategoryFormDialog } from "./SubCategoryFormDialog";
+import type { Category } from "@features/admin/categories/types/categories.types";
+import type { SubCategory } from "../types/sub-categories.types";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
+type SubCategoryRow = SubCategory & {
+  productCount: number;
+};
 
-type SubCategoryRow = {
-  id: string
-  name: string
-  categoryName: string
-  productCount: number
-  isActive: boolean
-}
+const CATEGORIES: Pick<Category, "id" | "name">[] = [
+  { id: 101, name: "Smart Devices" },
+  { id: 102, name: "Audio" },
+  { id: 103, name: "Furniture" },
+];
 
-// ── Mock Data ─────────────────────────────────────────────────────────────────
-
-const MOCK_SUB_CATEGORIES: SubCategoryRow[] = [
-  { id: "1", name: "Smartphones", categoryName: "Electronics", productCount: 24, isActive: true },
-  { id: "2", name: "Laptops", categoryName: "Electronics", productCount: 18, isActive: true },
-  { id: "3", name: "T-Shirts", categoryName: "Clothing", productCount: 45, isActive: true },
-  { id: "4", name: "Dresses", categoryName: "Clothing", productCount: 32, isActive: true },
-  { id: "5", name: "Fresh Produce", categoryName: "Food & Beverage", productCount: 67, isActive: true },
-  { id: "6", name: "Beverages", categoryName: "Food & Beverage", productCount: 41, isActive: false },
-  { id: "7", name: "Washing Machines", categoryName: "Home Appliances", productCount: 9, isActive: true },
-  { id: "8", name: "Fiction", categoryName: "Books", productCount: 156, isActive: true },
-  { id: "9", name: "Running Gear", categoryName: "Sports", productCount: 28, isActive: true },
-  { id: "10", name: "Headphones", categoryName: "Electronics", productCount: 15, isActive: false },
-]
-
-// ── Columns ───────────────────────────────────────────────────────────────────
+const SUB_CATEGORY_ROWS: SubCategoryRow[] = [
+  {
+    id: 201,
+    name: "Phones",
+    categoryId: 101,
+    description: "<p>Mobile phones and smartphones.</p>",
+    photo: null,
+    sortOrder: 0,
+    category: CATEGORIES[0]!,
+    productCount: 24,
+    isActive: true,
+    createdAt: "2026-03-11",
+    updatedAt: "2026-03-24",
+  },
+  {
+    id: 202,
+    name: "Headphones",
+    categoryId: 102,
+    description: "<p>Over-ear, on-ear, and in-ear audio.</p>",
+    photo: null,
+    sortOrder: 1,
+    category: CATEGORIES[1]!,
+    productCount: 12,
+    isActive: true,
+    createdAt: "2026-03-10",
+    updatedAt: "2026-03-23",
+  },
+  {
+    id: 203,
+    name: "Desks",
+    categoryId: 103,
+    description: "<p>Standing desks and workstations.</p>",
+    photo: null,
+    sortOrder: 2,
+    category: CATEGORIES[2]!,
+    productCount: 7,
+    isActive: true,
+    createdAt: "2026-03-09",
+    updatedAt: "2026-03-22",
+  },
+];
 
 const COLUMNS: Column<SubCategoryRow>[] = [
-  { key: "name", label: "Name", sortable: true },
-  { key: "categoryName", label: "Parent Category" },
   {
-    key: "productCount",
-    label: "Products",
-    render: (row) => <span className="text-sm text-zinc-700">{row.productCount}</span>,
+    key: "photo",
+    label: "Photo",
+    render: (row) =>
+      row.photo ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={row.photo}
+          alt={row.name}
+          className="h-10 w-10 rounded-xl object-cover"
+        />
+      ) : (
+        <div className="h-10 w-10 rounded-xl border border-zinc-200 bg-zinc-50" />
+      ),
   },
+  { key: "name", label: "Sub-category", sortable: true },
+  {
+    key: "category",
+    label: "Category",
+    render: (row) => row.category?.name ?? "—",
+  },
+  {
+    key: "description",
+    label: "Description",
+    render: (row) => (
+      <span className="line-clamp-1 text-sm text-zinc-500">
+        {plainTextFromRichText(row.description) || "No description"}
+      </span>
+    ),
+  },
+  { key: "sortOrder", label: "Order" },
+  { key: "productCount", label: "Products" },
   {
     key: "isActive",
     label: "Status",
     render: (row) => (
       <StatusBadge
-        variant={row.isActive ? "success" : "neutral"}
         label={row.isActive ? "Active" : "Inactive"}
+        variant={row.isActive ? "success" : "neutral"}
       />
     ),
   },
-]
-
-// ── Component ─────────────────────────────────────────────────────────────────
+];
 
 export function SubCategoriesModule(): React.JSX.Element {
-  const [search, setSearch] = useState("")
-  const [page, setPage] = useState(1)
-  const [pageSize, setPageSize] = useState(10)
-  const [dialogOpen, setDialogOpen] = useState(false)
-  const [editItem, setEditItem] = useState<SubCategoryRow | undefined>(undefined)
-  const [deleteTarget, setDeleteTarget] = useState<SubCategoryRow | undefined>(undefined)
-  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [rows, setRows] = useState<SubCategoryRow[]>(SUB_CATEGORY_ROWS);
+  const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [photoFilter, setPhotoFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editItem, setEditItem] = useState<SubCategoryRow | undefined>(
+    undefined,
+  );
+  const [deleteTarget, setDeleteTarget] = useState<SubCategoryRow | undefined>(
+    undefined,
+  );
+  const [selectedIds, setSelectedIds] = useState<SubCategoryRow["id"][]>([]);
 
-  const filtered = search.trim()
-    ? MOCK_SUB_CATEGORIES.filter(
-        (r) =>
-          r.name.toLowerCase().includes(search.toLowerCase()) ||
-          r.categoryName.toLowerCase().includes(search.toLowerCase()),
+  const searchFiltered = search.trim()
+    ? rows.filter(
+        (row) =>
+          row.name.toLowerCase().includes(search.toLowerCase()) ||
+          (row.category?.name ?? "").toLowerCase().includes(search.toLowerCase()),
       )
-    : MOCK_SUB_CATEGORIES
+    : rows;
+  const filtered = searchFiltered.filter((row) => {
+    const matchesCategory =
+      categoryFilter === "all"
+        ? true
+        : row.categoryId === Number(categoryFilter);
+    const matchesStatus =
+      statusFilter === "all"
+        ? true
+        : statusFilter === "active"
+          ? row.isActive
+          : !row.isActive;
+    const matchesPhoto =
+      photoFilter === "all"
+        ? true
+        : photoFilter === "with-photo"
+          ? row.photo !== null
+          : row.photo === null;
 
-  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize)
+    return matchesCategory && matchesStatus && matchesPhoto;
+  });
 
-  function renderActions(row: SubCategoryRow): React.ReactNode {
-    return (
-      <div className="flex items-center gap-1">
-        <button
-          type="button"
-          onClick={() => { setEditItem(row); setDialogOpen(true) }}
-          className="p-1.5 rounded hover:bg-zinc-100 text-zinc-400 hover:text-zinc-700 transition-colors"
-        >
-          <IconPencil size={16} />
-        </button>
-        <button
-          type="button"
-          onClick={() => setDeleteTarget(row)}
-          className="p-1.5 rounded hover:bg-zinc-100 text-zinc-400 hover:text-red-500 transition-colors"
-        >
-          <IconTrash size={16} />
-        </button>
-      </div>
-    )
+  const paginated = filtered.slice((page - 1) * pageSize, page * pageSize);
+
+  function handleSubmit(values: CreateSubCategoryInput): void {
+    const today = new Date().toISOString().slice(0, 10);
+    const category = CATEGORIES.find((c) => c.id === values.categoryId);
+    if (editItem) {
+      setRows(rows.map((r) =>
+        r.id === editItem.id
+          ? {
+              ...r,
+              name: values.name,
+              categoryId: values.categoryId,
+              category: category ?? null,
+              description: values.description ?? null,
+              photo: values.photo ?? null,
+              sortOrder: values.sortOrder,
+              isActive: values.isActive,
+              updatedAt: today,
+            }
+          : r,
+      ));
+      toast.success("Sub-category updated");
+    } else {
+      const newRow: SubCategoryRow = {
+        id: Date.now(),
+        name: values.name,
+        categoryId: values.categoryId,
+        category: category ?? null,
+        description: values.description ?? null,
+        photo: values.photo ?? null,
+        sortOrder: values.sortOrder,
+        productCount: 0,
+        isActive: values.isActive,
+        createdAt: today,
+        updatedAt: today,
+      };
+      setRows([...rows, newRow]);
+      toast.success("Sub-category created");
+    }
+    setDialogOpen(false);
+    setEditItem(undefined);
+  }
+
+  function handleDeleteConfirm(): void {
+    if (!deleteTarget) return;
+    setRows(rows.filter((r) => r.id !== deleteTarget.id));
+    toast.success(`"${deleteTarget.name}" deleted`);
+    setDeleteTarget(undefined);
   }
 
   return (
-    <div>
+    <div className="space-y-6">
       <PageHeader
         title="Sub-categories"
-        subtitle="Manage product sub-categories"
+        subtitle="Manage the sub-categories used for product organization."
+        action={
+          <Button onClick={() => setDialogOpen(true)}>
+            <IconPlus className="h-4 w-4" />
+            Add Sub-category
+          </Button>
+        }
       />
       <DataTable
         columns={COLUMNS}
         rows={paginated}
         selectable
         onSelectionChange={setSelectedIds}
-        renderActions={renderActions}
+        renderActions={(row) => (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon-sm"
+                aria-label="Sub-category actions"
+              >
+                <IconDots className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-40">
+              <DropdownMenuItem
+                onClick={() => {
+                  setEditItem(row);
+                  setDialogOpen(true);
+                }}
+              >
+                <IconPencil className="h-3.5 w-3.5" />
+                Edit
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                variant="destructive"
+                onClick={() => setDeleteTarget(row)}
+              >
+                <IconTrash className="h-3.5 w-3.5" />
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        )}
         toolbar={
           <TableToolbar
             search={search}
-            onSearch={(v) => { setSearch(v); setPage(1) }}
-            placeholder="Search sub-categories..."
+            onSearch={(value) => {
+              setSearch(value);
+              setPage(1);
+            }}
+            placeholder="Search sub-categories…"
             selectedCount={selectedIds.length}
-            action={
-              <Button
-                size="sm"
-                onClick={() => { setEditItem(undefined); setDialogOpen(true) }}
-              >
-                Add Sub-category
-              </Button>
-            }
+            filters={[
+              {
+                id: "category",
+                label: "Category",
+                value: categoryFilter,
+                onChange: (value) => {
+                  setCategoryFilter(value);
+                  setPage(1);
+                },
+                options: CATEGORIES.map((category) => ({
+                  label: category.name,
+                  value: String(category.id),
+                })),
+              },
+              {
+                id: "status",
+                label: "Status",
+                value: statusFilter,
+                onChange: (value) => {
+                  setStatusFilter(value);
+                  setPage(1);
+                },
+                options: [
+                  { label: "Active", value: "active" },
+                  { label: "Inactive", value: "inactive" },
+                ],
+              },
+              {
+                id: "photo",
+                label: "Photo",
+                value: photoFilter,
+                onChange: (value) => {
+                  setPhotoFilter(value);
+                  setPage(1);
+                },
+                options: [
+                  { label: "With Photo", value: "with-photo" },
+                  { label: "Without Photo", value: "without-photo" },
+                ],
+              },
+            ]}
+            onClearFilters={() => {
+              setSearch("");
+              setCategoryFilter("all");
+              setStatusFilter("all");
+              setPhotoFilter("all");
+              setPage(1);
+            }}
           />
         }
         footer={
@@ -138,36 +333,49 @@ export function SubCategoriesModule(): React.JSX.Element {
             page={page}
             pageSize={pageSize}
             onPageChange={setPage}
-            onPageSizeChange={(size) => { setPageSize(size); setPage(1) }}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPage(1);
+            }}
           />
         }
       />
       <SubCategoryFormDialog
         key={editItem?.id ?? "new"}
         open={dialogOpen}
-        onClose={() => { setDialogOpen(false); setEditItem(undefined) }}
-        onSubmit={() => setDialogOpen(false)}
+        onClose={() => {
+          setDialogOpen(false);
+          setEditItem(undefined);
+        }}
+        onSubmit={handleSubmit}
         isSubmitting={false}
         {...(editItem
           ? {
               subCategory: {
                 id: editItem.id,
                 name: editItem.name,
-                categoryName: editItem.categoryName,
-                description: null,
+                categoryId: editItem.categoryId,
+                ...(editItem.description !== null
+                  ? { description: editItem.description }
+                  : {}),
+                ...(editItem.photo !== null ? { photo: editItem.photo } : {}),
+                sortOrder: editItem.sortOrder,
                 isActive: editItem.isActive,
+                createdAt: editItem.createdAt,
+                updatedAt: editItem.updatedAt,
               },
             }
           : {})}
+        categories={CATEGORIES}
       />
       <DeleteDialog
         open={deleteTarget !== undefined}
         title="Delete Sub-category"
-        description={`Are you sure you want to delete "${deleteTarget?.name}"? This action cannot be undone.`}
-        onConfirm={() => setDeleteTarget(undefined)}
+        description={`Delete "${deleteTarget?.name}" from the admin? This action cannot be undone.`}
+        onConfirm={handleDeleteConfirm}
         onCancel={() => setDeleteTarget(undefined)}
         isDeleting={false}
       />
     </div>
-  )
+  );
 }

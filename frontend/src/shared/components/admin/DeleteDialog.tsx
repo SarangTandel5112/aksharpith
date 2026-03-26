@@ -28,8 +28,12 @@ export function DeleteDialog(props: DeleteDialogProps): React.JSX.Element {
     >
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>{props.title}</AlertDialogTitle>
-          <AlertDialogDescription>{props.description}</AlertDialogDescription>
+          <AlertDialogTitle className="text-lg font-semibold text-zinc-950">
+            {props.title}
+          </AlertDialogTitle>
+          <AlertDialogDescription className="text-sm leading-6 text-zinc-500">
+            {props.description}
+          </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={props.isDeleting}>
