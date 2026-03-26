@@ -13,6 +13,7 @@ import { Product } from './product.entity';
 @Entity('product_vendors')
 @Index(['productId'])
 @Index(['productId', 'isPrimary'])
+@Index(['gstin'])
 export class ProductVendor {
   @PrimaryGeneratedColumn('uuid') id: string;
 

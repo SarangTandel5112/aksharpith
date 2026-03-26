@@ -11,6 +11,7 @@ import { ProductGroupFieldValue } from '../src/modules/product/entities/product-
 import { JwtAuthGuard } from '../src/security/jwt-auth.guard';
 import { RolesGuard } from '../src/core/guards/roles.guard';
 import { ResponseTransformer } from '../src/core/interceptors/response.transformer';
+import { initE2eApp } from './helpers/init-e2e-app';
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 const GROUP_ID = 'd1b2c3d4-e5f6-7890-abcd-ef1234567880';
@@ -116,7 +117,7 @@ describe('ProductGroupController (e2e)', () => {
     app.useGlobalPipes(
       new ValidationPipe({ transform: true, whitelist: true }),
     );
-    await app.init();
+    await initE2eApp(app);
   });
 
   afterAll(async () => {

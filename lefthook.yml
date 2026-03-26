@@ -45,15 +45,15 @@
 pre-commit:
   parallel: false
   commands:
-    backend-type-check:
-      root: "backend/"
-      run: npm run type-check
-    backend-lint:
-      root: "backend/"
+    nest-backend-type-check:
+      root: "nest-backend/"
+      run: npx tsc --noEmit
+    nest-backend-lint:
+      root: "nest-backend/"
       run: npm run lint
-    backend-test-unit:
-      root: "backend/"
-      run: npm run test:unit
-    backend-build:
-      root: "backend/"
+    nest-backend-test:
+      root: "nest-backend/"
+      run: npm test -- --runInBand
+    nest-backend-build:
+      root: "nest-backend/"
       run: npm run build

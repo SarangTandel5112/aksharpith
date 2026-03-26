@@ -8,15 +8,14 @@ import {
 } from '@nestjs/common';
 import { TokenExpiredError } from '@nestjs/jwt';
 import { Request, Response } from 'express';
-import { ConfigService } from '@nestjs/config';
+import { QueryFailedError } from 'typeorm';
 import { StatusCode } from '../http/response';
-import { ServerConfig, ServerConfigName } from '../../config/server.config';
 import { WinstonLogger } from '../../setup/winston.logger';
+import { PostgresErrorCode } from '../../utils/constants';
 
 @Catch()
 export class ExceptionHandler implements ExceptionFilter {
   constructor(
-    private readonly configService: ConfigService,
     private readonly logger: WinstonLogger,
   ) {}
 
@@ -30,7 +29,25 @@ export class ExceptionHandler implements ExceptionFilter {
     let message = 'Something went wrong';
     let errors: string[] | undefined;
 
-    if (exception instanceof HttpException) {
+    if (exception instanceof QueryFailedError) {
+      const code = (exception as QueryFailedError & {
+        driverError?: { code?: string };
+      }).driverError?.code;
+
+      switch (code) {
+        case PostgresErrorCode.UNIQUE_VIOLATION:
+          status = HttpStatus.CONFLICT;
+          message = 'Resource already exists';
+          break;
+        case PostgresErrorCode.FOREIGN_KEY_VIOLATION:
+          status = HttpStatus.BAD_REQUEST;
+          message = 'Invalid reference supplied';
+          break;
+        default:
+          this.logger.error(exception.message, exception.stack);
+          break;
+      }
+    } else if (exception instanceof HttpException) {
       status = exception.getStatus();
       const exceptionResponse = exception.getResponse();
 
@@ -69,13 +86,6 @@ export class ExceptionHandler implements ExceptionFilter {
       message = 'Token Expired';
       response.setHeader('instruction', 'refresh_token');
     } else {
-      const serverConfig =
-        this.configService.getOrThrow<ServerConfig>(ServerConfigName);
-      message =
-        serverConfig.nodeEnv === 'development'
-          ? (exception as Error).message
-          : message;
-
       this.logger.error(
         (exception as Error).message,
         (exception as Error).stack,

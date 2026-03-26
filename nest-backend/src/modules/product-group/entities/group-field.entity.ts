@@ -13,6 +13,7 @@ import {
 import { Expose } from 'class-transformer';
 import { ProductGroup } from './product-group.entity';
 import { GroupFieldOption } from './group-field-option.entity';
+import { ProductGroupFieldValue } from '../../product/entities/product-group-field-value.entity';
 
 export enum FieldType {
   TEXT = 'text',
@@ -24,6 +25,10 @@ export enum FieldType {
 
 @Entity('group_fields')
 @Index(['groupId'])
+@Index(['groupId', 'fieldKey'], {
+  unique: true,
+  where: '"deleted_at" IS NULL AND "is_active" = true',
+})
 export class GroupField {
   @PrimaryGeneratedColumn('uuid')
   @Expose()
@@ -32,18 +37,18 @@ export class GroupField {
   @Column({ name: 'group_id' })
   groupId: string;
 
-  @ManyToOne(() => ProductGroup, (g) => g.fields, { onDelete: 'CASCADE' })
+  @ManyToOne(() => ProductGroup, (g) => g.fields, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'group_id' })
   group: ProductGroup;
 
-  @Column({ name: 'field_name', length: 150 })
+  @Column({ name: 'field_name', length: 100 })
   @Expose()
   fieldName: string;
 
   @Column({
     name: 'field_type',
-    type: 'enum',
-    enum: FieldType,
+    type: 'varchar',
+    length: 30,
     default: FieldType.TEXT,
   })
   @Expose()
@@ -61,17 +66,21 @@ export class GroupField {
   @Expose()
   isRequired: boolean;
 
-  @Column({ name: 'sort_order', type: 'int', default: 0 })
+  @Column({ name: 'display_order', type: 'int', default: 0 })
   @Expose()
   sortOrder: number;
+
+  @Column({ name: 'is_active', type: 'boolean', default: true })
+  @Expose()
+  isActive?: boolean;
 
   @CreateDateColumn({ name: 'created_at' })
   @Expose()
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn({ name: 'updated_at', nullable: true })
   @Expose()
-  updatedAt: Date;
+  updatedAt: Date | null;
 
   @DeleteDateColumn({ name: 'deleted_at', nullable: true })
   deletedAt: Date | null;
@@ -79,4 +88,7 @@ export class GroupField {
   @OneToMany(() => GroupFieldOption, (o) => o.field, { cascade: true })
   @Expose()
   options: GroupFieldOption[];
+
+  @OneToMany(() => ProductGroupFieldValue, (value) => value.field)
+  values?: ProductGroupFieldValue[];
 }

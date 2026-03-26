@@ -8,6 +8,7 @@ import {
   MoreThanOrEqual,
   SelectQueryBuilder,
 } from 'typeorm';
+import { resolveSortField } from '../../common/utils/sort.util';
 import { Product } from './entities/product.entity';
 import { ProductMedia } from './entities/product-media.entity';
 import { ProductPhysicalAttributes } from './entities/product-physical-attributes.entity';
@@ -29,6 +30,17 @@ import { GroupField } from '../product-group/entities/group-field.entity';
 
 @Injectable()
 export class ProductRepository {
+  private static readonly ALLOWED_SORT_FIELDS = [
+    'createdAt',
+    'updatedAt',
+    'name',
+    'sku',
+    'basePrice',
+    'stockQuantity',
+    'productType',
+    'isActive',
+  ] as const;
+
   constructor(
     @InjectRepository(Product)
     private readonly repo: Repository<Product>,
@@ -65,6 +77,11 @@ export class ProductRepository {
       maxPrice,
       minStock,
     } = query;
+    const safeSortBy = resolveSortField(
+      sortBy,
+      ProductRepository.ALLOWED_SORT_FIELDS,
+      'createdAt',
+    );
 
     const where: FindOptionsWhere<Product> = {};
     if (search) where.name = ILike(`%${search}%`);
@@ -92,7 +109,7 @@ export class ProductRepository {
       const qb = this.repo
         .createQueryBuilder('product')
         .where(where)
-        .orderBy(`product.${sortBy}`, order as 'ASC' | 'DESC')
+        .orderBy(`product.${safeSortBy}`, order as 'ASC' | 'DESC')
         .skip((page - 1) * limit)
         .take(limit);
       this.applyGroupFieldFilters(qb, gf);
@@ -101,7 +118,7 @@ export class ProductRepository {
 
     return this.repo.findAndCount({
       where,
-      order: { [sortBy]: order },
+      order: { [safeSortBy]: order },
       skip: (page - 1) * limit,
       take: limit,
     });

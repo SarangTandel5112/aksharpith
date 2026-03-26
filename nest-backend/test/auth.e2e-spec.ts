@@ -20,6 +20,7 @@ import { AuthModule } from '../src/modules/auth/auth.module';
 import { User } from '../src/modules/user/entities/user.entity';
 import { PasswordResetToken } from '../src/modules/auth/entities/password-reset-token.entity';
 import { ResponseTransformer } from '../src/core/interceptors/response.transformer';
+import { initE2eApp } from './helpers/init-e2e-app';
 
 // ─── Shared test fixtures ────────────────────────────────────────────────────
 
@@ -105,7 +106,7 @@ describe('Auth (e2e)', () => {
       new ValidationPipe({ transform: true, whitelist: true }),
     );
     app.useGlobalInterceptors(new ResponseTransformer());
-    await app.init();
+    await initE2eApp(app);
   });
 
   afterEach(async () => {
@@ -286,18 +287,50 @@ describe('Auth (e2e)', () => {
 
   describe('POST /auth/logout', () => {
     it('returns 200 and clears the access_token cookie', async () => {
+      const userRecord = {
+        id: TEST_USER_ID,
+        email: TEST_EMAIL,
+        password: hashedPassword,
+        firstName: 'Alice',
+        middleName: null,
+        lastName: 'Smith',
+        roleId: 'role-uuid-0001',
+        isActive: true,
+        createdAt: new Date('2025-01-01T00:00:00Z'),
+        updatedAt: new Date('2025-01-01T00:00:00Z'),
+      };
+
+      mockUserRepo.findOne
+        .mockResolvedValueOnce(userRecord)
+        .mockResolvedValueOnce(userRecord);
+
+      const loginRes = await request(app.getHttpServer())
+        .post('/auth/login')
+        .send({ email: TEST_EMAIL, password: TEST_PASSWORD })
+        .expect(200);
+
+      const authCookies = loginRes.headers['set-cookie'] as string[] | string;
+      const authCookieString = Array.isArray(authCookies)
+        ? authCookies.join('; ')
+        : authCookies ?? '';
+      const accessToken =
+        authCookieString.match(/access_token=([^;]+)/)?.[1];
+
+      expect(accessToken).toBeDefined();
+
       const res = await request(app.getHttpServer())
         .post('/auth/logout')
+        .set('Authorization', `Bearer ${accessToken}`)
         .expect(200);
 
       expect(res.body.data).toMatchObject({ message: 'Logout successful' });
       const setCookieHeader = res.headers['set-cookie'] as string[] | string;
-      const cookies = Array.isArray(setCookieHeader)
+      const clearedCookies = Array.isArray(setCookieHeader)
         ? setCookieHeader
         : [setCookieHeader ?? ''];
       // Cookie cleared = set with empty value or Max-Age=0
       expect(
-        cookies.some(
+        clearedCookies.some(
           (c: string) =>
             c.startsWith('access_token=;') ||
             c.includes('Max-Age=0') ||

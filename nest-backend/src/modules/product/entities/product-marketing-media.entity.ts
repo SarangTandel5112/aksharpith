@@ -34,8 +34,8 @@ export class ProductMarketingMedia {
 
   @Column({
     name: 'media_type',
-    type: 'enum',
-    enum: MarketingMediaType,
+    type: 'varchar',
+    length: 20,
     default: MarketingMediaType.PHOTO,
   })
   mediaType: MarketingMediaType;

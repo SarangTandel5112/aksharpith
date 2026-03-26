@@ -33,6 +33,7 @@ import { Role } from '../src/modules/role/entities/role.entity';
 import { JwtAuthGuard } from '../src/security/jwt-auth.guard';
 import { RolesGuard } from '../src/core/guards/roles.guard';
 import { ResponseTransformer } from '../src/core/interceptors/response.transformer';
+import { initE2eApp } from './helpers/init-e2e-app';
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
@@ -178,7 +179,7 @@ describe('Users (e2e)', () => {
       new ValidationPipe({ transform: true, whitelist: true }),
     );
     app.useGlobalInterceptors(new ResponseTransformer());
-    await app.init();
+    await initE2eApp(app);
 
     jwtService = moduleFixture.get(JwtService);
     authToken = jwtService.sign({

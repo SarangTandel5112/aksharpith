@@ -23,27 +23,27 @@ export class ProductPhysicalAttributes {
   @JoinColumn({ name: 'product_id' })
   product: Product;
 
-  @Column({ name: 'weight', type: 'decimal', precision: 10, scale: 3, nullable: true })
+  @Column({ name: 'weight', type: 'varchar', length: 30, nullable: true })
   @Expose()
-  weight: number | null;
+  weight: string | number | null;
 
-  @Column({ name: 'length', type: 'decimal', precision: 10, scale: 3, nullable: true })
+  @Column({ name: 'length', type: 'varchar', length: 30, nullable: true })
   @Expose()
-  length: number | null;
+  length: string | number | null;
 
-  @Column({ name: 'width', type: 'decimal', precision: 10, scale: 3, nullable: true })
+  @Column({ name: 'width', type: 'varchar', length: 30, nullable: true })
   @Expose()
-  width: number | null;
+  width: string | number | null;
 
-  @Column({ name: 'height', type: 'decimal', precision: 10, scale: 3, nullable: true })
+  @Column({ name: 'height', type: 'varchar', length: 30, nullable: true })
   @Expose()
-  height: number | null;
+  height: string | number | null;
 
   @CreateDateColumn({ name: 'created_at' })
   @Expose()
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn({ name: 'updated_at', nullable: true })
   @Expose()
-  updatedAt: Date;
+  updatedAt: Date | null;
 }

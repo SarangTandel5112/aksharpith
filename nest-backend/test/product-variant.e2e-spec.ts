@@ -13,6 +13,7 @@ import { ProductVariantMedia } from '../src/modules/product-variant/entities/pro
 import { JwtAuthGuard } from '../src/security/jwt-auth.guard';
 import { RolesGuard } from '../src/core/guards/roles.guard';
 import { ResponseTransformer } from '../src/core/interceptors/response.transformer';
+import { initE2eApp } from './helpers/init-e2e-app';
 
 // ─── constants ────────────────────────────────────────────────────────────────
 
@@ -106,7 +107,6 @@ function makeTypeOrmRepoMock() {
   return {
     findOne: jest.fn(),
     find: jest.fn(),
-    findByIds: jest.fn(),
     create: jest.fn(),
     save: jest.fn(),
     update: jest.fn(),
@@ -163,7 +163,7 @@ describe('ProductVariantController (e2e)', () => {
     app.useGlobalPipes(
       new ValidationPipe({ transform: true, whitelist: true }),
     );
-    await app.init();
+    await initE2eApp(app);
   });
 
   afterAll(async () => {
@@ -292,7 +292,7 @@ describe('ProductVariantController (e2e)', () => {
 
       productRepo.findOne.mockResolvedValue(makeProduct());
       variantRepo.findByCombinationHash.mockResolvedValue(null);
-      attributeValueRepo.findByIds.mockResolvedValue([attrValue]);
+      attributeValueRepo.find.mockResolvedValue([attrValue]);
       variantRepo.createWithAttributes.mockResolvedValue(created);
 
       const res = await request(app.getHttpServer())

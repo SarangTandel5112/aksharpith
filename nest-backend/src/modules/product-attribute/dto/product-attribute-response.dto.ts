@@ -4,9 +4,11 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 export class AttributeValueResponseDto {
   @Expose() id: string;
   @Expose() value: string;
-  @Expose() sortOrder: number;
+  @Expose() code: string;
+  @Expose() sortOrder: number | null;
   @Expose() isActive: boolean;
   @Expose() createdAt: Date;
+  @Expose() updatedAt: Date | null;
 }
 
 export class ProductAttributeResponseDto {
@@ -18,6 +20,22 @@ export class ProductAttributeResponseDto {
   @Expose()
   name: string;
 
+  @ApiPropertyOptional()
+  @Expose()
+  code: string;
+
+  @ApiPropertyOptional()
+  @Expose()
+  productId: string | null;
+
+  @ApiPropertyOptional()
+  @Expose()
+  sortOrder: number | null;
+
+  @ApiProperty()
+  @Expose()
+  isRequired: boolean;
+
   @ApiProperty()
   @Expose()
   isActive: boolean;
@@ -26,9 +44,9 @@ export class ProductAttributeResponseDto {
   @Expose()
   createdAt: Date;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @Expose()
-  updatedAt: Date;
+  updatedAt: Date | null;
 
   @ApiPropertyOptional({ type: [AttributeValueResponseDto] })
   @Expose()

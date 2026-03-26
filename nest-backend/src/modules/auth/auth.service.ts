@@ -28,7 +28,15 @@ export class AuthService {
 
   async signUp(signUpDto: SignUpDto): Promise<{ message: string }> {
     try {
-      const { firstName, middleName, lastName, email, password, roleId } =
+      const {
+        username,
+        firstName,
+        middleName,
+        lastName,
+        email,
+        password,
+        roleId,
+      } =
         signUpDto;
 
       const emailExists = await this.userRepo.findOne({ where: { email } });
@@ -39,11 +47,13 @@ export class AuthService {
       const hashedPassword = await bcrypt.hash(password, 10);
 
       const user = this.userRepo.create({
+        username: username ?? email,
         firstName,
         middleName: middleName ?? null,
         lastName,
         email,
         password: hashedPassword,
+        isTempPassword: false,
         ...(roleId ? { roleId } : {}),
       });
 

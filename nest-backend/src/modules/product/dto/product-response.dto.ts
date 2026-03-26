@@ -16,6 +16,10 @@ export class ProductResponseDto {
 
   @ApiPropertyOptional()
   @Expose()
+  upc: string | null;
+
+  @ApiPropertyOptional()
+  @Expose()
   description: string | null;
 
   @ApiProperty()
@@ -25,6 +29,10 @@ export class ProductResponseDto {
   @ApiProperty()
   @Expose()
   basePrice: number;
+
+  @ApiPropertyOptional()
+  @Expose()
+  model: string | null;
 
   @ApiProperty()
   @Expose()
@@ -42,9 +50,21 @@ export class ProductResponseDto {
   @Expose()
   groupId: string | null;
 
+  @ApiPropertyOptional()
+  @Expose()
+  hsnCode: string | null;
+
+  @ApiProperty()
+  @Expose()
+  nonTaxable: boolean;
+
   @ApiProperty()
   @Expose()
   itemInactive: boolean;
+
+  @ApiProperty()
+  @Expose()
+  nonStockItem: boolean;
 
   @ApiProperty()
   @Expose()
@@ -54,9 +74,9 @@ export class ProductResponseDto {
   @Expose()
   createdAt: Date;
 
-  @ApiProperty()
+  @ApiPropertyOptional()
   @Expose()
-  updatedAt: Date;
+  updatedAt: Date | null;
 
   constructor(partial: Partial<ProductResponseDto>) {
     Object.assign(this, partial);

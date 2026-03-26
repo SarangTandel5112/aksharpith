@@ -1,6 +1,12 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+  Optional,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { ProductVariantRepository } from './product-variant.repository';
 import { Product } from '../product/entities/product.entity';
 import { ProductAttributeValue } from '../product-attribute/entities/product-attribute-value.entity';
@@ -17,6 +23,8 @@ export class ProductVariantService {
     @InjectRepository(Product) private readonly productRepo: Repository<Product>,
     @InjectRepository(ProductAttributeValue)
     private readonly valueRepo: Repository<ProductAttributeValue>,
+    @Optional()
+    private readonly dataSource: DataSource,
   ) {}
 
   async findAll(productId: string, query: QueryProductVariantDto) {
@@ -40,7 +48,12 @@ export class ProductVariantService {
     if (existing && !existing.isDeleted && !existing.deletedAt) {
       throw new ConflictException('Variant with this attribute combination already exists');
     }
-    const values = await this.valueRepo.findByIds(dto.attributeValueIds);
+    const values = await this.valueRepo.find({
+      where: { id: In(dto.attributeValueIds) },
+    });
+    if (values.length !== dto.attributeValueIds.length) {
+      throw new BadRequestException('One or more attribute values are invalid');
+    }
     const attributeMap: Record<string, string> = {};
     values.forEach((v) => {
       attributeMap[v.id] = v.attributeId;
@@ -60,13 +73,91 @@ export class ProductVariantService {
   }
 
   async generateMatrix(productId: string, dto: GenerateLotMatrixDto) {
+    if (!this.dataSource) {
+      return this.generateMatrixWithoutTransaction(productId, dto);
+    }
+
+    return this.dataSource.transaction(async (manager) => {
+      const product = await manager.getRepository(Product).findOne({
+        where: { id: productId },
+      });
+      if (!product) {
+        throw new NotFoundException(`Product ${productId} not found`);
+      }
+
+      const valueRepo = manager.getRepository(ProductAttributeValue);
+      const valuesByAttribute: Map<string, ProductAttributeValue[]> = new Map();
+      for (const attributeId of dto.attributeIds) {
+        const values = await valueRepo.find({ where: { attributeId } });
+        if (values.length === 0) {
+          throw new NotFoundException(
+            `Attribute ${attributeId} not found or has no values`,
+          );
+        }
+        valuesByAttribute.set(attributeId, values);
+      }
+
+      const allGroups = Array.from(valuesByAttribute.values());
+      const combinations = this.cartesian(allGroups);
+
+      const results = [];
+      for (const combination of combinations) {
+        const valueIds = combination.map((v) => v.id);
+        const hash = buildCombinationHash(valueIds);
+        const existing = await this.variantRepo.findByCombinationHashWithManager(
+          productId,
+          hash,
+          manager,
+        );
+
+        if (existing) {
+          if (!existing.isDeleted && !existing.deletedAt) {
+            results.push(existing);
+            continue;
+          }
+          await this.variantRepo.restoreWithManager(existing.id, manager);
+          results.push(
+            await this.variantRepo.findByIdWithManager(existing.id, manager),
+          );
+          continue;
+        }
+
+        const attributeMap: Record<string, string> = {};
+        combination.forEach((v) => {
+          attributeMap[v.id] = v.attributeId;
+        });
+        const autoSku = `${productId.slice(0, 8)}-${hash.slice(0, 12)}`;
+        const newVariant = await this.variantRepo.createWithAttributes(
+          productId,
+          {
+            sku: autoSku,
+            price: 0,
+            stockQuantity: 0,
+            attributeValueIds: valueIds,
+          },
+          attributeMap,
+          manager,
+        );
+        results.push(newVariant);
+      }
+
+      return results;
+    });
+  }
+
+  private async generateMatrixWithoutTransaction(
+    productId: string,
+    dto: GenerateLotMatrixDto,
+  ) {
     await this.ensureProductExists(productId);
 
     const valuesByAttribute: Map<string, ProductAttributeValue[]> = new Map();
     for (const attributeId of dto.attributeIds) {
       const values = await this.valueRepo.find({ where: { attributeId } });
       if (values.length === 0) {
-        throw new NotFoundException(`Attribute ${attributeId} not found or has no values`);
+        throw new NotFoundException(
+          `Attribute ${attributeId} not found or has no values`,
+        );
       }
       valuesByAttribute.set(attributeId, values);
     }
@@ -78,7 +169,10 @@ export class ProductVariantService {
     for (const combination of combinations) {
       const valueIds = combination.map((v) => v.id);
       const hash = buildCombinationHash(valueIds);
-      const existing = await this.variantRepo.findByCombinationHash(productId, hash);
+      const existing = await this.variantRepo.findByCombinationHash(
+        productId,
+        hash,
+      );
 
       if (existing) {
         if (!existing.isDeleted && !existing.deletedAt) {
@@ -97,7 +191,12 @@ export class ProductVariantService {
       const autoSku = `${productId.slice(0, 8)}-${hash.slice(0, 12)}`;
       const newVariant = await this.variantRepo.createWithAttributes(
         productId,
-        { sku: autoSku, price: 0, stockQuantity: 0, attributeValueIds: valueIds },
+        {
+          sku: autoSku,
+          price: 0,
+          stockQuantity: 0,
+          attributeValueIds: valueIds,
+        },
         attributeMap,
       );
       results.push(newVariant);

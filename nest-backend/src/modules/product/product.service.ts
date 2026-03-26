@@ -3,7 +3,9 @@ import {
   NotFoundException,
   ConflictException,
   BadRequestException,
+  Optional,
 } from '@nestjs/common';
+import { DataSource } from 'typeorm';
 import { plainToInstance } from 'class-transformer';
 import { ProductRepository } from './product.repository';
 import { CreateProductDto } from './dto/create-product.dto';
@@ -24,10 +26,15 @@ import { ProductMarketingMedia } from './entities/product-marketing-media.entity
 import { ProductZone } from './entities/product-zone.entity';
 import { ProductGroupFieldValue } from './entities/product-group-field-value.entity';
 import { ProductVendor } from './entities/product-vendor.entity';
+import { Product } from './entities/product.entity';
 
 @Injectable()
 export class ProductService {
-  constructor(private readonly productRepo: ProductRepository) {}
+  constructor(
+    private readonly productRepo: ProductRepository,
+    @Optional()
+    private readonly dataSource: DataSource,
+  ) {}
 
   private toDto(p: unknown): ProductResponseDto {
     return plainToInstance(ProductResponseDto, p, {
@@ -68,6 +75,8 @@ export class ProductService {
   async update(id: string, dto: UpdateProductDto): Promise<ProductResponseDto> {
     const existing = await this.productRepo.findById(id);
     if (!existing) throw new NotFoundException(`Product ${id} not found`);
+    const { clearFieldValues: _clearFieldValues, ...persistedDto } = dto;
+
     if (dto.sku) {
       const skuConflict = await this.productRepo.findBySku(dto.sku);
       if (skuConflict && skuConflict.id !== id) {
@@ -83,10 +92,23 @@ export class ProductService {
             `Cannot change group: ${valueCount} field values exist. Pass clearFieldValues: true to delete them.`,
           );
         }
-        await this.productRepo.deleteGroupFieldValues(id);
+        if (this.dataSource) {
+          await this.dataSource.transaction(async (manager) => {
+            await manager.getRepository(ProductGroupFieldValue).delete({
+              productId: id,
+            });
+            await manager.getRepository(Product).update(id, persistedDto);
+          });
+          const updatedProduct = await this.productRepo.findById(id);
+          return this.toDto(updatedProduct!);
+        } else {
+          await this.productRepo.deleteGroupFieldValues(id);
+          const updatedProduct = await this.productRepo.update(id, persistedDto);
+          return this.toDto(updatedProduct!);
+        }
       }
     }
-    const product = await this.productRepo.update(id, dto);
+    const product = await this.productRepo.update(id, persistedDto);
     return this.toDto(product!);
   }
 

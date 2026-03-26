@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike, FindOptionsWhere } from 'typeorm';
+import { resolveSortField } from '../../common/utils/sort.util';
 import { ProductGroup } from './entities/product-group.entity';
 import { GroupField } from './entities/group-field.entity';
 import { GroupFieldOption } from './entities/group-field-option.entity';
@@ -15,6 +16,13 @@ import { UpdateGroupFieldOptionDto } from './dto/update-group-field-option.dto';
 
 @Injectable()
 export class ProductGroupRepository {
+  private static readonly ALLOWED_SORT_FIELDS = [
+    'createdAt',
+    'updatedAt',
+    'name',
+    'isActive',
+  ] as const;
+
   constructor(
     @InjectRepository(ProductGroup)
     private readonly repo: Repository<ProductGroup>,
@@ -37,12 +45,17 @@ export class ProductGroupRepository {
       search,
       isActive,
     } = query;
+    const safeSortBy = resolveSortField(
+      sortBy,
+      ProductGroupRepository.ALLOWED_SORT_FIELDS,
+      'createdAt',
+    );
     const where: FindOptionsWhere<ProductGroup> = {};
     if (search) where.name = ILike(`%${search}%`);
     if (isActive !== undefined) where.isActive = isActive;
     return this.repo.findAndCount({
       where,
-      order: { [sortBy]: order },
+      order: { [safeSortBy]: order },
       skip: (page - 1) * limit,
       take: limit,
     });
@@ -66,17 +79,22 @@ export class ProductGroupRepository {
   async create(dto: CreateProductGroupDto): Promise<ProductGroup> {
     const group = this.repo.create({
       name: dto.name,
+      description: dto.description ?? null,
       fields:
         dto.fields?.map((f) => ({
           fieldName: f.fieldName,
-          fieldKey: this.slugify(f.fieldName),
+          fieldKey: f.fieldKey ?? this.slugify(f.fieldName),
           fieldType: f.fieldType,
           isRequired: f.isRequired ?? false,
+          isFilterable: f.isFilterable ?? false,
           sortOrder: f.sortOrder ?? 0,
+          isActive: true,
           options:
             f.options?.map((o) => ({
+              optionLabel: o.optionLabel,
               optionValue: o.optionValue,
               sortOrder: o.sortOrder ?? 0,
+              isActive: o.isActive ?? true,
             })) ?? [],
         })) ?? [],
     });

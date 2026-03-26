@@ -10,6 +10,15 @@ import {
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class SignUpDto {
+  @ApiPropertyOptional({
+    example: 'john.doe@example.com',
+    description: 'Username (optional, defaults to email)',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  username?: string;
+
   @ApiProperty({ example: 'John', description: 'First name (max 100 chars)' })
   @IsString()
   @IsNotEmpty()

@@ -12,9 +12,11 @@ import { Product } from './product.entity';
 
 @Entity('product_zones')
 @Index(['productId'])
+@Index(['productId', 'isActive'])
+@Index(['zoneCode'])
 @Index(['productId', 'zoneCode'], {
   unique: true,
-  where: '"zone_code" IS NOT NULL',
+  where: '"is_active" = true AND "zone_code" IS NOT NULL',
 })
 export class ProductZone {
   @PrimaryGeneratedColumn('uuid') id: string;

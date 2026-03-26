@@ -17,14 +17,20 @@ export class CreateProductDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  @MaxLength(255)
+  @MaxLength(150)
   name: string;
 
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  @MaxLength(100)
+  @MaxLength(10)
   sku: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  upc?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -42,6 +48,12 @@ export class CreateProductDto {
   @IsNumber()
   @Min(0)
   basePrice?: number;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  model?: string;
 
   @ApiPropertyOptional()
   @IsOptional()
@@ -67,8 +79,24 @@ export class CreateProductDto {
 
   @ApiPropertyOptional()
   @IsOptional()
+  @IsString()
+  @MaxLength(8)
+  hsnCode?: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  nonTaxable?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
   @IsBoolean()
   itemInactive?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  nonStockItem?: boolean;
 
   @ApiPropertyOptional()
   @IsOptional()

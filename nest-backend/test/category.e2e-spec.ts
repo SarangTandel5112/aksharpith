@@ -8,6 +8,7 @@ import { Category } from '../src/modules/category/entities/category.entity';
 import { JwtAuthGuard } from '../src/security/jwt-auth.guard';
 import { RolesGuard } from '../src/core/guards/roles.guard';
 import { ResponseTransformer } from '../src/core/interceptors/response.transformer';
+import { initE2eApp } from './helpers/init-e2e-app';
 
 // ─── constants ────────────────────────────────────────────────────────────────
 
@@ -64,7 +65,7 @@ describe('CategoryController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
-    await app.init();
+    await initE2eApp(app);
   });
 
   afterAll(async () => {

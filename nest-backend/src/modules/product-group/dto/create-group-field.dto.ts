@@ -19,8 +19,14 @@ export class CreateGroupFieldDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  @MaxLength(150)
+  @MaxLength(100)
   fieldName: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  fieldKey?: string;
 
   @ApiPropertyOptional({ enum: FieldType })
   @IsOptional()
@@ -31,6 +37,11 @@ export class CreateGroupFieldDto {
   @IsOptional()
   @IsBoolean()
   isRequired?: boolean;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsBoolean()
+  isFilterable?: boolean;
 
   @ApiPropertyOptional()
   @IsOptional()

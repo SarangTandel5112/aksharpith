@@ -1,6 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import { getRepositoryToken } from '@nestjs/typeorm';
-import { NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  NotFoundException,
+  ConflictException,
+  BadRequestException,
+} from '@nestjs/common';
 import { ProductVariantService } from '../product-variant.service';
 import { ProductVariantRepository } from '../product-variant.repository';
 import { Product } from '../../product/entities/product.entity';
@@ -18,7 +22,6 @@ const mockVariantRepo = () => ({
 const mockProductRepo = () => ({ findOne: jest.fn() });
 const mockValueRepo = () => ({
   find: jest.fn(),
-  findByIds: jest.fn(),
 });
 
 describe('ProductVariantService', () => {
@@ -102,7 +105,7 @@ describe('ProductVariantService', () => {
     it('creates variant successfully', async () => {
       productRepo.findOne.mockResolvedValue(mockProduct);
       variantRepo.findByCombinationHash.mockResolvedValue(null);
-      valueRepo.findByIds.mockResolvedValue([
+      valueRepo.find.mockResolvedValue([
         { id: 'val-a', attributeId: 'attr-1' },
         { id: 'val-b', attributeId: 'attr-2' },
       ]);
@@ -114,6 +117,20 @@ describe('ProductVariantService', () => {
         attributeValueIds: ['val-a', 'val-b'],
       });
       expect(result).toEqual(created);
+    });
+
+    it('throws 400 when one or more attribute values are invalid', async () => {
+      productRepo.findOne.mockResolvedValue(mockProduct);
+      variantRepo.findByCombinationHash.mockResolvedValue(null);
+      valueRepo.find.mockResolvedValue([{ id: 'val-a', attributeId: 'attr-1' }]);
+
+      await expect(
+        service.create('prod-1', {
+          sku: 'SKU-001',
+          price: 9.99,
+          attributeValueIds: ['val-a', 'missing'],
+        }),
+      ).rejects.toThrow(BadRequestException);
     });
 
     it('throws 409 on duplicate active combination', async () => {

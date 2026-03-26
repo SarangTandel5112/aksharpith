@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike, FindOptionsWhere } from 'typeorm';
+import { resolveSortField } from '../../common/utils/sort.util';
 import { Role } from './entities/role.entity';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
@@ -8,6 +9,13 @@ import { QueryRoleDto } from './dto/query-role.dto';
 
 @Injectable()
 export class RoleRepository {
+  private static readonly ALLOWED_SORT_FIELDS = [
+    'createdAt',
+    'updatedAt',
+    'roleName',
+    'isActive',
+  ] as const;
+
   constructor(
     @InjectRepository(Role)
     private readonly repo: Repository<Role>,
@@ -22,12 +30,17 @@ export class RoleRepository {
       search,
       isActive,
     } = query;
+    const safeSortBy = resolveSortField(
+      sortBy,
+      RoleRepository.ALLOWED_SORT_FIELDS,
+      'createdAt',
+    );
     const where: FindOptionsWhere<Role> = {};
     if (search) where.roleName = ILike(`%${search}%`);
     if (isActive !== undefined) where.isActive = isActive;
     return this.repo.findAndCount({
       where,
-      order: { [sortBy]: order },
+      order: { [safeSortBy]: order },
       skip: (page - 1) * limit,
       take: limit,
     });

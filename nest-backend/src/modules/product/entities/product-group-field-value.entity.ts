@@ -13,7 +13,7 @@ import { GroupField } from '../../product-group/entities/group-field.entity';
 import { GroupFieldOption } from '../../product-group/entities/group-field-option.entity';
 
 @Entity('product_group_field_values')
-@Index(['productId', 'fieldId'], { unique: true })
+@Index(['productId', 'fieldId'], { unique: true, where: '"is_active" = true' })
 @Index(['productId'])
 @Index(['fieldId'])
 export class ProductGroupFieldValue {

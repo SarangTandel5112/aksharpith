@@ -12,12 +12,14 @@ import { Expose } from 'class-transformer';
 import { Product } from './product.entity';
 
 export enum MediaType {
-  IMAGE = 'image',
+  PHOTO = 'photo',
   VIDEO = 'video',
 }
 
 @Entity('product_media')
 @Index(['productId'])
+@Index(['productId', 'sortOrder'], { unique: true })
+@Index(['productId', 'isPrimary'])
 export class ProductMedia {
   @PrimaryGeneratedColumn('uuid')
   @Expose()
@@ -30,15 +32,20 @@ export class ProductMedia {
   @JoinColumn({ name: 'product_id' })
   product: Product;
 
-  @Column({ name: 'url', length: 500 })
+  @Column({ name: 'media_url', length: 500 })
   @Expose()
   url: string;
 
-  @Column({ name: 'media_type', type: 'enum', enum: MediaType, default: MediaType.IMAGE })
+  @Column({
+    name: 'media_type',
+    type: 'varchar',
+    length: 20,
+    default: MediaType.PHOTO,
+  })
   @Expose()
   mediaType: MediaType;
 
-  @Column({ name: 'sort_order', type: 'int', default: 0 })
+  @Column({ name: 'display_order', type: 'int', default: 0 })
   @Expose()
   sortOrder: number;
 
@@ -46,11 +53,19 @@ export class ProductMedia {
   @Expose()
   isPrimary: boolean;
 
+  @Column({ name: 'file_size', type: 'int', nullable: true })
+  @Expose()
+  fileSize: number | null;
+
+  @Column({ name: 'file_name', length: 255, nullable: true })
+  @Expose()
+  fileName: string | null;
+
   @CreateDateColumn({ name: 'created_at' })
   @Expose()
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn({ name: 'updated_at', nullable: true })
   @Expose()
-  updatedAt: Date;
+  updatedAt: Date | null;
 }

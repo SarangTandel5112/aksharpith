@@ -1,4 +1,3 @@
-import { ConfigService } from '@nestjs/config';
 import { WinstonLogger } from '../../setup/winston.logger';
 import { ExceptionHandler } from './exception.handler';
 import { Test } from '@nestjs/testing';
@@ -11,7 +10,9 @@ import {
 } from '@nestjs/common';
 import { TokenExpiredError } from '@nestjs/jwt';
 import { HttpArgumentsHost } from '@nestjs/common/interfaces';
+import { QueryFailedError } from 'typeorm';
 import { StatusCode } from '../http/response';
+import { PostgresErrorCode } from '../../utils/constants';
 
 describe('ExceptionHandler', () => {
   let exceptionHandler: ExceptionHandler;
@@ -19,7 +20,6 @@ describe('ExceptionHandler', () => {
   const mockSetStatus = jest.fn(() => ({ json: mockSetJson }));
   const mockSetJson = jest.fn();
   const mockSetHeader = jest.fn();
-  const mockServiceConfig = jest.fn();
 
   const hostMock: ArgumentsHost = {
     switchToHttp: () =>
@@ -44,16 +44,11 @@ describe('ExceptionHandler', () => {
     const module = await Test.createTestingModule({
       providers: [
         ExceptionHandler,
-        {
-          provide: ConfigService,
-          useValue: { getOrThrow: mockServiceConfig },
-        },
         { provide: WinstonLogger, useValue: { error: jest.fn() } },
       ],
     }).compile();
 
     exceptionHandler = module.get(ExceptionHandler);
-    mockServiceConfig.mockReturnValue({ nodeEnv: 'development' });
   });
 
   it('should set token expired data on TokenExpiredError', () => {
@@ -122,26 +117,7 @@ describe('ExceptionHandler', () => {
     expect(exceptionHandler['logger'].error).toHaveBeenCalled();
   });
 
-  it('should log non http expections', () => {
-    const exception = new Error('Other Error');
-    exceptionHandler.catch(exception, hostMock);
-
-    expect(mockSetStatus).toHaveBeenCalledWith(
-      HttpStatus.INTERNAL_SERVER_ERROR,
-    );
-
-    expect(mockSetJson).toHaveBeenCalledWith({
-      statusCode: StatusCode.FAILURE,
-      message: 'Other Error',
-      url: 'test',
-    });
-
-    expect(mockSetHeader).not.toHaveBeenCalled();
-    expect(exceptionHandler['logger'].error).toHaveBeenCalled();
-  });
-
-  it('should not send actual error on production', () => {
-    mockServiceConfig.mockReturnValue({ nodeEnv: 'production' });
+  it('should return a generic message for non-http errors', () => {
     const exception = new Error('Other Error');
     exceptionHandler.catch(exception, hostMock);
 
@@ -157,5 +133,39 @@ describe('ExceptionHandler', () => {
 
     expect(mockSetHeader).not.toHaveBeenCalled();
     expect(exceptionHandler['logger'].error).toHaveBeenCalled();
+  });
+
+  it('maps unique constraint violations to conflict responses', () => {
+    const exception = new QueryFailedError(
+      'INSERT',
+      [],
+      { code: PostgresErrorCode.UNIQUE_VIOLATION } as never,
+    );
+
+    exceptionHandler.catch(exception, hostMock);
+
+    expect(mockSetStatus).toHaveBeenCalledWith(HttpStatus.CONFLICT);
+    expect(mockSetJson).toHaveBeenCalledWith({
+      statusCode: StatusCode.FAILURE,
+      message: 'Resource already exists',
+      url: 'test',
+    });
+  });
+
+  it('maps foreign key violations to bad request responses', () => {
+    const exception = new QueryFailedError(
+      'INSERT',
+      [],
+      { code: PostgresErrorCode.FOREIGN_KEY_VIOLATION } as never,
+    );
+
+    exceptionHandler.catch(exception, hostMock);
+
+    expect(mockSetStatus).toHaveBeenCalledWith(HttpStatus.BAD_REQUEST);
+    expect(mockSetJson).toHaveBeenCalledWith({
+      statusCode: StatusCode.FAILURE,
+      message: 'Invalid reference supplied',
+      url: 'test',
+    });
   });
 });

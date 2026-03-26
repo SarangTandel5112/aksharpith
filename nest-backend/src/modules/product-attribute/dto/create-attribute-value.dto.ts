@@ -13,8 +13,14 @@ export class CreateAttributeValueDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  @MaxLength(255)
+  @MaxLength(50)
   value: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MaxLength(30)
+  code?: string;
 
   @ApiPropertyOptional()
   @IsOptional()

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike, FindOptionsWhere } from 'typeorm';
+import { resolveSortField } from '../../common/utils/sort.util';
 import { Department } from './entities/department.entity';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';
@@ -8,6 +9,14 @@ import { QueryDepartmentDto } from './dto/query-department.dto';
 
 @Injectable()
 export class DepartmentRepository {
+  private static readonly ALLOWED_SORT_FIELDS = [
+    'createdAt',
+    'updatedAt',
+    'name',
+    'code',
+    'isActive',
+  ] as const;
+
   constructor(
     @InjectRepository(Department)
     private readonly repo: Repository<Department>,
@@ -15,12 +24,17 @@ export class DepartmentRepository {
 
   async findAll(query: QueryDepartmentDto): Promise<[Department[], number]> {
     const { page, limit, sortBy = 'createdAt', order = 'ASC', search, isActive } = query;
+    const safeSortBy = resolveSortField(
+      sortBy,
+      DepartmentRepository.ALLOWED_SORT_FIELDS,
+      'createdAt',
+    );
     const where: FindOptionsWhere<Department> = {};
     if (search) where.name = ILike(`%${search}%`);
     if (isActive !== undefined) where.isActive = isActive;
     return this.repo.findAndCount({
       where,
-      order: { [sortBy]: order },
+      order: { [safeSortBy]: order },
       skip: (page - 1) * limit,
       take: limit,
     });

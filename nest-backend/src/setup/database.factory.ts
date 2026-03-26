@@ -22,8 +22,9 @@ export class DatabaseFactory implements TypeOrmOptionsFactory {
     const isDevelopment = serverConfig.nodeEnv === 'development';
 
     const uri = `postgres://${user}:${password}@${host}:${port}/${name}`;
-
-    Logger.debug(`Database URI: ${uri}`);
+    if (isDevelopment) {
+      Logger.debug(`Connecting to postgres://${user}:***@${host}:${port}/${name}`);
+    }
 
     return {
       type: 'postgres',

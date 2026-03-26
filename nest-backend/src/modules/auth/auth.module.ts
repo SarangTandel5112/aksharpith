@@ -14,6 +14,7 @@ import { PasswordResetToken } from './entities/password-reset-token.entity';
 
 @Module({
   imports: [
+    ConfigModule,
     PassportModule.register({ defaultStrategy: 'local' }),
     JwtModule.registerAsync({
       imports: [ConfigModule],
@@ -34,12 +35,6 @@ import { PasswordResetToken } from './entities/password-reset-token.entity';
     TypeOrmModule.forFeature([User, PasswordResetToken]),
   ],
   controllers: [AuthController],
-  providers: [
-    AuthService,
-    UserRepository,
-    LocalStrategy,
-    ConfigService,
-    JwtStrategy,
-  ],
+  providers: [AuthService, UserRepository, LocalStrategy, JwtStrategy],
 })
 export class AuthModule {}

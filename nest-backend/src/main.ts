@@ -12,7 +12,6 @@ import { Response } from 'express';
 import { ServerConfigName } from './config/server.config';
 import { ConfigService } from '@nestjs/config';
 import { ServerConfig } from './config/server.config';
-import { ValidationPipe } from '@nestjs/common';
 
 async function bootstrap() {
   console.log('Jay Swaminarayan... Shree Swaminarayan Vijayate...');
@@ -67,12 +66,6 @@ async function bootstrap() {
     });
   }
 
-  app.useGlobalPipes(
-    new ValidationPipe({
-      transform: true, // Automatically transform request data to DTO instances
-      whitelist: true, // Strip properties that are not defined in the DTO
-    }),
-  );
   await app.listen(serverConfig.port ?? 3000);
 }
 bootstrap();

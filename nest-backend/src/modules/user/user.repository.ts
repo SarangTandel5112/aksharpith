@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, ILike, FindOptionsWhere } from 'typeorm';
+import { resolveSortField } from '../../common/utils/sort.util';
 import { User } from './entities/user.entity';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
@@ -8,6 +9,16 @@ import { QueryUserDto } from './dto/query-user.dto';
 
 @Injectable()
 export class UserRepository {
+  private static readonly ALLOWED_SORT_FIELDS = [
+    'createdAt',
+    'updatedAt',
+    'firstName',
+    'lastName',
+    'email',
+    'username',
+    'isActive',
+  ] as const;
+
   constructor(
     @InjectRepository(User)
     private readonly repo: Repository<User>,
@@ -23,6 +34,11 @@ export class UserRepository {
       roleId,
       isActive,
     } = query;
+    const safeSortBy = resolveSortField(
+      sortBy,
+      UserRepository.ALLOWED_SORT_FIELDS,
+      'createdAt',
+    );
 
     const where: FindOptionsWhere<User> | FindOptionsWhere<User>[] = [];
 
@@ -43,7 +59,7 @@ export class UserRepository {
     return this.repo.findAndCount({
       where,
       relations: ['role'],
-      order: { [sortBy]: order },
+      order: { [safeSortBy]: order },
       skip: (page - 1) * limit,
       take: limit,
     });
@@ -59,6 +75,8 @@ export class UserRepository {
 
   async create(dto: CreateUserDto & { password: string }): Promise<User> {
     const user = this.repo.create(dto);
+    user.username = dto.username ?? dto.email;
+    user.isTempPassword = dto.isTempPassword ?? false;
     return this.repo.save(user);
   }
 

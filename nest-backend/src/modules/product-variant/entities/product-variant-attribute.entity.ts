@@ -15,14 +15,14 @@ export class ProductVariantAttribute {
   @JoinColumn({ name: 'variant_id' })
   variant: ProductVariant;
 
-  @ManyToOne(() => ProductAttribute)
+  @ManyToOne(() => ProductAttribute, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'attribute_id' })
   attribute: ProductAttribute;
 
   @Column({ name: 'attribute_value_id' })
   attributeValueId: string;
 
-  @ManyToOne(() => ProductAttributeValue)
+  @ManyToOne(() => ProductAttributeValue, { onDelete: 'RESTRICT' })
   @JoinColumn({ name: 'attribute_value_id' })
   attributeValue: ProductAttributeValue;
 }

@@ -34,7 +34,9 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
         relations: ['role'],
       });
 
-      if (!user) throw new UnauthorizedException('UNAUTHORIZED');
+      if (!user || !user.isActive) {
+        throw new UnauthorizedException('User is inactive');
+      }
 
       return user;
     } catch (error) {

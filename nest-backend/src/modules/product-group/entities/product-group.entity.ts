@@ -10,17 +10,25 @@ import {
 } from 'typeorm';
 import { Expose } from 'class-transformer';
 import { GroupField } from './group-field.entity';
+import { Product } from '../../product/entities/product.entity';
 
 @Entity('product_groups')
-@Index(['name'], { unique: true, where: '"deleted_at" IS NULL' })
+@Index(['name'], {
+  unique: true,
+  where: '"deleted_at" IS NULL AND "is_active" = true',
+})
 export class ProductGroup {
   @PrimaryGeneratedColumn('uuid')
   @Expose()
   id: string;
 
-  @Column({ name: 'name', length: 150 })
+  @Column({ name: 'group_name', length: 100 })
   @Expose()
   name: string;
+
+  @Column({ type: 'text', nullable: true })
+  @Expose()
+  description?: string | null;
 
   @Column({ name: 'is_active', type: 'boolean', default: true })
   @Expose()
@@ -39,4 +47,7 @@ export class ProductGroup {
 
   @OneToMany(() => GroupField, (f) => f.group, { cascade: true })
   fields: GroupField[];
+
+  @OneToMany(() => Product, (product) => product.group)
+  products?: Product[];
 }

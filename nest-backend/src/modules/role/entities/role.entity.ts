@@ -6,11 +6,16 @@ import {
   UpdateDateColumn,
   DeleteDateColumn,
   Index,
+  OneToMany,
 } from 'typeorm';
 import { Expose } from 'class-transformer';
+import { User } from '../../user/entities/user.entity';
 
 @Entity('user_roles')
-@Index(['roleName'], { unique: true, where: '"deleted_at" IS NULL' })
+@Index(['roleName'], {
+  unique: true,
+  where: '"deleted_at" IS NULL AND "is_active" = true',
+})
 export class Role {
   @PrimaryGeneratedColumn('uuid')
   @Expose()
@@ -28,10 +33,13 @@ export class Role {
   @Expose()
   createdAt: Date;
 
-  @UpdateDateColumn({ name: 'updated_at' })
+  @UpdateDateColumn({ name: 'updated_at', nullable: true })
   @Expose()
-  updatedAt: Date;
+  updatedAt: Date | null;
 
   @DeleteDateColumn({ name: 'deleted_at', nullable: true })
   deletedAt: Date | null;
+
+  @OneToMany(() => User, (user) => user.role)
+  users?: User[];
 }

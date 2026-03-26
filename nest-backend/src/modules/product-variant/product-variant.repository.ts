@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { EntityManager, Repository } from 'typeorm';
 import { ProductVariant } from './entities/product-variant.entity';
 import { ProductVariantMedia } from './entities/product-variant-media.entity';
 import { QueryProductVariantDto } from './dto/query-product-variant.dto';
@@ -31,14 +31,31 @@ export class ProductVariantRepository {
   }
 
   async findById(id: string): Promise<ProductVariant | null> {
-    return this.repo.findOne({
+    return this.findByIdWithManager(id);
+  }
+
+  async findByIdWithManager(
+    id: string,
+    manager?: EntityManager,
+  ): Promise<ProductVariant | null> {
+    const repo = manager?.getRepository(ProductVariant) ?? this.repo;
+    return repo.findOne({
       where: { id },
       relations: ['variantAttributes', 'variantAttributes.attributeValue'],
     });
   }
 
   async findByCombinationHash(productId: string, hash: string): Promise<ProductVariant | null> {
-    return this.repo.findOne({
+    return this.findByCombinationHashWithManager(productId, hash);
+  }
+
+  async findByCombinationHashWithManager(
+    productId: string,
+    hash: string,
+    manager?: EntityManager,
+  ): Promise<ProductVariant | null> {
+    const repo = manager?.getRepository(ProductVariant) ?? this.repo;
+    return repo.findOne({
       where: { productId, combinationHash: hash },
       withDeleted: true,
     });
@@ -48,9 +65,11 @@ export class ProductVariantRepository {
     productId: string,
     dto: CreateProductVariantDto,
     attributeMap: Record<string, string>,
+    manager?: EntityManager,
   ): Promise<ProductVariant> {
     const hash = buildCombinationHash(dto.attributeValueIds);
-    const variant = this.repo.create({
+    const repo = manager?.getRepository(ProductVariant) ?? this.repo;
+    const variant = repo.create({
       productId,
       sku: dto.sku,
       price: dto.price,
@@ -61,7 +80,7 @@ export class ProductVariantRepository {
         attributeValueId: valueId,
       })),
     });
-    return this.repo.save(variant);
+    return repo.save(variant);
   }
 
   async update(id: string, dto: UpdateProductVariantDto): Promise<void> {
@@ -74,8 +93,13 @@ export class ProductVariantRepository {
   }
 
   async restore(id: string): Promise<void> {
-    await this.repo.restore(id);
-    await this.repo.update(id, { isDeleted: false });
+    await this.restoreWithManager(id);
+  }
+
+  async restoreWithManager(id: string, manager?: EntityManager): Promise<void> {
+    const repo = manager?.getRepository(ProductVariant) ?? this.repo;
+    await repo.restore(id);
+    await repo.update(id, { isDeleted: false });
   }
 
   async addMedia(

@@ -13,6 +13,10 @@ import { GroupField } from './group-field.entity';
 
 @Entity('group_field_options')
 @Index(['fieldId'])
+@Index(['fieldId', 'optionValue'], {
+  unique: true,
+  where: '"is_active" = true',
+})
 export class GroupFieldOption {
   @PrimaryGeneratedColumn('uuid')
   @Expose()
@@ -33,9 +37,13 @@ export class GroupFieldOption {
   @Expose()
   optionValue: string;
 
-  @Column({ name: 'sort_order', type: 'int', default: 0 })
+  @Column({ name: 'display_order', type: 'int', default: 0 })
   @Expose()
   sortOrder: number;
+
+  @Column({ name: 'is_active', type: 'boolean', default: true })
+  @Expose()
+  isActive: boolean;
 
   @CreateDateColumn({ name: 'created_at' })
   @Expose()

@@ -37,6 +37,7 @@ import { ProductAttribute } from '../src/modules/product-attribute/entities/prod
 import { JwtAuthGuard } from '../src/security/jwt-auth.guard';
 import { RolesGuard } from '../src/core/guards/roles.guard';
 import { ResponseTransformer } from '../src/core/interceptors/response.transformer';
+import { initE2eApp } from './helpers/init-e2e-app';
 
 // ─── constants ───────────────────────────────────────────────────────────────
 const VALID_UUID = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
@@ -79,7 +80,7 @@ async function buildApp(
 
   const app = moduleFixture.createNestApplication();
   app.useGlobalPipes(new ValidationPipe({ transform: true, whitelist: true }));
-  await app.init();
+  await initE2eApp(app);
   return app;
 }
 

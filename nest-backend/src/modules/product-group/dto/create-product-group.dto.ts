@@ -7,8 +7,13 @@ export class CreateProductGroupDto {
   @ApiProperty()
   @IsString()
   @IsNotEmpty()
-  @MaxLength(150)
+  @MaxLength(100)
   name: string;
+
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  description?: string;
 
   @ApiPropertyOptional({ type: [CreateGroupFieldDto] })
   @IsOptional()
