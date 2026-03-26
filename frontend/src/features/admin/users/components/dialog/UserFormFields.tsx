@@ -17,32 +17,28 @@ import {
   SelectValue,
 } from "@shared/components/ui/select";
 import type React from "react";
-import type { Control } from "react-hook-form";
-import type {
-  CreateUserFormValues,
-  UpdateUserFormValues,
-} from "@features/users/validations/user-form.schema";
-
-type FormValues = CreateUserFormValues | UpdateUserFormValues;
+import type { Control, FieldValues, Path } from "react-hook-form";
 
 type RoleOption = {
-  id: number;
+  id: string;
   name: string;
 };
 
-type UserFormFieldsProps = {
-  control: Control<any>;
+type UserFormFieldsProps<TFieldValues extends FieldValues> = {
+  control: Control<TFieldValues>;
   includePassword: boolean;
   roleOptions: RoleOption[];
 };
 
-export function UserFormFields(props: UserFormFieldsProps): React.JSX.Element {
+export function UserFormFields<TFieldValues extends FieldValues>(
+  props: UserFormFieldsProps<TFieldValues>,
+): React.JSX.Element {
   return (
     <div className="space-y-6">
       <div className="grid gap-4 md:grid-cols-2">
         <FormField
           control={props.control}
-          name="username"
+          name={"username" as Path<TFieldValues>}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Username</FormLabel>
@@ -55,7 +51,7 @@ export function UserFormFields(props: UserFormFieldsProps): React.JSX.Element {
         />
         <FormField
           control={props.control}
-          name="firstName"
+          name={"firstName" as Path<TFieldValues>}
           render={({ field }) => (
             <FormItem>
               <FormLabel>First Name</FormLabel>
@@ -68,7 +64,7 @@ export function UserFormFields(props: UserFormFieldsProps): React.JSX.Element {
         />
         <FormField
           control={props.control}
-          name="middleName"
+          name={"middleName" as Path<TFieldValues>}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Middle Name</FormLabel>
@@ -83,7 +79,7 @@ export function UserFormFields(props: UserFormFieldsProps): React.JSX.Element {
       <div className="grid gap-4 md:grid-cols-2">
         <FormField
           control={props.control}
-          name="lastName"
+          name={"lastName" as Path<TFieldValues>}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Last Name</FormLabel>
@@ -96,7 +92,7 @@ export function UserFormFields(props: UserFormFieldsProps): React.JSX.Element {
         />
         <FormField
           control={props.control}
-          name="email"
+          name={"email" as Path<TFieldValues>}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Email</FormLabel>
@@ -116,7 +112,7 @@ export function UserFormFields(props: UserFormFieldsProps): React.JSX.Element {
       {props.includePassword && (
         <FormField
           control={props.control}
-          name="password"
+          name={"password" as Path<TFieldValues>}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Password</FormLabel>
@@ -136,13 +132,13 @@ export function UserFormFields(props: UserFormFieldsProps): React.JSX.Element {
       <div className="grid gap-4 md:grid-cols-2">
         <FormField
           control={props.control}
-          name="roleId"
+          name={"roleId" as Path<TFieldValues>}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Role</FormLabel>
               <Select
-                value={field.value !== undefined ? String(field.value) : ""}
-                onValueChange={(value) => field.onChange(Number(value))}
+                value={field.value ?? ""}
+                onValueChange={field.onChange}
               >
                 <FormControl>
                   <SelectTrigger>
@@ -151,7 +147,7 @@ export function UserFormFields(props: UserFormFieldsProps): React.JSX.Element {
                 </FormControl>
                 <SelectContent>
                   {props.roleOptions.map((role) => (
-                    <SelectItem key={role.id} value={String(role.id)}>
+                    <SelectItem key={role.id} value={role.id}>
                       {role.name}
                     </SelectItem>
                   ))}
@@ -163,7 +159,7 @@ export function UserFormFields(props: UserFormFieldsProps): React.JSX.Element {
         />
         <FormField
           control={props.control}
-          name="isActive"
+          name={"isActive" as Path<TFieldValues>}
           render={({ field }) => (
             <FormItem className="flex h-full items-center gap-3 rounded-xl border border-zinc-200 px-4">
               <FormControl>

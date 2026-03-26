@@ -5,7 +5,19 @@ import { Button } from "@shared/components/ui/button";
 import { Input } from "@shared/components/ui/input";
 import { IconPlus, IconTrash } from "@tabler/icons-react";
 import type React from "react";
-import { useMemo, useState } from "react";
+import { useState } from "react";
+
+type AttributeValueDraft = {
+  id: string;
+  value: string;
+};
+
+function createAttributeValueDraft(): AttributeValueDraft {
+  return {
+    id: globalThis.crypto?.randomUUID?.() ?? `value-${Date.now()}`,
+    value: "",
+  };
+}
 
 type LotMatrixAttributeBuilderProps = {
   onCreateAttribute: (input: ProductLotMatrixAttributeBuilderInput) => void;
@@ -16,18 +28,19 @@ export function LotMatrixAttributeBuilder(
 ): React.JSX.Element {
   const [isOpen, setIsOpen] = useState(false);
   const [name, setName] = useState("");
-  const [values, setValues] = useState<string[]>(["", ""]);
+  const [values, setValues] = useState<AttributeValueDraft[]>([
+    createAttributeValueDraft(),
+    createAttributeValueDraft(),
+  ]);
 
-  const normalizedValues = useMemo(
-    () =>
-      Array.from(new Set(values.map((value) => value.trim()).filter(Boolean))),
-    [values],
+  const normalizedValues = Array.from(
+    new Set(values.map((entry) => entry.value.trim()).filter(Boolean)),
   );
   const canSave = name.trim().length > 0 && normalizedValues.length > 0;
 
   function reset(): void {
     setName("");
-    setValues(["", ""]);
+    setValues([createAttributeValueDraft(), createAttributeValueDraft()]);
     setIsOpen(false);
   }
 
@@ -81,7 +94,9 @@ export function LotMatrixAttributeBuilder(
             type="button"
             variant="ghost"
             size="sm"
-            onClick={() => setValues((current) => [...current, ""])}
+            onClick={() =>
+              setValues((current) => [...current, createAttributeValueDraft()])
+            }
           >
             <IconPlus className="h-4 w-4" />
             Add Value
@@ -89,14 +104,16 @@ export function LotMatrixAttributeBuilder(
         </div>
         <div className="space-y-2">
           {values.map((value, index) => (
-            <div key={`value-${index}`} className="flex items-center gap-2">
+            <div key={value.id} className="flex items-center gap-2">
               <Input
                 placeholder={`Value ${index + 1}`}
-                value={value}
+                value={value.value}
                 onChange={(event) =>
                   setValues((current) =>
-                    current.map((item, itemIndex) =>
-                      itemIndex === index ? event.target.value : item,
+                    current.map((item) =>
+                      item.id === value.id
+                        ? { ...item, value: event.target.value }
+                        : item,
                     ),
                   )
                 }
@@ -109,7 +126,7 @@ export function LotMatrixAttributeBuilder(
                 aria-label="Remove attribute value"
                 onClick={() =>
                   setValues((current) =>
-                    current.filter((_, itemIndex) => itemIndex !== index),
+                    current.filter((item) => item.id !== value.id),
                   )
                 }
               >

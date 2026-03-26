@@ -40,7 +40,7 @@ export function RoleFormDialog(props: RoleFormDialogProps): React.JSX.Element {
   const form = useForm<z.input<typeof RoleFormSchema>, unknown, RoleFormValues>({
     resolver: zodResolver(RoleFormSchema),
     defaultValues: {
-      name: props.role?.name ?? "",
+      roleName: props.role?.roleName ?? props.role?.name ?? "",
     },
   });
 
@@ -56,21 +56,23 @@ export function RoleFormDialog(props: RoleFormDialogProps): React.JSX.Element {
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(props.onSubmit)}
-            className="space-y-6"
+            className="flex min-h-0 flex-1 flex-col"
           >
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Role Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g. Admin" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+            <div className="min-h-0 flex-1 overflow-y-auto px-6 py-6">
+              <FormField
+                control={form.control}
+                name="roleName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Role Name</FormLabel>
+                    <FormControl>
+                      <Input placeholder="e.g. Admin" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
             <DialogFooter>
               <Button
                 type="button"

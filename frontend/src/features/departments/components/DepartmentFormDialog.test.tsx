@@ -25,7 +25,7 @@ describe("DepartmentFormDialog", () => {
         onSubmit={vi.fn()}
         isSubmitting={false}
         department={{
-          id: 1,
+          id: "1",
           name: "Electronics",
           code: "ELEC",
           description: "<p>Devices.</p>",
@@ -72,7 +72,6 @@ describe("DepartmentFormDialog", () => {
         name: "New Department",
         code: undefined,
         description: undefined,
-        isActive: true,
       });
     });
   });

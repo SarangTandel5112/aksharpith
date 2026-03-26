@@ -2,31 +2,11 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { server } from "@test/msw/server";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { HttpResponse, http } from "msw";
 import type React from "react";
 import { beforeEach, describe, expect, it } from "vitest";
 import { DepartmentsModule } from "./DepartmentsModule";
 
 // ── Deterministic mock data ────────────────────────────────────────────────────
-
-const BASE = "http://localhost:3000";
-
-const MOCK_DEPARTMENTS = [
-  {
-    id: "dept-1",
-    name: "Electronics",
-    description: "Electronic products",
-    createdAt: "2024-01-01T00:00:00Z",
-    updatedAt: "2024-01-01T00:00:00Z",
-  },
-  {
-    id: "dept-2",
-    name: "Clothing",
-    description: "Apparel and clothing",
-    createdAt: "2024-01-01T00:00:00Z",
-    updatedAt: "2024-01-01T00:00:00Z",
-  },
-];
 
 // ── Wrapper ────────────────────────────────────────────────────────────────────
 
@@ -49,21 +29,7 @@ function createWrapper() {
 
 describe("DepartmentsModule", () => {
   beforeEach(() => {
-    server.use(
-      http.get(`${BASE}/api/departments`, () =>
-        HttpResponse.json({
-          statusCode: 200,
-          message: "OK",
-          data: {
-            items: MOCK_DEPARTMENTS,
-            total: MOCK_DEPARTMENTS.length,
-            page: 1,
-            limit: 20,
-            totalPages: 1,
-          },
-        }),
-      ),
-    );
+    server.resetHandlers();
   });
 
   it("renders the page header with title", () => {
@@ -75,7 +41,7 @@ describe("DepartmentsModule", () => {
     render(<DepartmentsModule />, { wrapper: createWrapper() });
     await waitFor(() => {
       expect(screen.getByText("Electronics")).toBeInTheDocument();
-      expect(screen.getByText("Clothing")).toBeInTheDocument();
+      expect(screen.getByText("Fashion")).toBeInTheDocument();
     });
   });
 
@@ -96,12 +62,14 @@ describe("DepartmentsModule", () => {
     );
     // Open the row actions dropdown for the first row
     const rowActionButtons = screen.getAllByRole("button", {
-      name: /row actions/i,
+      name: /department actions/i,
     });
     // Safe: MOCK_DEPARTMENTS has 2 items so rowActionButtons[0] is guaranteed to exist
     await user.click(rowActionButtons[0]!);
     // Click Delete in the dropdown
     await user.click(screen.getByRole("menuitem", { name: /delete/i }));
-    expect(screen.getByText(/are you sure/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: /delete department/i }),
+    ).toBeInTheDocument();
   });
 });

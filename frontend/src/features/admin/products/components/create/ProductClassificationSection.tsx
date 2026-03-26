@@ -19,10 +19,10 @@ import {
   SelectValue,
 } from "@shared/components/ui/select";
 import type React from "react";
-import type { Control } from "react-hook-form";
+import type { Control, FieldValues, Path } from "react-hook-form";
 
-type ProductClassificationSectionProps = {
-  control: Control<any>;
+type ProductClassificationSectionProps<TFieldValues extends FieldValues> = {
+  control: Control<TFieldValues>;
   departments: Department[];
   subCategories: SubCategory[];
   groups: Group[];
@@ -31,8 +31,8 @@ type ProductClassificationSectionProps = {
 
 const EMPTY_VALUE = "__none__";
 
-export function ProductClassificationSection(
-  props: ProductClassificationSectionProps,
+export function ProductClassificationSection<TFieldValues extends FieldValues>(
+  props: ProductClassificationSectionProps<TFieldValues>,
 ): React.JSX.Element {
   return (
     <SectionCard
@@ -42,14 +42,14 @@ export function ProductClassificationSection(
       <div className="grid gap-4 md:grid-cols-2">
         <FormField
           control={props.control}
-          name="departmentId"
+          name={"departmentId" as Path<TFieldValues>}
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-zinc-700">Department</FormLabel>
               <Select
-                value={typeof field.value === "number" ? String(field.value) : EMPTY_VALUE}
+                value={typeof field.value === "string" && field.value ? field.value : EMPTY_VALUE}
                 onValueChange={(value) =>
-                  field.onChange(value === EMPTY_VALUE ? undefined : Number(value))
+                  field.onChange(value === EMPTY_VALUE ? "" : value)
                 }
               >
                 <FormControl>
@@ -60,7 +60,7 @@ export function ProductClassificationSection(
                 <SelectContent>
                   <SelectItem value={EMPTY_VALUE}>No department</SelectItem>
                   {props.departments.map((department) => (
-                    <SelectItem key={department.id} value={String(department.id)}>
+                    <SelectItem key={department.id} value={department.id}>
                       {department.name}
                     </SelectItem>
                   ))}
@@ -72,14 +72,14 @@ export function ProductClassificationSection(
         />
         <FormField
           control={props.control}
-          name="subCategoryId"
+          name={"subCategoryId" as Path<TFieldValues>}
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-zinc-700">Sub-category</FormLabel>
               <Select
-                value={typeof field.value === "number" ? String(field.value) : EMPTY_VALUE}
+                value={typeof field.value === "string" && field.value ? field.value : EMPTY_VALUE}
                 onValueChange={(value) =>
-                  field.onChange(value === EMPTY_VALUE ? undefined : Number(value))
+                  field.onChange(value === EMPTY_VALUE ? "" : value)
                 }
               >
                 <FormControl>
@@ -90,7 +90,7 @@ export function ProductClassificationSection(
                 <SelectContent>
                   <SelectItem value={EMPTY_VALUE}>No sub-category</SelectItem>
                   {props.subCategories.map((subCategory) => (
-                    <SelectItem key={subCategory.id} value={String(subCategory.id)}>
+                    <SelectItem key={subCategory.id} value={subCategory.id}>
                       {subCategory.name} • {subCategory.category?.name ?? "Unassigned"}
                     </SelectItem>
                   ))}
@@ -111,14 +111,14 @@ export function ProductClassificationSection(
       ) : null}
       <FormField
         control={props.control}
-        name="groupId"
+        name={"groupId" as Path<TFieldValues>}
         render={({ field }) => (
           <FormItem>
             <FormLabel className="text-zinc-700">Group Template</FormLabel>
             <Select
-              value={typeof field.value === "number" ? String(field.value) : EMPTY_VALUE}
+              value={typeof field.value === "string" && field.value ? field.value : EMPTY_VALUE}
               onValueChange={(value) =>
-                field.onChange(value === EMPTY_VALUE ? undefined : Number(value))
+                field.onChange(value === EMPTY_VALUE ? "" : value)
               }
             >
               <FormControl>
@@ -129,7 +129,7 @@ export function ProductClassificationSection(
               <SelectContent>
                 <SelectItem value={EMPTY_VALUE}>No template</SelectItem>
                 {props.groups.map((group) => (
-                  <SelectItem key={group.id} value={String(group.id)}>
+                  <SelectItem key={group.id} value={group.id}>
                     {group.name}
                   </SelectItem>
                 ))}

@@ -7,7 +7,7 @@ beforeEach(() => useLotMatrixStore.getState().reset());
 
 describe("LotMatrixWizard", () => {
   it("renders the attribute picker by default", () => {
-    render(<LotMatrixWizard productId={1} />);
+    render(<LotMatrixWizard productId="1" />);
     expect(screen.getByText(/Choose Attributes/i)).toBeInTheDocument();
   });
 });

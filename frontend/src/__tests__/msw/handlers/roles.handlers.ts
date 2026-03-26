@@ -12,14 +12,16 @@ const BFF = 'http://localhost:3000'
 
 export const mockRoles: Role[] = [
   {
-    id: 1,
+    id: "1",
+    roleName: "Admin",
     name: 'Admin',
     isActive: true,
     createdAt: '2024-01-01T00:00:00.000Z',
     updatedAt: '2024-01-01T00:00:00.000Z',
   },
   {
-    id: 2,
+    id: "2",
+    roleName: "Staff",
     name: 'Staff',
     isActive: true,
     createdAt: '2024-01-02T00:00:00.000Z',

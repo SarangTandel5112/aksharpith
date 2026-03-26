@@ -59,7 +59,7 @@ import { IconArrowLeft } from "@tabler/icons-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import type { z } from "zod";
@@ -84,9 +84,9 @@ export function ProductCreatePage(): React.JSX.Element {
       hsnCode: "",
       price: 0,
       stockQuantity: 0,
-      departmentId: 0,
-      subCategoryId: 0,
-      groupId: 0,
+      departmentId: "",
+      subCategoryId: "",
+      groupId: "",
       nonTaxable: false,
       itemInactive: false,
       nonStockItem: false,
@@ -129,7 +129,7 @@ export function ProductCreatePage(): React.JSX.Element {
   const [productAttributes, setProductAttributes] = useState<Attribute[]>(
     () => MOCK_ATTRIBUTES,
   );
-  const [selectedAttributeIds, setSelectedAttributeIds] = useState<number[]>(
+  const [selectedAttributeIds, setSelectedAttributeIds] = useState<string[]>(
     [],
   );
   const [lotMatrixRows, setLotMatrixRows] = useState<ProductLotMatrixRowDraft[]>(
@@ -141,9 +141,9 @@ export function ProductCreatePage(): React.JSX.Element {
   const [vendors, setVendors] = useState<ProductVendorDraft[]>([]);
   const [zones, setZones] = useState<ProductZoneDraft[]>([]);
 
-  const possibleLotMatrixCount = useMemo(
-    () => computeLotMatrixCount(productAttributes, selectedAttributeIds),
-    [productAttributes, selectedAttributeIds],
+  const possibleLotMatrixCount = computeLotMatrixCount(
+    productAttributes,
+    selectedAttributeIds,
   );
   const lotMatrixBadgeCount =
     lotMatrixRows.length > 0 ? lotMatrixRows.length : possibleLotMatrixCount;
@@ -174,88 +174,48 @@ export function ProductCreatePage(): React.JSX.Element {
     return () => window.clearTimeout(timeoutId);
   }, [highlightedLotMatrixRowId]);
 
-  const visibleTabs = useMemo(
-    () =>
-      buildProductCreateTabs({
-        productType: watchedProductType ?? "Standard",
-        selectedGroup,
-        mediaCount: mediaItems.length,
-        marketingCount: marketingItems.length,
-        vendorCount: vendors.length,
-        zoneCount: zones.length,
-        lotMatrixBadgeCount,
-      }),
-    [
-      lotMatrixBadgeCount,
-      marketingItems.length,
-      mediaItems.length,
-      selectedGroup,
-      vendors.length,
-      watchedProductType,
-      zones.length,
-    ],
-  );
+  const visibleTabs = buildProductCreateTabs({
+    productType: watchedProductType ?? "Standard",
+    selectedGroup,
+    mediaCount: mediaItems.length,
+    marketingCount: marketingItems.length,
+    vendorCount: vendors.length,
+    zoneCount: zones.length,
+    lotMatrixBadgeCount,
+  });
 
   useEffect(() => {
     if (visibleTabs.some((tab) => tab.key === activeTab)) return;
     setActiveTab("basic");
   }, [activeTab, visibleTabs]);
 
-  const payload = useMemo(
-    () =>
-      buildProductCreateWorkspacePayload({
-        values: watchedValues,
-        state: {
-          groupFieldValues,
-          media: mediaItems,
-          marketingMedia: marketingItems,
-          selectedAttributeIds,
-          lotMatrixRows,
-          vendors,
-          zones,
-        },
-        attributes: productAttributes,
-      }),
-    [
+  const payload = buildProductCreateWorkspacePayload({
+    values: watchedValues,
+    state: {
       groupFieldValues,
-      marketingItems,
-      mediaItems,
-      lotMatrixRows,
-      productAttributes,
+      media: mediaItems,
+      marketingMedia: marketingItems,
       selectedAttributeIds,
+      lotMatrixRows,
       vendors,
-      watchedValues,
       zones,
-    ],
-  );
+    },
+    attributes: productAttributes,
+  });
 
-  const summary = useMemo(
-    () =>
-      buildProductCreateSummary({
-        payload,
-        values: watchedValues,
-        catalog: {
-          currentTabLabel:
-            visibleTabs.find((tab) => tab.key === activeTab)?.label ?? "Basic Info",
-          productTypeLabel: formatProductType(watchedProductType ?? "Standard"),
-          departmentName: selectedDepartmentName,
-          categoryName: derivedCategoryName,
-          subCategoryName: selectedSubCategoryName,
-          groupName: selectedGroupName,
-        },
-      }),
-    [
-      activeTab,
-      derivedCategoryName,
-      payload,
-      selectedDepartmentName,
-      selectedGroupName,
-      selectedSubCategoryName,
-      visibleTabs,
-      watchedProductType,
-      watchedValues,
-    ],
-  );
+  const summary = buildProductCreateSummary({
+    payload,
+    values: watchedValues,
+    catalog: {
+      currentTabLabel:
+        visibleTabs.find((tab) => tab.key === activeTab)?.label ?? "Basic Info",
+      productTypeLabel: formatProductType(watchedProductType ?? "Standard"),
+      departmentName: selectedDepartmentName,
+      categoryName: derivedCategoryName,
+      subCategoryName: selectedSubCategoryName,
+      groupName: selectedGroupName,
+    },
+  });
 
   function handleSubmit(values: ProductCreateWorkspaceValues): void {
     console.log(
@@ -406,7 +366,7 @@ export function ProductCreatePage(): React.JSX.Element {
                   productType={watchedProductType ?? "Standard"}
                   selectedAttributeIds={selectedAttributeIds}
                   highlightedRowId={highlightedLotMatrixRowId}
-                  onToggleAttribute={(attributeId: number) =>
+                  onToggleAttribute={(attributeId: string) =>
                     setSelectedAttributeIds((current) =>
                       current.includes(attributeId)
                         ? current.filter((value) => value !== attributeId)

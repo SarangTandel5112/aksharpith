@@ -1,11 +1,11 @@
-import type { ProductResponseDto } from "@shared/contracts";
+import type { Product } from "@features/admin/products/types/products.types";
 
-export type CatalogProduct = ProductResponseDto;
+export type CatalogProduct = Product;
 
 export type FilterState = {
   search: string;
-  categoryId: number | null;
-  departmentId: number | null;
+  categoryId: string | null;
+  departmentId: string | null;
   minPrice: number | null;
   maxPrice: number | null;
   page: number;
@@ -14,8 +14,8 @@ export type FilterState = {
 
 export type CatalogFiltersStore = FilterState & {
   setSearch: (search: string) => void;
-  setCategoryId: (id: number | null) => void;
-  setDepartmentId: (id: number | null) => void;
+  setCategoryId: (id: string | null) => void;
+  setDepartmentId: (id: string | null) => void;
   setPriceRange: (min: number | null, max: number | null) => void;
   setPage: (page: number) => void;
   reset: () => void;

@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const RoleFormSchema = z.object({
-  name: z
+  roleName: z
     .string()
     .min(1, "Role name is required")
     .max(100, "Role name must be under 100 characters"),

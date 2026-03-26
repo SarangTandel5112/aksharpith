@@ -14,7 +14,6 @@ export const DepartmentFormSchema = z.object({
     .string()
     .optional()
     .transform((value) => value || undefined),
-  isActive: z.boolean().default(true),
 });
 
 export type DepartmentFormValues = z.infer<typeof DepartmentFormSchema>;
@@ -33,7 +32,6 @@ export const DepartmentPatchSchema = z.object({
   description: z
     .string()
     .optional(),
-  isActive: z.boolean().optional(),
 });
 
 export type DepartmentPatchValues = z.infer<typeof DepartmentPatchSchema>;

@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@shared/components/ui/button";
-import { Checkbox } from "@shared/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -26,8 +25,7 @@ import { z } from "zod";
 import type { Role } from "../types/roles.types";
 
 const RoleFormSchema = z.object({
-  name: z.string().min(1, "Role name is required").max(100),
-  isActive: z.boolean().default(true),
+  roleName: z.string().min(1, "Role name is required").max(100),
 });
 
 type RoleFormValues = z.infer<typeof RoleFormSchema>;
@@ -48,8 +46,7 @@ export function RoleFormDialog(props: RoleFormDialogProps): React.JSX.Element {
   >({
     resolver: zodResolver(RoleFormSchema),
     defaultValues: {
-      name: props.role?.name ?? "",
-      isActive: props.role?.isActive ?? true,
+      roleName: props.role?.roleName ?? props.role?.name ?? "",
     },
   });
   return (
@@ -62,12 +59,12 @@ export function RoleFormDialog(props: RoleFormDialogProps): React.JSX.Element {
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit((values) => props.onSubmit(values))}
-            className="space-y-6"
+            className="flex min-h-0 flex-1 flex-col"
           >
-            <div className="space-y-6">
+            <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-6">
               <FormField
                 control={form.control}
-                name="name"
+                name="roleName"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Role Name</FormLabel>
@@ -75,28 +72,6 @@ export function RoleFormDialog(props: RoleFormDialogProps): React.JSX.Element {
                       <Input placeholder="e.g. Admin" {...field} />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="isActive"
-                render={({ field }) => (
-                  <FormItem className="flex items-center gap-3 rounded-2xl border border-zinc-200 px-4 py-3">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value ?? false}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1">
-                      <FormLabel className="text-sm font-medium text-zinc-900">
-                        Active
-                      </FormLabel>
-                      <p className="text-sm text-zinc-500">
-                        Allow this role to be assigned to users.
-                      </p>
-                    </div>
                   </FormItem>
                 )}
               />

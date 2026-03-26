@@ -89,8 +89,10 @@ function SectionHeading(props: SectionHeadingProps): React.JSX.Element {
   );
 }
 
-function formatOptionalText(value: string | null): string {
-  return value && value.trim().length > 0 ? value : "Not set";
+function formatOptionalText(value: string | number | null): string {
+  if (value === null) return "Not set";
+  const normalized = String(value).trim();
+  return normalized.length > 0 ? normalized : "Not set";
 }
 
 // ── Main component ────────────────────────────────────────────────────────────
@@ -99,7 +101,7 @@ export function ProductViewPage(
   props: ProductViewPageProps,
 ): React.JSX.Element {
   const [activeTab, setActiveTab] = useState<TabKey>("overview");
-  const productId = Number(props.productId);
+  const productId = props.productId;
 
   const row = buildProductListRows().find(
     (item) => item.product.id === productId,
@@ -182,6 +184,7 @@ export function ProductViewPage(
       <div className="flex gap-1 overflow-x-auto rounded-md border border-zinc-200 bg-zinc-50 p-1">
         {TABS.map((tab) => (
           <button
+            type="button"
             key={tab.key}
             onClick={() => setActiveTab(tab.key)}
             className={cn(

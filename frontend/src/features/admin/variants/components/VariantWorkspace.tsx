@@ -18,7 +18,7 @@ type VariantWorkspaceProps = {
 export function VariantWorkspace(
   props: VariantWorkspaceProps,
 ): React.JSX.Element {
-  const product = findProduct(Number(props.productId));
+  const product = findProduct(props.productId);
 
   if (!product) {
     return (

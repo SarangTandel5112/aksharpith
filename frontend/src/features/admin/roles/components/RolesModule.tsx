@@ -25,34 +25,37 @@ import type { Role } from "../types/roles.types";
 import { RoleFormDialog } from "./RoleFormDialog";
 
 type RoleFormValues = {
-  name: string;
-  isActive: boolean;
+  roleName: string;
 };
 
 const MOCK_ROLES: Role[] = [
   {
-    id: 1,
+    id: "1",
+    roleName: "Admin",
     name: "Admin",
     isActive: true,
     createdAt: "2026-03-01",
     updatedAt: "2026-03-22",
   },
   {
-    id: 2,
+    id: "2",
+    roleName: "Staff",
     name: "Staff",
     isActive: true,
     createdAt: "2026-03-01",
     updatedAt: "2026-03-22",
   },
   {
-    id: 3,
+    id: "3",
+    roleName: "Viewer",
     name: "Viewer",
     isActive: true,
     createdAt: "2026-03-01",
     updatedAt: "2026-03-22",
   },
   {
-    id: 4,
+    id: "4",
+    roleName: "Legacy",
     name: "Legacy",
     isActive: false,
     createdAt: "2026-03-01",
@@ -115,8 +118,8 @@ export function RolesModule(): React.JSX.Element {
           r.id === editItem.id
             ? {
                 ...r,
-                name: values.name,
-                isActive: values.isActive,
+                name: values.roleName,
+                roleName: values.roleName,
                 updatedAt: today,
               }
             : r,
@@ -125,9 +128,10 @@ export function RolesModule(): React.JSX.Element {
       toast.success("Role updated");
     } else {
       const newRole: Role = {
-        id: Date.now(),
-        name: values.name,
-        isActive: values.isActive,
+        id: String(Date.now()),
+        name: values.roleName,
+        roleName: values.roleName,
+        isActive: true,
         createdAt: today,
         updatedAt: today,
       };

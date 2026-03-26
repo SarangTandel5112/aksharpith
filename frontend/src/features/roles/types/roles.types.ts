@@ -1,11 +1,13 @@
 import type {
   CreateRoleDto,
-  PaginatedData,
   RoleResponseDto,
   UpdateRoleDto,
-} from "@shared/contracts";
+} from "@features/roles/contracts/roles.contracts";
+import type { PaginatedResponse } from "@shared/types/core";
 
-export type Role = RoleResponseDto;
-export type PaginatedRoles = PaginatedData<Role>;
+export type Role = RoleResponseDto & {
+  name: RoleResponseDto["roleName"];
+};
+export type PaginatedRoles = PaginatedResponse<Role>;
 export type CreateRoleInput = CreateRoleDto;
 export type UpdateRoleInput = UpdateRoleDto;

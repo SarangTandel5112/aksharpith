@@ -3,6 +3,7 @@
 import { Button } from "@shared/components/ui/button";
 import { cn } from "@shared/lib/utils";
 import { IconPhoto, IconTrash, IconUpload } from "@tabler/icons-react";
+import Image from "next/image";
 import type React from "react";
 import { useId, useRef, useState } from "react";
 
@@ -89,12 +90,14 @@ export function ImageDropzone(
       >
         {props.value ? (
           <div className="space-y-3 p-3">
-            <div className="overflow-hidden rounded-xl border border-zinc-200 bg-white">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
+            <div className="relative h-48 overflow-hidden rounded-xl border border-zinc-200 bg-white">
+              <Image
                 src={props.value}
                 alt="Uploaded preview"
-                className="h-48 w-full object-cover"
+                fill
+                unoptimized
+                sizes="100vw"
+                className="object-cover"
               />
             </div>
             <div className="flex items-center justify-between gap-3 px-1">

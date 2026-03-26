@@ -23,7 +23,7 @@ import {
 } from "@shared/components/ui/dropdown-menu";
 import { IconDots, IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
 import type React from "react";
-import { useDeferredValue, useMemo, useState } from "react";
+import { useDeferredValue, useState } from "react";
 import { toast } from "sonner";
 
 type AttributeTableRow = Attribute & {
@@ -50,91 +50,84 @@ export function AttributesModule(): React.JSX.Element {
         attribute.name.toLowerCase().includes(deferredSearch.toLowerCase()),
       )
     : rows;
-  const usageByAttribute = useMemo(() => buildAttributeUsageMap(rows), [rows]);
-  const tableRows = useMemo<AttributeTableRow[]>(
-    () =>
-      searchFilteredRows
-        .filter((attribute) => {
-          const usage = usageByAttribute[attribute.id];
-          const matchesStatus =
-            statusFilter === "all"
-              ? true
-              : statusFilter === "active"
-                ? attribute.isActive
-                : !attribute.isActive;
-          const matchesUsage =
-            usageFilter === "all"
-              ? true
-              : usageFilter === "in-use"
-                ? Boolean(usage?.inUse)
-                : !usage?.inUse;
+  const usageByAttribute = buildAttributeUsageMap(rows);
+  const tableRows: AttributeTableRow[] = searchFilteredRows
+    .filter((attribute) => {
+      const usage = usageByAttribute[attribute.id];
+      const matchesStatus =
+        statusFilter === "all"
+          ? true
+          : statusFilter === "active"
+            ? attribute.isActive
+            : !attribute.isActive;
+      const matchesUsage =
+        usageFilter === "all"
+          ? true
+          : usageFilter === "in-use"
+            ? Boolean(usage?.inUse)
+            : !usage?.inUse;
 
-          return matchesStatus && matchesUsage;
-        })
-        .map((attribute) => ({
-        ...attribute,
-        usage: usageByAttribute[attribute.id] ?? {
-          productCount: 0,
-          lotMatrixRowCount: 0,
-          inUse: false,
-          valueUsageById: {},
-        },
-      })),
-    [searchFilteredRows, statusFilter, usageByAttribute, usageFilter],
-  );
-  const columns = useMemo<Column<AttributeTableRow>[]>(
-    () => [
-      { key: "name", label: "Attribute", sortable: true },
-      {
-        key: "values",
-        label: "Structured Values",
-        render: (row) => (
-          <div className="flex flex-wrap gap-2">
-            {row.values.map((value) => (
-              <span
-                key={value.id}
-                className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-700"
-              >
-                {value.label}
-              </span>
-            ))}
-          </div>
-        ),
+      return matchesStatus && matchesUsage;
+    })
+    .map((attribute) => ({
+      ...attribute,
+      usage: usageByAttribute[attribute.id] ?? {
+        productCount: 0,
+        lotMatrixRowCount: 0,
+        inUse: false,
+        valueUsageById: {},
       },
-      {
-        key: "usage",
-        label: "Usage",
-        render: (row) => (
-          <div className="space-y-2">
-            <StatusBadge
-              label={row.usage.inUse ? "Used in catalog" : "Not used yet"}
-              variant={row.usage.inUse ? "warning" : "neutral"}
-            />
-            <p className="text-xs leading-5 text-zinc-500">
-              {row.usage.inUse
-                ? `${row.usage.productCount} product${
-                    row.usage.productCount === 1 ? "" : "s"
-                  } • ${row.usage.lotMatrixRowCount} lot matrix row${
-                    row.usage.lotMatrixRowCount === 1 ? "" : "s"
-                  }`
-                : "Safe to rename or delete while it has no linked rows."}
-            </p>
-          </div>
-        ),
-      },
-      {
-        key: "isActive",
-        label: "Status",
-        render: (row) => (
+    }));
+  const columns: Column<AttributeTableRow>[] = [
+    { key: "name", label: "Attribute", sortable: true },
+    {
+      key: "values",
+      label: "Structured Values",
+      render: (row) => (
+        <div className="flex flex-wrap gap-2">
+          {row.values.map((value) => (
+            <span
+              key={value.id}
+              className="inline-flex items-center rounded-full bg-zinc-100 px-2.5 py-1 text-xs font-medium text-zinc-700"
+            >
+              {value.label}
+            </span>
+          ))}
+        </div>
+      ),
+    },
+    {
+      key: "usage",
+      label: "Usage",
+      render: (row) => (
+        <div className="space-y-2">
           <StatusBadge
-            label={row.isActive ? "Active" : "Inactive"}
-            variant={row.isActive ? "success" : "neutral"}
+            label={row.usage.inUse ? "Used in catalog" : "Not used yet"}
+            variant={row.usage.inUse ? "warning" : "neutral"}
           />
-        ),
-      },
-    ],
-    [],
-  );
+          <p className="text-xs leading-5 text-zinc-500">
+            {row.usage.inUse
+              ? `${row.usage.productCount} product${
+                  row.usage.productCount === 1 ? "" : "s"
+                } • ${row.usage.lotMatrixRowCount} lot matrix row${
+                  row.usage.lotMatrixRowCount === 1 ? "" : "s"
+                }`
+              : "Safe to rename or delete while it has no linked rows."}
+          </p>
+        </div>
+      ),
+    },
+    {
+      key: "isActive",
+      label: "Status",
+      render: (row) => (
+        <StatusBadge
+          label={row.isActive ? "Active" : "Inactive"}
+          variant={row.isActive ? "success" : "neutral"}
+        />
+      ),
+    },
+  ];
 
   const paginatedRows = tableRows.slice(
     (page - 1) * pageSize,
@@ -276,7 +269,10 @@ export function AttributesModule(): React.JSX.Element {
                       isRequired: values.isRequired ?? false,
                       isActive: values.isActive,
                       values: values.values.map((v, i) => ({
-                        id: v.valueId ?? Date.now() + i,
+                        id:
+                          v.valueId ??
+                          globalThis.crypto?.randomUUID?.() ??
+                          `${r.id}-value-${i + 1}`,
                         attributeId: r.id,
                         label: v.label,
                         code: v.code,
@@ -285,6 +281,7 @@ export function AttributesModule(): React.JSX.Element {
                         createdAt:
                           r.values.find((existingValue) => existingValue.id === v.valueId)
                             ?.createdAt ?? today,
+                        updatedAt: today,
                       })),
                       updatedAt: today,
                     }
@@ -293,27 +290,30 @@ export function AttributesModule(): React.JSX.Element {
             );
             toast.success("Attribute updated");
           } else {
-            const newId = Date.now();
+            const newId =
+              globalThis.crypto?.randomUUID?.() ?? `attr-${Date.now()}`;
             setRows((prev) => [
               ...prev,
               {
                 id: newId,
-                productId: 0,
+                productId: null,
                 name: values.name,
                 code: values.code,
                 sortOrder: values.sortOrder ?? null,
                 isRequired: values.isRequired ?? false,
                 isActive: values.isActive,
                 values: values.values.map((v, i) => ({
-                  id: newId * 100 + i,
+                  id: `${newId}-value-${i + 1}`,
                   attributeId: newId,
                   label: v.label,
                   code: v.code,
                   sortOrder: v.sortOrder,
                   isActive: v.isActive,
                   createdAt: today,
+                  updatedAt: today,
                 })),
                 createdAt: today,
+                updatedAt: today,
               },
             ]);
             toast.success("Attribute created");

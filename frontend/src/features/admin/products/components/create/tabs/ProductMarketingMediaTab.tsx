@@ -53,7 +53,10 @@ export function ProductMarketingMediaTab(
 
         {props.items.map((item, index) => (
           <div
-            key={index}
+            key={
+              item.clientId ??
+              `${item.mediaUrl}-${item.displayOrder ?? index}`
+            }
             className="rounded-lg border border-zinc-200 bg-zinc-50 p-4"
           >
             <div className="grid gap-3 sm:grid-cols-2">
@@ -61,9 +64,9 @@ export function ProductMarketingMediaTab(
                 <p className="text-xs font-medium text-zinc-600">Media URL</p>
                 <Input
                   placeholder="https://images.example.com/campaign.jpg"
-                  value={item.url}
+                  value={item.mediaUrl}
                   onChange={(e) =>
-                    props.onChange(index, "url", e.target.value)
+                    props.onChange(index, "mediaUrl", e.target.value)
                   }
                 />
               </div>
@@ -86,16 +89,16 @@ export function ProductMarketingMediaTab(
               <div className="space-y-1">
                 <p className="text-xs font-medium text-zinc-600">Type</p>
                 <Select
-                  value={item.type}
+                  value={item.mediaType ?? "photo"}
                   onValueChange={(val) =>
-                    props.onChange(index, "type", val)
+                    props.onChange(index, "mediaType", val)
                   }
                 >
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="image">Image</SelectItem>
+                    <SelectItem value="photo">Photo</SelectItem>
                     <SelectItem value="video">Video</SelectItem>
                   </SelectContent>
                 </Select>
@@ -107,11 +110,11 @@ export function ProductMarketingMediaTab(
                 <Input
                   type="number"
                   min={0}
-                  value={item.sortOrder}
+                  value={item.displayOrder ?? 0}
                   onChange={(e) =>
                     props.onChange(
                       index,
-                      "sortOrder",
+                      "displayOrder",
                       Number(e.target.value),
                     )
                   }

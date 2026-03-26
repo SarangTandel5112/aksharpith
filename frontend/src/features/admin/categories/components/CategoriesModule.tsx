@@ -19,6 +19,7 @@ import {
   DropdownMenuTrigger,
 } from "@shared/components/ui/dropdown-menu";
 import { IconDots, IconPencil, IconPlus, IconTrash } from "@tabler/icons-react";
+import Image from "next/image";
 import type React from "react";
 import { useState } from "react";
 import { toast } from "sonner";
@@ -32,14 +33,14 @@ type CategoryRow = Category & {
 };
 
 const DEPARTMENTS: Pick<Department, "id" | "name">[] = [
-  { id: 1, name: "Electronics" },
-  { id: 2, name: "Fashion" },
-  { id: 3, name: "Home" },
+  { id: "1", name: "Electronics" },
+  { id: "2", name: "Fashion" },
+  { id: "3", name: "Home" },
 ];
 
 const MOCK_CATEGORIES: CategoryRow[] = [
   {
-    id: 101,
+    id: "101",
     name: "Audio",
     description: "<p>Headphones, speakers, and sound systems.</p>",
     photo: null,
@@ -51,7 +52,7 @@ const MOCK_CATEGORIES: CategoryRow[] = [
     updatedAt: "2026-03-22",
   },
   {
-    id: 102,
+    id: "102",
     name: "Smart Devices",
     description: "<p>Phones, watches, and connected devices.</p>",
     photo: null,
@@ -63,7 +64,7 @@ const MOCK_CATEGORIES: CategoryRow[] = [
     updatedAt: "2026-03-21",
   },
   {
-    id: 103,
+    id: "103",
     name: "Furniture",
     description: "<p>Tables, desks, and home pieces.</p>",
     photo: null,
@@ -75,7 +76,7 @@ const MOCK_CATEGORIES: CategoryRow[] = [
     updatedAt: "2026-03-18",
   },
   {
-    id: 104,
+    id: "104",
     name: "Archive",
     description: "<p>Retired categories kept for reference.</p>",
     photo: null,
@@ -94,10 +95,12 @@ const COLUMNS: Column<CategoryRow>[] = [
     label: "Photo",
     render: (row) =>
       row.photo ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
+        <Image
           src={row.photo}
           alt={row.name}
+          width={40}
+          height={40}
+          unoptimized
           className="h-10 w-10 rounded-xl object-cover"
         />
       ) : (
@@ -164,7 +167,7 @@ export function CategoriesModule(): React.JSX.Element {
     const matchesDepartment =
       departmentFilter === "all"
         ? true
-        : row.departmentId === Number(departmentFilter);
+        : row.departmentId === departmentFilter;
     const matchesStatus =
       statusFilter === "all"
         ? true
@@ -313,9 +316,7 @@ export function CategoriesModule(): React.JSX.Element {
         }}
         onSubmit={(values: CreateCategoryInput) => {
           const today = new Date().toISOString().split("T")[0] ?? "";
-          const department = DEPARTMENTS.find(
-            (item) => item.id === values.departmentId,
-          );
+      const department = DEPARTMENTS.find((item) => item.id === values.departmentId);
           if (editItem) {
             setRows((prev) =>
               prev.map((r) =>
@@ -325,9 +326,9 @@ export function CategoriesModule(): React.JSX.Element {
                       name: values.name,
                       description: values.description ?? null,
                       photo: values.photo ?? null,
-                      departmentId: values.departmentId,
+                      departmentId: values.departmentId ?? null,
                       department: department ?? r.department ?? null,
-                      isActive: values.isActive ?? r.isActive,
+                      isActive: r.isActive,
                       updatedAt: today,
                     }
                   : r,
@@ -338,14 +339,14 @@ export function CategoriesModule(): React.JSX.Element {
             setRows((prev) => [
               ...prev,
               {
-                id: Date.now(),
+                id: String(Date.now()),
                 name: values.name,
                 description: values.description ?? null,
                 photo: values.photo ?? null,
-                departmentId: values.departmentId,
+                departmentId: values.departmentId ?? null,
                 department: department ?? null,
                 subCategoryCount: 0,
-                isActive: values.isActive ?? true,
+                isActive: true,
                 createdAt: today,
                 updatedAt: today,
               },

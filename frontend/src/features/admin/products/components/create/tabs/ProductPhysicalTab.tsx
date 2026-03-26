@@ -10,19 +10,18 @@ import {
 } from "@shared/components/ui/form";
 import { Input } from "@shared/components/ui/input";
 import type React from "react";
-import type { Control } from "react-hook-form";
+import type { Control, FieldValues, Path } from "react-hook-form";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-type ProductPhysicalTabProps = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  control: Control<any>;
+type ProductPhysicalTabProps<TFieldValues extends FieldValues> = {
+  control: Control<TFieldValues>;
 };
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
-export function ProductPhysicalTab(
-  props: ProductPhysicalTabProps,
+export function ProductPhysicalTab<TFieldValues extends FieldValues>(
+  props: ProductPhysicalTabProps<TFieldValues>,
 ): React.JSX.Element {
   return (
     <SectionCard
@@ -32,7 +31,7 @@ export function ProductPhysicalTab(
       <div className="grid gap-4 sm:grid-cols-2">
         <FormField
           control={props.control}
-          name="physicalWeight"
+          name={"physicalWeight" as Path<TFieldValues>}
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-zinc-700">Weight (kg)</FormLabel>
@@ -49,7 +48,7 @@ export function ProductPhysicalTab(
         />
         <FormField
           control={props.control}
-          name="physicalLength"
+          name={"physicalLength" as Path<TFieldValues>}
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-zinc-700">Length (cm)</FormLabel>
@@ -66,7 +65,7 @@ export function ProductPhysicalTab(
         />
         <FormField
           control={props.control}
-          name="physicalWidth"
+          name={"physicalWidth" as Path<TFieldValues>}
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-zinc-700">Width (cm)</FormLabel>
@@ -83,7 +82,7 @@ export function ProductPhysicalTab(
         />
         <FormField
           control={props.control}
-          name="physicalHeight"
+          name={"physicalHeight" as Path<TFieldValues>}
           render={({ field }) => (
             <FormItem>
               <FormLabel className="text-zinc-700">Height (cm)</FormLabel>

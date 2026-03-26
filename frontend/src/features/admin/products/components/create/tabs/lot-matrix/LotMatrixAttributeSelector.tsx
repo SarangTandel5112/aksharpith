@@ -3,16 +3,17 @@
 import type { Attribute } from "@features/admin/attributes/types/attributes.types";
 import { SectionCard } from "@shared/components/admin";
 import { Button } from "@shared/components/ui/button";
-import { Checkbox } from "@shared/components/ui/checkbox";
+import { cn } from "@shared/lib/utils";
+import { CheckIcon } from "lucide-react";
 import type React from "react";
 
 type LotMatrixAttributeSelectorProps = {
   attributes: Attribute[];
-  selectedAttributeIds: number[];
+  selectedAttributeIds: string[];
   canGenerate: boolean;
   canAddRow: boolean;
   possibleCount: number;
-  onToggleAttribute: (attributeId: number) => void;
+  onToggleAttribute: (attributeId: string) => void;
   onGenerateRows: () => void;
   onAddRow: () => void;
   onResetRows: () => void;
@@ -36,20 +37,28 @@ export function LotMatrixAttributeSelector(
           const isSelected = props.selectedAttributeIds.includes(attribute.id);
 
           return (
-            <label
+            <button
+              type="button"
               key={attribute.id}
-              className={`flex cursor-pointer items-start gap-3 rounded-2xl border px-3 py-3 transition-colors ${
+              aria-pressed={isSelected}
+              onClick={() => props.onToggleAttribute(attribute.id)}
+              className={`flex w-full cursor-pointer items-start gap-3 rounded-2xl px-3 py-3 text-left transition-colors ${
                 isSelected
                   ? "border-zinc-900 bg-zinc-50"
                   : "border-zinc-200 bg-white hover:border-zinc-300"
               }`}
             >
-              <Checkbox
-                checked={isSelected}
-                onCheckedChange={() => props.onToggleAttribute(attribute.id)}
-                aria-label={`Use ${attribute.name} in lot matrix`}
-                className="mt-0.5"
-              />
+              <span
+                aria-hidden="true"
+                className={cn(
+                  "mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-[4px] border transition-colors",
+                  isSelected
+                    ? "border-zinc-900 bg-zinc-900 text-white"
+                    : "border-zinc-300 bg-white text-transparent",
+                )}
+              >
+                <CheckIcon className="size-3" />
+              </span>
               <div className="min-w-0 flex-1 space-y-2">
                 <div className="flex items-center justify-between gap-3">
                   <p className="truncate text-sm font-medium text-zinc-950">
@@ -83,7 +92,7 @@ export function LotMatrixAttributeSelector(
                   )}
                 </div>
               </div>
-            </label>
+            </button>
           );
         })}
       </div>

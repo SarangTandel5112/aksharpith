@@ -12,10 +12,10 @@ import { Input } from "@shared/components/ui/input";
 import { Button } from "@shared/components/ui/button";
 import { IconTrash } from "@tabler/icons-react";
 import type React from "react";
-import type { Control } from "react-hook-form";
+import type { Control, FieldValues, Path } from "react-hook-form";
 
-type AttributeValueEditorProps = {
-  control: Control<any>;
+type AttributeValueEditorProps<TFieldValues extends FieldValues> = {
+  control: Control<TFieldValues>;
   index: number;
   canRemove: boolean;
   isLocked?: boolean;
@@ -23,8 +23,8 @@ type AttributeValueEditorProps = {
   onRemove: () => void;
 };
 
-export function AttributeValueEditor(
-  props: AttributeValueEditorProps,
+export function AttributeValueEditor<TFieldValues extends FieldValues>(
+  props: AttributeValueEditorProps<TFieldValues>,
 ): React.JSX.Element {
   return (
     <div className="rounded-2xl border border-zinc-200 p-4">
@@ -53,7 +53,7 @@ export function AttributeValueEditor(
       <div className="mt-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_120px]">
         <FormField
           control={props.control}
-          name={`values.${props.index}.label` as const}
+          name={`values.${props.index}.label` as Path<TFieldValues>}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Label</FormLabel>
@@ -66,7 +66,7 @@ export function AttributeValueEditor(
         />
         <FormField
           control={props.control}
-          name={`values.${props.index}.code` as const}
+          name={`values.${props.index}.code` as Path<TFieldValues>}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Code</FormLabel>
@@ -86,7 +86,7 @@ export function AttributeValueEditor(
       <div className="mt-4 grid gap-4 md:grid-cols-[120px_minmax(0,1fr)]">
         <FormField
           control={props.control}
-          name={`values.${props.index}.sortOrder` as const}
+          name={`values.${props.index}.sortOrder` as Path<TFieldValues>}
           render={({ field }) => (
             <FormItem>
               <FormLabel>Sort Order</FormLabel>
@@ -106,7 +106,7 @@ export function AttributeValueEditor(
       </div>
       <FormField
         control={props.control}
-        name={`values.${props.index}.isActive` as const}
+        name={`values.${props.index}.isActive` as Path<TFieldValues>}
         render={({ field }) => (
           <FormItem className="mt-4 flex items-center gap-3 space-y-0">
             <FormControl>

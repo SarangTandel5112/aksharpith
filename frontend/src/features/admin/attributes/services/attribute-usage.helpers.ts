@@ -9,14 +9,14 @@ import {
 } from "@features/admin/products/services/product-admin.mock";
 
 export function summarizeAttributeUsage(attribute: Attribute): AttributeUsageSummary {
-  const productIds = new Set<number>();
-  const rowIds = new Set<number>();
-  const valueProductIds = new Map<number, Set<number>>();
-  const valueRowIds = new Map<number, Set<number>>();
+  const productIds = new Set<string>();
+  const rowIds = new Set<string>();
+  const valueProductIds = new Map<string, Set<string>>();
+  const valueRowIds = new Map<string, Set<string>>();
 
   for (const value of attribute.values) {
-    valueProductIds.set(value.id, new Set<number>());
-    valueRowIds.set(value.id, new Set<number>());
+    valueProductIds.set(value.id, new Set<string>());
+    valueRowIds.set(value.id, new Set<string>());
   }
 
   for (const product of MOCK_PRODUCTS) {
@@ -36,12 +36,12 @@ export function summarizeAttributeUsage(attribute: Attribute): AttributeUsageSum
 
       for (const link of matchingLinks) {
         const currentProductIds =
-          valueProductIds.get(link.attributeValueId) ?? new Set<number>();
+          valueProductIds.get(link.attributeValueId) ?? new Set<string>();
         currentProductIds.add(product.id);
         valueProductIds.set(link.attributeValueId, currentProductIds);
 
         const currentRowIds =
-          valueRowIds.get(link.attributeValueId) ?? new Set<number>();
+          valueRowIds.get(link.attributeValueId) ?? new Set<string>();
         currentRowIds.add(variant.id);
         valueRowIds.set(link.attributeValueId, currentRowIds);
       }
@@ -75,7 +75,7 @@ export function summarizeAttributeUsage(attribute: Attribute): AttributeUsageSum
 
 export function buildAttributeUsageMap(
   attributes: Attribute[],
-): Record<number, AttributeUsageSummary> {
+): Record<string, AttributeUsageSummary> {
   return Object.fromEntries(
     attributes.map((attribute) => [attribute.id, summarizeAttributeUsage(attribute)]),
   );

@@ -43,7 +43,7 @@ export async function createUser(input: CreateUserInput): Promise<User> {
 }
 
 export async function updateUser(
-  id: number,
+  id: string,
   input: UpdateUserInput,
 ): Promise<User> {
   const res = await fetch(`/api/users/${id}`, {
@@ -60,7 +60,7 @@ export async function updateUser(
   return json.data
 }
 
-export async function deleteUser(id: number): Promise<void> {
+export async function deleteUser(id: string): Promise<void> {
   const res = await fetch(`/api/users/${id}`, { method: 'DELETE' })
   if (res.status === 204) return
   await throwIfNotOk(res)

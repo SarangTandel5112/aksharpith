@@ -20,7 +20,7 @@ import { UserFormDialog } from "./UserFormDialog";
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 type UserRow = {
-  id: number;
+  id: string;
   name: string;
   email: string;
   role: string;
@@ -111,7 +111,7 @@ export function UsersModule(): React.JSX.Element {
     } else {
       const createValues = values as CreateUserFormValues;
       const input = {
-        username: createValues.username,
+        ...(createValues.username ? { username: createValues.username } : {}),
         firstName: createValues.firstName,
         ...(createValues.middleName
           ? { middleName: createValues.middleName }
@@ -150,7 +150,7 @@ export function UsersModule(): React.JSX.Element {
     id: u.id,
     name: `${u.firstName} ${u.lastName}`,
     email: u.email,
-    role: u.role?.name ?? "—",
+    role: u.role?.roleName ?? u.role?.name ?? "—",
     createdAt: new Date(u.createdAt).toLocaleDateString(),
   }));
 

@@ -4,6 +4,7 @@ import {
   formatProductListingStatus,
   formatProductSellingStatus,
 } from "@features/admin/products/services/product-admin.helpers";
+import Image from "next/image";
 import type React from "react";
 
 type ProductCreateSummarySidebarProps = {
@@ -37,14 +38,17 @@ export function ProductCreateSummarySidebar(
   const initials = buildInitials(summary.productName);
 
   return (
-    <div className="space-y-5 xl:sticky xl:top-6">
+    <div className="space-y-5 xl:sticky xl:top-6 xl:max-h-[calc(100dvh-9rem)] xl:overflow-y-auto xl:pr-1 scrollbar-hidden">
       <div className="overflow-hidden rounded-[1.5rem] border border-zinc-200 bg-white shadow-sm">
-        <div className="aspect-[4/3] overflow-hidden border-b border-zinc-200 bg-zinc-100">
+        <div className="relative aspect-[4/3] overflow-hidden border-b border-zinc-200 bg-zinc-100">
           {summary.primaryMediaUrl ? (
-            <img
+            <Image
               src={summary.primaryMediaUrl}
               alt={summary.productName}
-              className="h-full w-full object-cover"
+              fill
+              unoptimized
+              sizes="(min-width: 1280px) 320px, 100vw"
+              className="object-cover"
             />
           ) : (
             <div className="flex h-full items-end bg-gradient-to-br from-zinc-100 via-white to-sky-100 p-5">

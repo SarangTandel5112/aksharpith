@@ -22,7 +22,7 @@ app/                  Next.js pages + BFF API routes
 features/             UI layer -- hooks, stores, components
   auth/               Login, session management (stub — build this first)
   Each feature has:   components/  hooks/  store/  types/
-                      constants/   validations/  schemas/
+                      contracts/   constants/ validations/ schemas/
 
 shared/               Generic, cross-feature utilities
   components/         Generic UI only -- no feature logic
@@ -66,7 +66,10 @@ When you need to create a new file, answer these in order:
 4. **Is it a Next.js page, layout, or BFF route handler?**
    → `app/`
 
-5. **Is it a shared TypeScript type used across features?**
+5. **Is it a backend DTO contract owned by one feature/domain?**
+   → `features/<feature>/contracts/<name>.contracts.ts`
+
+6. **Is it a shared TypeScript type used across features?**
    → `shared/types/<name>.types.ts`
 
 ---

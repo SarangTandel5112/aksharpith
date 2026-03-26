@@ -42,12 +42,12 @@ export function ProductZonesTab(
 
         {props.items.map((item, index) => (
           <div
-            key={index}
+            key={item.clientId ?? `${item.zoneName}-${item.zoneCode ?? index}`}
             className="rounded-lg border border-zinc-200 bg-zinc-50 p-4"
           >
             <div className="mb-3 flex items-center justify-between">
               <p className="text-sm font-medium text-zinc-800">
-                {item.name || `Zone ${index + 1}`}
+                {item.zoneName || `Zone ${index + 1}`}
               </p>
               <Button
                 type="button"
@@ -67,9 +67,9 @@ export function ProductZonesTab(
                 </p>
                 <Input
                   placeholder="e.g. North Zone"
-                  value={item.name}
+                  value={item.zoneName}
                   onChange={(e) =>
-                    props.onChange(index, "name", e.target.value)
+                    props.onChange(index, "zoneName", e.target.value)
                   }
                 />
               </div>
@@ -77,9 +77,9 @@ export function ProductZonesTab(
                 <p className="text-xs font-medium text-zinc-600">Zone code</p>
                 <Input
                   placeholder="e.g. NORTH"
-                  value={item.code ?? ""}
+                  value={item.zoneCode ?? ""}
                   onChange={(e) =>
-                    props.onChange(index, "code", e.target.value || null)
+                    props.onChange(index, "zoneCode", e.target.value || null)
                   }
                 />
               </div>

@@ -2,7 +2,6 @@
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@shared/components/ui/button";
-import { Checkbox } from "@shared/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -44,7 +43,7 @@ type SubCategoryFormDialogProps = {
   onSubmit: (values: CreateSubCategoryInput) => void;
   isSubmitting: boolean;
   subCategory?: CreateSubCategoryInput & {
-    id: number;
+    id: string;
     createdAt: string;
     updatedAt: string | null;
   };
@@ -62,11 +61,10 @@ export function SubCategoryFormDialog(
     resolver: zodResolver(CreateSubCategorySchema),
     defaultValues: {
       name: props.subCategory?.name ?? "",
-      categoryId: props.subCategory?.categoryId ?? 0,
+      categoryId: props.subCategory?.categoryId ?? "",
       description: props.subCategory?.description ?? "",
       photo: props.subCategory?.photo ?? null,
       sortOrder: props.subCategory?.sortOrder ?? 0,
-      isActive: props.subCategory?.isActive ?? true,
     },
   });
   return (
@@ -83,9 +81,9 @@ export function SubCategoryFormDialog(
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(props.onSubmit)}
-            className="space-y-6"
+            className="flex min-h-0 flex-1 flex-col"
           >
-            <div className="space-y-6">
+            <div className="min-h-0 flex-1 space-y-6 overflow-y-auto px-6 py-6">
               <div className="grid gap-4 md:grid-cols-[minmax(0,1fr)_200px]">
                 <FormField
                   control={form.control}
@@ -126,14 +124,11 @@ export function SubCategoryFormDialog(
                   <FormItem>
                     <FormLabel>Parent Category</FormLabel>
                     {(() => {
-                      const currentValue =
-                        typeof field.value === "number" && field.value > 0
-                          ? String(field.value)
-                          : "";
+                      const currentValue = field.value ?? "";
                       return (
                     <Select
                       value={currentValue}
-                      onValueChange={(value) => field.onChange(Number(value))}
+                      onValueChange={field.onChange}
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -142,7 +137,7 @@ export function SubCategoryFormDialog(
                       </FormControl>
                       <SelectContent>
                         {props.categories.map((category) => (
-                          <SelectItem key={category.id} value={String(category.id)}>
+                          <SelectItem key={category.id} value={category.id}>
                             {category.name}
                           </SelectItem>
                         ))}
@@ -185,28 +180,6 @@ export function SubCategoryFormDialog(
                       />
                     </FormControl>
                     <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="isActive"
-                render={({ field }) => (
-                  <FormItem className="flex items-center gap-3 rounded-2xl border border-zinc-200 px-4 py-3">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value ?? false}
-                        onCheckedChange={field.onChange}
-                      />
-                    </FormControl>
-                    <div className="space-y-1">
-                      <FormLabel className="text-sm font-medium text-zinc-900">
-                        Active
-                      </FormLabel>
-                      <p className="text-sm text-zinc-500">
-                        Show this sub-category during product setup.
-                      </p>
-                    </div>
                   </FormItem>
                 )}
               />

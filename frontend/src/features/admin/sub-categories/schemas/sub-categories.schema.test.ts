@@ -8,6 +8,6 @@ describe('CreateSubCategorySchema', () => {
     expect(CreateSubCategorySchema.safeParse({ name: '', categoryId: '550e8400-e29b-41d4-a716-446655440000' }).success).toBe(false)
   })
   it('rejects invalid categoryId', () => {
-    expect(CreateSubCategorySchema.safeParse({ name: 'T-Shirts', categoryId: 'bad' }).success).toBe(false)
+    expect(CreateSubCategorySchema.safeParse({ name: 'T-Shirts', categoryId: '' }).success).toBe(false)
   })
 })

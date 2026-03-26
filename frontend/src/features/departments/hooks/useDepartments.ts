@@ -22,10 +22,10 @@ type UseDepartmentsReturn = {
   isLoading: boolean;
   createDepartment: (input: CreateDepartmentInput) => Promise<Department>;
   updateDepartment: (
-    id: number,
+    id: string,
     input: UpdateDepartmentInput,
   ) => Promise<Department>;
-  deleteDepartment: (id: number) => Promise<void>;
+  deleteDepartment: (id: string) => Promise<void>;
   isCreating: boolean;
   isUpdating: boolean;
   isDeleting: boolean;
@@ -48,7 +48,7 @@ export function useDepartments(): UseDepartmentsReturn {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, input }: { id: number; input: UpdateDepartmentInput }) =>
+    mutationFn: ({ id, input }: { id: string; input: UpdateDepartmentInput }) =>
       apiUpdateDepartment(id, input),
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.departments.all() });
@@ -56,7 +56,7 @@ export function useDepartments(): UseDepartmentsReturn {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: number) => apiDeleteDepartment(id),
+    mutationFn: (id: string) => apiDeleteDepartment(id),
     onSettled: () => {
       void qc.invalidateQueries({ queryKey: queryKeys.departments.all() });
     },
@@ -70,11 +70,11 @@ export function useDepartments(): UseDepartmentsReturn {
       createMutation.mutateAsync(input),
 
     updateDepartment: (
-      id: number,
+      id: string,
       input: UpdateDepartmentInput,
     ): Promise<Department> => updateMutation.mutateAsync({ id, input }),
 
-    deleteDepartment: (id: number): Promise<void> =>
+    deleteDepartment: (id: string): Promise<void> =>
       deleteMutation.mutateAsync(id),
 
     isCreating: createMutation.isPending,

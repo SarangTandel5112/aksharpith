@@ -19,36 +19,36 @@ import type {
 const now = "2026-03-24T09:00:00.000Z";
 
 export const MOCK_IDS = {
-  departmentElectronics: 1,
-  departmentFashion: 2,
-  departmentHome: 3,
-  categorySmartDevices: 101,
-  categoryAudio: 102,
-  categoryFurniture: 103,
-  subCategoryPhones: 201,
-  subCategoryHeadphones: 202,
-  subCategoryDesks: 203,
-  attributeColor: 301,
-  attributeStorage: 302,
-  valueSilver: 401,
-  valueBlack: 402,
-  value128: 403,
-  value256: 404,
-  groupElectronics: 501,
-  groupFieldBattery: 601,
-  groupFieldWaterproof: 602,
-  groupFieldFinish: 603,
-  groupFieldOptionMatte: 701,
-  groupFieldOptionGloss: 702,
-  roleAdmin: 801,
-  roleStaff: 802,
-  roleViewer: 803,
-  userArjun: 901,
-  userPriya: 902,
-  userKiran: 903,
-  productIphone: 1001,
-  productHeadphones: 1002,
-  productDesk: 1003,
+  departmentElectronics: "1",
+  departmentFashion: "2",
+  departmentHome: "3",
+  categorySmartDevices: "101",
+  categoryAudio: "102",
+  categoryFurniture: "103",
+  subCategoryPhones: "201",
+  subCategoryHeadphones: "202",
+  subCategoryDesks: "203",
+  attributeColor: "301",
+  attributeStorage: "302",
+  valueSilver: "401",
+  valueBlack: "402",
+  value128: "403",
+  value256: "404",
+  groupElectronics: "501",
+  groupFieldBattery: "601",
+  groupFieldWaterproof: "602",
+  groupFieldFinish: "603",
+  groupFieldOptionMatte: "701",
+  groupFieldOptionGloss: "702",
+  roleAdmin: "801",
+  roleStaff: "802",
+  roleViewer: "803",
+  userArjun: "901",
+  userPriya: "902",
+  userKiran: "903",
+  productIphone: "1001",
+  productHeadphones: "1002",
+  productDesk: "1003",
 } as const;
 
 export const MOCK_DEPARTMENTS: Department[] = [
@@ -184,6 +184,7 @@ export const MOCK_ATTRIBUTES: Attribute[] = [
     isRequired: true,
     isActive: true,
     createdAt: now,
+    updatedAt: now,
     values: [
       {
         id: MOCK_IDS.valueSilver,
@@ -193,6 +194,7 @@ export const MOCK_ATTRIBUTES: Attribute[] = [
         sortOrder: 0,
         isActive: true,
         createdAt: now,
+        updatedAt: now,
       },
       {
         id: MOCK_IDS.valueBlack,
@@ -202,6 +204,7 @@ export const MOCK_ATTRIBUTES: Attribute[] = [
         sortOrder: 1,
         isActive: true,
         createdAt: now,
+        updatedAt: now,
       },
     ],
   },
@@ -214,6 +217,7 @@ export const MOCK_ATTRIBUTES: Attribute[] = [
     isRequired: true,
     isActive: true,
     createdAt: now,
+    updatedAt: now,
     values: [
       {
         id: MOCK_IDS.value128,
@@ -223,6 +227,7 @@ export const MOCK_ATTRIBUTES: Attribute[] = [
         sortOrder: 0,
         isActive: true,
         createdAt: now,
+        updatedAt: now,
       },
       {
         id: MOCK_IDS.value256,
@@ -232,6 +237,7 @@ export const MOCK_ATTRIBUTES: Attribute[] = [
         sortOrder: 1,
         isActive: true,
         createdAt: now,
+        updatedAt: now,
       },
     ],
   },
@@ -312,6 +318,7 @@ export const MOCK_GROUPS: Group[] = [
 export const MOCK_ROLES: Role[] = [
   {
     id: MOCK_IDS.roleAdmin,
+    roleName: "Admin",
     name: "Admin",
     isActive: true,
     createdAt: now,
@@ -319,6 +326,7 @@ export const MOCK_ROLES: Role[] = [
   },
   {
     id: MOCK_IDS.roleStaff,
+    roleName: "Staff",
     name: "Staff",
     isActive: true,
     createdAt: now,
@@ -326,6 +334,7 @@ export const MOCK_ROLES: Role[] = [
   },
   {
     id: MOCK_IDS.roleViewer,
+    roleName: "Viewer",
     name: "Viewer",
     isActive: true,
     createdAt: now,
@@ -344,7 +353,14 @@ export const MOCK_USERS: User[] = [
     isTempPassword: false,
     isActive: true,
     roleId: MOCK_IDS.roleAdmin,
-    role: { id: MOCK_IDS.roleAdmin, name: "Admin", isActive: true },
+    role: {
+      id: MOCK_IDS.roleAdmin,
+      roleName: "Admin",
+      name: "Admin",
+      isActive: true,
+      createdAt: now,
+      updatedAt: now,
+    },
     createdAt: now,
     updatedAt: now,
   },
@@ -358,7 +374,14 @@ export const MOCK_USERS: User[] = [
     isTempPassword: false,
     isActive: true,
     roleId: MOCK_IDS.roleStaff,
-    role: { id: MOCK_IDS.roleStaff, name: "Staff", isActive: true },
+    role: {
+      id: MOCK_IDS.roleStaff,
+      roleName: "Staff",
+      name: "Staff",
+      isActive: true,
+      createdAt: now,
+      updatedAt: now,
+    },
     createdAt: now,
     updatedAt: now,
   },
@@ -372,7 +395,14 @@ export const MOCK_USERS: User[] = [
     isTempPassword: false,
     isActive: false,
     roleId: MOCK_IDS.roleViewer,
-    role: { id: MOCK_IDS.roleViewer, name: "Viewer", isActive: true },
+    role: {
+      id: MOCK_IDS.roleViewer,
+      roleName: "Viewer",
+      name: "Viewer",
+      isActive: true,
+      createdAt: now,
+      updatedAt: now,
+    },
     createdAt: now,
     updatedAt: now,
   },
@@ -381,12 +411,15 @@ export const MOCK_USERS: User[] = [
 export const MOCK_PRODUCTS: Product[] = [
   {
     id: MOCK_IDS.productIphone,
+    sku: "IPH16PRO",
     code: "IPH16PRO",
     upc: "8901234567890",
     name: "iPhone 16 Pro",
+    productType: "Lot Matrix",
     type: "Lot Matrix",
     description: "Flagship smartphone configured for premium catalog display.",
     model: "A3101",
+    basePrice: 129900,
     departmentId: MOCK_IDS.departmentElectronics,
     department: { id: MOCK_IDS.departmentElectronics, name: "Electronics" },
     subCategoryId: MOCK_IDS.subCategoryPhones,
@@ -405,12 +438,15 @@ export const MOCK_PRODUCTS: Product[] = [
   },
   {
     id: MOCK_IDS.productHeadphones,
+    sku: "STX900",
     code: "STX900",
     upc: "8901234567891",
     name: "Studio Headphones X",
+    productType: "Standard",
     type: "Standard",
     description: "Over-ear headphones with strong merchandising assets.",
     model: "STX-900",
+    basePrice: 15999,
     departmentId: MOCK_IDS.departmentElectronics,
     department: { id: MOCK_IDS.departmentElectronics, name: "Electronics" },
     subCategoryId: MOCK_IDS.subCategoryHeadphones,
@@ -429,12 +465,15 @@ export const MOCK_PRODUCTS: Product[] = [
   },
   {
     id: MOCK_IDS.productDesk,
+    sku: "ARCDESK",
     code: "ARCDESK",
     upc: "8901234567892",
     name: "Arc Standing Desk",
+    productType: "Standard",
     type: "Standard",
     description: "Modular standing desk for home-office collections.",
     model: "ARC-DESK",
+    basePrice: 49999,
     departmentId: MOCK_IDS.departmentHome,
     department: { id: MOCK_IDS.departmentHome, name: "Home" },
     subCategoryId: MOCK_IDS.subCategoryDesks,
@@ -453,13 +492,14 @@ export const MOCK_PRODUCTS: Product[] = [
   },
 ];
 
-export const MOCK_MEDIA_BY_PRODUCT: Record<number, ProductMediaItem[]> = {
+export const MOCK_MEDIA_BY_PRODUCT: Record<string, ProductMediaItem[]> = {
   [MOCK_IDS.productIphone]: [
     {
-      id: 1101,
+      id: "1101",
       productId: MOCK_IDS.productIphone,
       url: "https://images.example.com/iphone-front.jpg",
-      type: "image",
+      mediaType: "photo",
+      type: "photo",
       sortOrder: 0,
       isPrimary: true,
       fileSize: 2400,
@@ -468,9 +508,10 @@ export const MOCK_MEDIA_BY_PRODUCT: Record<number, ProductMediaItem[]> = {
       updatedAt: now,
     },
     {
-      id: 1102,
+      id: "1102",
       productId: MOCK_IDS.productIphone,
       url: "https://images.example.com/iphone-spin.mp4",
+      mediaType: "video",
       type: "video",
       sortOrder: 1,
       isPrimary: false,
@@ -482,10 +523,11 @@ export const MOCK_MEDIA_BY_PRODUCT: Record<number, ProductMediaItem[]> = {
   ],
   [MOCK_IDS.productHeadphones]: [
     {
-      id: 1103,
+      id: "1103",
       productId: MOCK_IDS.productHeadphones,
       url: "https://images.example.com/headphones-hero.jpg",
-      type: "image",
+      mediaType: "photo",
+      type: "photo",
       sortOrder: 0,
       isPrimary: true,
       fileSize: 2100,
@@ -497,13 +539,16 @@ export const MOCK_MEDIA_BY_PRODUCT: Record<number, ProductMediaItem[]> = {
   [MOCK_IDS.productDesk]: [],
 };
 
-export const MOCK_MARKETING_MEDIA_BY_PRODUCT: Record<number, ProductMarketingMediaItem[]> = {
+export const MOCK_MARKETING_MEDIA_BY_PRODUCT: Record<string, ProductMarketingMediaItem[]> = {
   [MOCK_IDS.productIphone]: [
     {
-      id: 1201,
+      id: "1201",
       productId: MOCK_IDS.productIphone,
+      mediaUrl: "https://images.example.com/campaign-hero.jpg",
       url: "https://images.example.com/campaign-hero.jpg",
-      type: "image",
+      mediaType: "photo",
+      type: "photo",
+      displayOrder: 0,
       sortOrder: 0,
       thumbnailUrl: "https://images.example.com/campaign-hero-thumb.jpg",
       duration: null,
@@ -512,10 +557,13 @@ export const MOCK_MARKETING_MEDIA_BY_PRODUCT: Record<number, ProductMarketingMed
       updatedAt: now,
     },
     {
-      id: 1202,
+      id: "1202",
       productId: MOCK_IDS.productIphone,
+      mediaUrl: "https://images.example.com/campaign-demo.mp4",
       url: "https://images.example.com/campaign-demo.mp4",
+      mediaType: "video",
       type: "video",
+      displayOrder: 1,
       sortOrder: 1,
       thumbnailUrl: "https://images.example.com/campaign-demo-thumb.jpg",
       duration: 42,
@@ -528,11 +576,12 @@ export const MOCK_MARKETING_MEDIA_BY_PRODUCT: Record<number, ProductMarketingMed
   [MOCK_IDS.productDesk]: [],
 };
 
-export const MOCK_VENDORS_BY_PRODUCT: Record<number, ProductVendor[]> = {
+export const MOCK_VENDORS_BY_PRODUCT: Record<string, ProductVendor[]> = {
   [MOCK_IDS.productIphone]: [
     {
-      id: 1301,
+      id: "1301",
       productId: MOCK_IDS.productIphone,
+      vendorName: "Apple India Pvt Ltd",
       name: "Apple India Pvt Ltd",
       contactPerson: "Rahul Sharma",
       contactEmail: "rahul@apple.example",
@@ -550,12 +599,14 @@ export const MOCK_VENDORS_BY_PRODUCT: Record<number, ProductVendor[]> = {
   [MOCK_IDS.productDesk]: [],
 };
 
-export const MOCK_ZONES_BY_PRODUCT: Record<number, ProductZone[]> = {
+export const MOCK_ZONES_BY_PRODUCT: Record<string, ProductZone[]> = {
   [MOCK_IDS.productIphone]: [
     {
-      id: 1401,
+      id: "1401",
       productId: MOCK_IDS.productIphone,
+      zoneName: "North Zone",
       name: "North Zone",
+      zoneCode: "NORTH",
       code: "NORTH",
       description: "Delhi NCR focus",
       isActive: true,
@@ -567,9 +618,9 @@ export const MOCK_ZONES_BY_PRODUCT: Record<number, ProductZone[]> = {
   [MOCK_IDS.productDesk]: [],
 };
 
-export const MOCK_PHYSICAL_ATTRIBUTES_BY_PRODUCT: Record<number, ProductPhysicalAttributes> = {
+export const MOCK_PHYSICAL_ATTRIBUTES_BY_PRODUCT: Record<string, ProductPhysicalAttributes> = {
   [MOCK_IDS.productIphone]: {
-    id: 1501,
+    id: "1501",
     productId: MOCK_IDS.productIphone,
     weight: "0.187",
     length: "14.67",
@@ -579,7 +630,7 @@ export const MOCK_PHYSICAL_ATTRIBUTES_BY_PRODUCT: Record<number, ProductPhysical
     updatedAt: now,
   },
   [MOCK_IDS.productHeadphones]: {
-    id: 1502,
+    id: "1502",
     productId: MOCK_IDS.productHeadphones,
     weight: "0.46",
     length: "22.4",
@@ -589,7 +640,7 @@ export const MOCK_PHYSICAL_ATTRIBUTES_BY_PRODUCT: Record<number, ProductPhysical
     updatedAt: now,
   },
   [MOCK_IDS.productDesk]: {
-    id: 1503,
+    id: "1503",
     productId: MOCK_IDS.productDesk,
     weight: "32.5",
     length: "150",
@@ -600,10 +651,10 @@ export const MOCK_PHYSICAL_ATTRIBUTES_BY_PRODUCT: Record<number, ProductPhysical
   },
 };
 
-export const MOCK_GROUP_FIELD_VALUES_BY_PRODUCT: Record<number, ProductGroupFieldValue[]> = {
+export const MOCK_GROUP_FIELD_VALUES_BY_PRODUCT: Record<string, ProductGroupFieldValue[]> = {
   [MOCK_IDS.productIphone]: [
     {
-      id: 1601,
+      id: "1601",
       productId: MOCK_IDS.productIphone,
       fieldId: MOCK_IDS.groupFieldBattery,
       valueText: "Up to 27 hours",
@@ -618,7 +669,7 @@ export const MOCK_GROUP_FIELD_VALUES_BY_PRODUCT: Record<number, ProductGroupFiel
       displayValue: "Up to 27 hours",
     },
     {
-      id: 1602,
+      id: "1602",
       productId: MOCK_IDS.productIphone,
       fieldId: MOCK_IDS.groupFieldWaterproof,
       valueText: null,
@@ -633,7 +684,7 @@ export const MOCK_GROUP_FIELD_VALUES_BY_PRODUCT: Record<number, ProductGroupFiel
       displayValue: "Yes",
     },
     {
-      id: 1603,
+      id: "1603",
       productId: MOCK_IDS.productIphone,
       fieldId: MOCK_IDS.groupFieldFinish,
       valueText: null,
@@ -652,10 +703,10 @@ export const MOCK_GROUP_FIELD_VALUES_BY_PRODUCT: Record<number, ProductGroupFiel
   [MOCK_IDS.productDesk]: [],
 };
 
-export const MOCK_VARIANTS_BY_PRODUCT: Record<number, Variant[]> = {
+export const MOCK_VARIANTS_BY_PRODUCT: Record<string, Variant[]> = {
   [MOCK_IDS.productIphone]: [
     {
-      id: 1701,
+      id: "1701",
       productId: MOCK_IDS.productIphone,
       sku: "IPH16PRO-SLV-128",
       upc: "8901234567893",
@@ -671,19 +722,19 @@ export const MOCK_VARIANTS_BY_PRODUCT: Record<number, Variant[]> = {
       media: [],
       variantAttributes: [
         {
-          variantId: 1701,
+          variantId: "1701",
           attributeId: MOCK_IDS.attributeColor,
           attributeValueId: MOCK_IDS.valueSilver,
         },
         {
-          variantId: 1701,
+          variantId: "1701",
           attributeId: MOCK_IDS.attributeStorage,
           attributeValueId: MOCK_IDS.value128,
         },
       ],
     },
     {
-      id: 1702,
+      id: "1702",
       productId: MOCK_IDS.productIphone,
       sku: "IPH16PRO-BLK-256",
       upc: "8901234567894",
@@ -699,12 +750,12 @@ export const MOCK_VARIANTS_BY_PRODUCT: Record<number, Variant[]> = {
       media: [],
       variantAttributes: [
         {
-          variantId: 1702,
+          variantId: "1702",
           attributeId: MOCK_IDS.attributeColor,
           attributeValueId: MOCK_IDS.valueBlack,
         },
         {
-          variantId: 1702,
+          variantId: "1702",
           attributeId: MOCK_IDS.attributeStorage,
           attributeValueId: MOCK_IDS.value256,
         },
@@ -715,53 +766,55 @@ export const MOCK_VARIANTS_BY_PRODUCT: Record<number, Variant[]> = {
   [MOCK_IDS.productDesk]: [],
 };
 
-export function findProduct(productId: number): Product | undefined {
+export function findProduct(productId: string): Product | undefined {
   return MOCK_PRODUCTS.find((product) => product.id === productId);
 }
 
-export function findCategory(categoryId: number): Category | undefined {
+export function findCategory(categoryId: string): Category | undefined {
   return MOCK_CATEGORIES.find((category) => category.id === categoryId);
 }
 
-export function findSubCategory(subCategoryId: number): SubCategory | undefined {
+export function findSubCategory(subCategoryId: string): SubCategory | undefined {
   return MOCK_SUB_CATEGORIES.find(
     (subCategory) => subCategory.id === subCategoryId,
   );
 }
 
-export function findGroup(groupId: number): Group | undefined {
+export function findGroup(groupId: string): Group | undefined {
   return MOCK_GROUPS.find((group) => group.id === groupId);
 }
 
 export function getCategoryForProduct(product: Product): Category | undefined {
-  const subCategory = findSubCategory(product.subCategoryId);
+  const subCategory = product.subCategoryId
+    ? findSubCategory(product.subCategoryId)
+    : undefined;
   return subCategory ? findCategory(subCategory.categoryId) : undefined;
 }
 
-export function getMediaForProduct(productId: number): ProductMediaItem[] {
+export function getMediaForProduct(productId: string): ProductMediaItem[] {
   return MOCK_MEDIA_BY_PRODUCT[productId] ?? [];
 }
 
 export function getMarketingMediaForProduct(
-  productId: number,
+  productId: string,
 ): ProductMarketingMediaItem[] {
   return MOCK_MARKETING_MEDIA_BY_PRODUCT[productId] ?? [];
 }
 
-export function getVendorsForProduct(productId: number): ProductVendor[] {
+export function getVendorsForProduct(productId: string): ProductVendor[] {
   return MOCK_VENDORS_BY_PRODUCT[productId] ?? [];
 }
 
-export function getZonesForProduct(productId: number): ProductZone[] {
+export function getZonesForProduct(productId: string): ProductZone[] {
   return MOCK_ZONES_BY_PRODUCT[productId] ?? [];
 }
 
 export function getPhysicalAttributesForProduct(
-  productId: number,
+  productId: string,
 ): ProductPhysicalAttributes {
   return (
     MOCK_PHYSICAL_ATTRIBUTES_BY_PRODUCT[productId] ?? {
-      id: 0,
+      id: "0",
       productId,
       weight: null,
       length: null,
@@ -774,11 +827,11 @@ export function getPhysicalAttributesForProduct(
 }
 
 export function getGroupFieldValuesForProduct(
-  productId: number,
+  productId: string,
 ): ProductGroupFieldValue[] {
   return MOCK_GROUP_FIELD_VALUES_BY_PRODUCT[productId] ?? [];
 }
 
-export function getVariantsForProduct(productId: number): Variant[] {
+export function getVariantsForProduct(productId: string): Variant[] {
   return MOCK_VARIANTS_BY_PRODUCT[productId] ?? [];
 }

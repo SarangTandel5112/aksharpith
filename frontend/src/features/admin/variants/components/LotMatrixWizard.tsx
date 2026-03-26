@@ -1,8 +1,8 @@
 "use client";
 
 import { MOCK_ATTRIBUTES } from "@features/admin/products/services/product-admin.mock";
-import { useEffect, useMemo, useState } from "react";
 import type React from "react";
+import { useEffect, useState } from "react";
 import {
   selectLotIsSubmitting,
   selectLotSelectedAttributeIds,
@@ -12,7 +12,7 @@ import { AttributePicker } from "./wizard/AttributePicker";
 import { GenerationActionBar } from "./wizard/GenerationActionBar";
 
 type LotMatrixWizardProps = {
-  productId: number;
+  productId: string;
 };
 
 export function LotMatrixWizard(
@@ -22,22 +22,17 @@ export function LotMatrixWizard(
   const isSubmitting = useLotMatrixStore(selectLotIsSubmitting);
   const [status, setStatus] = useState<"idle" | "success">("idle");
 
-  const selectedAttributes = useMemo(
-    () =>
-      MOCK_ATTRIBUTES.filter((attribute) =>
-        selectedAttributeIds.includes(attribute.id),
-      ),
-    [selectedAttributeIds],
+  const selectedAttributes = MOCK_ATTRIBUTES.filter((attribute) =>
+    selectedAttributeIds.includes(attribute.id),
   );
-
-  const generatedCount = useMemo(() => {
+  const generatedCount = (() => {
     if (selectedAttributes.length === 0) return 0;
 
     return selectedAttributes.reduce(
       (total, attribute) => total * Math.max(attribute.values.length, 1),
       1,
     );
-  }, [selectedAttributes]);
+  })();
 
   useEffect(() => {
     if (selectedAttributeIds.length === 0) {

@@ -8,7 +8,7 @@ import type React from "react";
 
 type LotMatrixSummaryPanelProps = {
   attributes: Attribute[];
-  selectedAttributeIds: number[];
+  selectedAttributeIds: string[];
   possibleCount: number;
   draftRows: ProductLotMatrixRowDraft[];
   readyRows: number;

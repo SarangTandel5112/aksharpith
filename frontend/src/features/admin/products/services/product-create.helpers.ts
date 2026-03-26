@@ -8,7 +8,6 @@ import type {
   ProductCreateSetupItem,
   ProductCreateSummary,
   ProductCreateTabDefinition,
-  ProductCreateWorkspaceState,
   ProductCreateWorkspaceContext,
   ProductCreateWorkspacePayload,
   ProductGridCardModel,
@@ -32,6 +31,10 @@ import {
   plainTextFromRichText,
 } from "@shared/lib/rich-text";
 import { formatCurrency } from "./product-admin.helpers";
+
+function createDraftId(prefix: string): string {
+  return globalThis.crypto?.randomUUID?.() ?? `${prefix}-${Date.now()}`;
+}
 
 function normalizeOptionalString(
   value: string | null | undefined,
@@ -57,15 +60,19 @@ function normalizeOptionalNumber(
 
 function normalizeOptionalDimension(
   value: string | null | undefined,
-): string | undefined {
+): number | undefined {
   const next = value?.trim();
-  return next ? next : undefined;
+  if (!next) return undefined;
+
+  const parsed = Number.parseFloat(next);
+  return Number.isNaN(parsed) ? undefined : parsed;
 }
 
 export function createEmptyMediaItem(index: number): ProductMediaDraft {
   return {
+    clientId: createDraftId(`media-${index}`),
     url: "",
-    type: "image",
+    mediaType: "photo",
     sortOrder: index,
     isPrimary: index === 0,
   };
@@ -75,34 +82,26 @@ export function createEmptyMarketingMediaItem(
   index: number,
 ): ProductMarketingMediaDraft {
   return {
-    url: "",
-    type: "image",
-    sortOrder: index,
-    thumbnailUrl: null,
-    duration: null,
-    fileSize: null,
+    clientId: createDraftId(`marketing-media-${index}`),
+    mediaUrl: "",
+    mediaType: "photo",
+    displayOrder: index,
   };
 }
 
 export function createEmptyVendorItem(index: number): ProductVendorDraft {
   return {
-    name: "",
-    contactPerson: null,
-    contactEmail: null,
-    contactPhone: null,
-    gstin: null,
-    address: null,
+    clientId: createDraftId(`vendor-${index}`),
+    vendorName: "",
     isPrimary: index === 0,
-    notes: null,
     isActive: true,
   };
 }
 
 export function createEmptyZoneItem(): ProductZoneDraft {
   return {
-    name: "",
-    code: null,
-    description: null,
+    clientId: createDraftId("zone"),
+    zoneName: "",
     isActive: true,
   };
 }
@@ -111,28 +110,30 @@ export function createRuntimeLotMatrixAttribute(
   input: ProductLotMatrixAttributeBuilderInput,
 ): Attribute {
   const timestamp = new Date().toISOString();
-  const attributeId = Date.now();
+  const attributeId = globalThis.crypto?.randomUUID?.() ?? `attr-${Date.now()}`;
   const uniqueValues = Array.from(
     new Set(input.values.map((value) => value.trim()).filter(Boolean)),
   );
 
   return {
     id: attributeId,
-    productId: 0,
+    productId: null,
     name: input.name.trim(),
     code: formatSkuSegment(input.name) || `ATTR${attributeId}`,
     sortOrder: 0,
     isRequired: false,
     isActive: true,
     createdAt: timestamp,
+    updatedAt: timestamp,
     values: uniqueValues.map((value, index) => ({
-      id: Number(`${attributeId}${index + 1}`),
+      id: `${attributeId}-${index + 1}`,
       attributeId,
       label: value,
       code: formatSkuSegment(value) || `VALUE${index + 1}`,
       sortOrder: index,
       isActive: true,
       createdAt: timestamp,
+      updatedAt: timestamp,
     })),
   };
 }
@@ -212,7 +213,7 @@ export function countPhysicalFields(
 
 export function computeLotMatrixCount(
   attributes: Attribute[],
-  selectedAttributeIds: number[],
+  selectedAttributeIds: string[],
 ): number {
   const selectedAttributes = attributes.filter((attribute) =>
     selectedAttributeIds.includes(attribute.id),
@@ -230,7 +231,7 @@ export function computeLotMatrixCount(
 
 export function buildLotMatrixPreview(
   attributes: Attribute[],
-  selectedAttributeIds: number[],
+  selectedAttributeIds: string[],
   limit = 8,
 ): string[] {
   const selectedAttributes = attributes.filter((attribute) =>
@@ -269,7 +270,7 @@ export function buildLotMatrixPreview(
 
 export function getSelectedLotMatrixAttributes(
   attributes: Attribute[],
-  selectedAttributeIds: number[],
+  selectedAttributeIds: string[],
 ): ProductLotMatrixAttributeDefinition[] {
   const attributeOrder = new Map(
     selectedAttributeIds.map((attributeId, index) => [attributeId, index]),
@@ -339,8 +340,8 @@ function buildManualVariantSku(productSku: string, index: number): string {
 
 function findAttributeValueLabel(
   matrixAttributes: ProductLotMatrixAttributeDefinition[],
-  attributeId: number,
-  attributeValueId: number | null,
+  attributeId: string,
+  attributeValueId: string | null,
 ): string | null {
   if (attributeValueId === null) return null;
 
@@ -364,7 +365,7 @@ export function countCompleteLotMatrixRows(
 
 export function createEmptyLotMatrixRow(options: {
   attributes: Attribute[];
-  selectedAttributeIds: number[];
+  selectedAttributeIds: string[];
   productCode: string;
   price: number;
   rowIndex: number;
@@ -395,7 +396,7 @@ export function createEmptyLotMatrixRow(options: {
 export function syncLotMatrixRows(
   rows: ProductLotMatrixRowDraft[],
   attributes: Attribute[],
-  selectedAttributeIds: number[],
+  selectedAttributeIds: string[],
 ): ProductLotMatrixRowDraft[] {
   const matrixAttributes = getSelectedLotMatrixAttributes(
     attributes,
@@ -438,7 +439,7 @@ export function syncLotMatrixRows(
 
 export function generateLotMatrixRows(options: {
   attributes: Attribute[];
-  selectedAttributeIds: number[];
+  selectedAttributeIds: string[];
   productCode: string;
   price: number;
   currentRows?: ProductLotMatrixRowDraft[];
@@ -511,10 +512,10 @@ export function generateLotMatrixRows(options: {
 
 export function updateLotMatrixRowSelection(options: {
   row: ProductLotMatrixRowDraft;
-  attributeId: number;
-  attributeValueId: number | null;
+  attributeId: string;
+  attributeValueId: string | null;
   attributes: Attribute[];
-  selectedAttributeIds: number[];
+  selectedAttributeIds: string[];
 }): ProductLotMatrixRowDraft {
   const matrixAttributes = getSelectedLotMatrixAttributes(
     options.attributes,
@@ -638,20 +639,28 @@ export function buildProductCreateWorkspacePayload(
       .filter((item) => normalizeOptionalString(item.url))
       .map((item, index) => ({
         url: item.url.trim(),
-        type: item.type,
+        mediaType: item.mediaType ?? "photo",
         sortOrder: index,
         ...(item.isPrimary !== undefined ? { isPrimary: item.isPrimary } : {}),
       })),
     marketingMedia: state.marketingMedia
-      .filter((item) => normalizeOptionalString(item.url))
-      .map((item, index) => ({
-        url: item.url.trim(),
-        type: item.type,
-        sortOrder: item.sortOrder ?? index,
-        thumbnailUrl: normalizeOptionalString(item.thumbnailUrl) ?? null,
-        duration: normalizeOptionalNumber(item.duration) ?? null,
-        fileSize: normalizeOptionalNumber(item.fileSize) ?? null,
-      })),
+      .filter((item) => normalizeOptionalString(item.mediaUrl))
+      .map((item, index) => {
+        const marketingPayload: ProductMarketingMediaDraft = {
+          mediaUrl: item.mediaUrl.trim(),
+          mediaType: item.mediaType ?? "photo",
+          displayOrder: item.displayOrder ?? index,
+        };
+
+        const thumbnailUrl = normalizeOptionalString(item.thumbnailUrl);
+        if (thumbnailUrl !== undefined) marketingPayload.thumbnailUrl = thumbnailUrl;
+        const duration = normalizeOptionalNumber(item.duration);
+        if (duration !== undefined) marketingPayload.duration = duration;
+        const fileSize = normalizeOptionalNumber(item.fileSize);
+        if (fileSize !== undefined) marketingPayload.fileSize = fileSize;
+
+        return marketingPayload;
+      }),
     lotMatrix: state.selectedAttributeIds.length
       ? {
           attributeIds: state.selectedAttributeIds,
@@ -678,31 +687,49 @@ export function buildProductCreateWorkspacePayload(
               isActive: row.isActive,
               attributeValueIds: row.selections
                 .map((selection) => selection.attributeValueId)
-                .filter((valueId): valueId is number => valueId !== null),
+                .filter((valueId): valueId is string => valueId !== null),
             })),
         }
       : null,
     vendors: state.vendors
-      .filter((item) => normalizeOptionalString(item.name))
-      .map((item) => ({
-        name: item.name.trim(),
-        contactPerson: normalizeOptionalString(item.contactPerson) ?? null,
-        contactEmail: normalizeOptionalString(item.contactEmail) ?? null,
-        contactPhone: normalizeOptionalString(item.contactPhone) ?? null,
-        gstin: normalizeOptionalString(item.gstin) ?? null,
-        address: normalizeOptionalString(item.address) ?? null,
-        ...(item.isPrimary !== undefined ? { isPrimary: item.isPrimary } : {}),
-        notes: normalizeOptionalString(item.notes) ?? null,
-        ...(item.isActive !== undefined ? { isActive: item.isActive } : {}),
-      })),
+      .filter((item) => normalizeOptionalString(item.vendorName))
+      .map((item) => {
+        const vendorPayload: ProductVendorDraft = {
+          vendorName: item.vendorName.trim(),
+          ...(item.isPrimary !== undefined ? { isPrimary: item.isPrimary } : {}),
+          ...(item.isActive !== undefined ? { isActive: item.isActive } : {}),
+        };
+
+        const contactPerson = normalizeOptionalString(item.contactPerson);
+        if (contactPerson !== undefined) vendorPayload.contactPerson = contactPerson;
+        const contactEmail = normalizeOptionalString(item.contactEmail);
+        if (contactEmail !== undefined) vendorPayload.contactEmail = contactEmail;
+        const contactPhone = normalizeOptionalString(item.contactPhone);
+        if (contactPhone !== undefined) vendorPayload.contactPhone = contactPhone;
+        const gstin = normalizeOptionalString(item.gstin);
+        if (gstin !== undefined) vendorPayload.gstin = gstin;
+        const address = normalizeOptionalString(item.address);
+        if (address !== undefined) vendorPayload.address = address;
+        const notes = normalizeOptionalString(item.notes);
+        if (notes !== undefined) vendorPayload.notes = notes;
+
+        return vendorPayload;
+      }),
     zones: state.zones
-      .filter((item) => normalizeOptionalString(item.name))
-      .map((item) => ({
-        name: item.name.trim(),
-        code: normalizeOptionalString(item.code) ?? null,
-        description: normalizeOptionalRichText(item.description) ?? null,
-        ...(item.isActive !== undefined ? { isActive: item.isActive } : {}),
-      })),
+      .filter((item) => normalizeOptionalString(item.zoneName))
+      .map((item) => {
+        const zonePayload: ProductZoneDraft = {
+          zoneName: item.zoneName.trim(),
+          ...(item.isActive !== undefined ? { isActive: item.isActive } : {}),
+        };
+
+        const zoneCode = normalizeOptionalString(item.zoneCode);
+        if (zoneCode !== undefined) zonePayload.zoneCode = zoneCode;
+        const description = normalizeOptionalRichText(item.description);
+        if (description !== undefined) zonePayload.description = description;
+
+        return zonePayload;
+      }),
   };
 }
 
