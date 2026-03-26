@@ -46,7 +46,7 @@ export function LoginPageClient(): React.JSX.Element {
     if (roleName === "Admin" || roleName === "Staff") {
       router.push("/admin/dashboard");
     } else {
-      router.push("/products");
+      router.push("/unauthorized");
     }
   }
 

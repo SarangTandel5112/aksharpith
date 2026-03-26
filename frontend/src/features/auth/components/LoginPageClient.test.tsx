@@ -56,7 +56,7 @@ describe("LoginPageClient", () => {
     });
   });
 
-  it("redirects to /products on successful login", async () => {
+  it("redirects viewers to /unauthorized on successful login", async () => {
     mockSignIn.mockResolvedValue({
       error: null,
       ok: true,
@@ -71,7 +71,7 @@ describe("LoginPageClient", () => {
     await user.click(screen.getByRole("button", { name: /sign in/i }));
 
     await waitFor(() => {
-      expect(mockPush).toHaveBeenCalledWith("/products");
+      expect(mockPush).toHaveBeenCalledWith("/unauthorized");
     });
   });
 

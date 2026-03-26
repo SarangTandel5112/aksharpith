@@ -1,10 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-type LinkProps = { href: string; children: React.ReactNode };
-vi.mock("next/link", () => ({
-  default: (props: LinkProps) => <a href={props.href}>{props.children}</a>,
-}));
-
 import { render, screen } from "@testing-library/react";
 import UnauthorizedPage from "./page";
 
@@ -20,10 +15,10 @@ describe("UnauthorizedPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders a link back to the catalog", () => {
+  it("renders the access guidance copy", () => {
     render(<UnauthorizedPage />);
-    const link = screen.getByRole("link", { name: /back to catalog/i });
-    expect(link).toBeInTheDocument();
-    expect(link).toHaveAttribute("href", "/products");
+    expect(
+      screen.getByText(/contact an administrator if you need access/i),
+    ).toBeInTheDocument();
   });
 });
